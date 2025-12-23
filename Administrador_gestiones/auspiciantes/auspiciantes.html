@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Auspiciantes</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="auspiciantes.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <header class="header">
+        <h1>Gestión de Auspiciantes</h1>
+        <button id="btnNuevoAusp" class="btn-agregar">
+            <i class="fa-solid fa-plus"></i> Agregar Auspiciante
+        </button>
+    </header>
+
+    <div class="search-container">
+        <input type="text" id="buscarAusp" placeholder="Buscar por nombre...">
+    </div>
+
+    <section id="gridAuspiciantes" class="grid-container">
+        <p style="width:100%; text-align:center;">Cargando...</p>
+    </section>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+
+            <div class="modal-header">
+                <h2 id="modalTitle">Agregar Auspiciante</h2>
+                <button class="modal-close" id="btnCerrarModal">✕</button>
+            </div>
+
+            <form id="formAusp">
+                <input type="hidden" id="idAusp" name="idAusp">
+
+                <div class="modal-body">
+
+                    <label>Nombre del Auspiciante</label>
+                    <input type="text" id="nombreAusp" class="input-field" required placeholder="Ej: McDonald's">
+
+                    <label>Código de Validación</label>
+                    <input type="text" id="codigoAusp" class="input-field" required placeholder="Ej: MCD-001 (Único)">
+
+                    <label>Descripción</label>
+                    <textarea id="descripcionAusp" class="input-field" rows="3" placeholder="Descripción breve..."></textarea>
+
+                    <label>Logo / Imagen</label>
+                    <div class="image-section">
+                        <img id="previewAusp" src="https://cdn-icons-png.flaticon.com/512/747/747543.png">
+                        <div class="image-actions">
+                            <button type="button" id="btnImagenAusp" class="btn-upload">Subir Imagen</button>
+                            <input type="file" id="imagenAusp" hidden accept="image/*">
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancelar" id="btnCancelar">Cancelar</button>
+                    <button type="submit" class="btn-guardar">Guardar</button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <script src="auspiciantes.js"></script>
+</body>
+</html>

@@ -1,0 +1,141 @@
+:root {
+    --primary: #1abc9c;
+    --danger: #e74c3c;
+    --dark: #2c3e50;
+    --light: #ecf0f1;
+}
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #f4f7f6;
+    margin: 0;
+    padding: 20px;
+}
+
+header {
+    background: var(--primary);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+    max-width: 1200px;
+    margin: auto;
+}
+
+.card {
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, .08);
+    overflow: hidden;
+}
+
+.card-body {
+    padding: 15px;
+}
+
+.card-actions {
+    padding: 15px;
+    background: #fafafa;
+    border-top: 1px solid #eee;
+}
+
+.status-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: .75em;
+    font-weight: bold;
+    color: white;
+}
+
+.status-pendiente {
+    background: #f39c12;
+}
+
+.status-aprobado {
+    background: #2ecc71;
+}
+
+.status-rechazado {
+    background: #e74c3c;
+}
+
+.btn-group {
+    display: flex;
+    gap: 10px;
+}
+
+.btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-approve {
+    background: #2ecc71;
+    color: white;
+}
+
+.btn-reject {
+    background: #e74c3c;
+    color: white;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, .8);
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+}
+
+.modal img {
+    max-width: 90%;
+    max-height: 90%;
+    border-radius: 10px;
+}
+
+
+.user-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--primary);
+    margin-right: 10px;
+}
+
+.user-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+
+.btn-download {
+    background-color: #3498db;
+    color: white;
+    width: 100%;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.btn-download:hover {
+    background-color: #2980b9;
+}

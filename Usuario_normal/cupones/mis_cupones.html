@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Cupones | Loopi</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="mis_cupones.css"> 
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../inicio_usuario_normal.html" class="nav-back">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <div class="nav-title">
+                <i class="fa-solid fa-wallet"></i> Mis Recompensas
+            </div>
+            <div style="width: 24px;"></div> </div>
+    </nav>
+
+    <div class="main-container">
+        
+        <div class="header-section">
+            <h2>Billetera Eco</h2>
+            <p>Tus premios listos para usar.</p>
+        </div>
+
+        <div id="gridCupones" class="grid-cupones">
+            <div class="loading">
+                <i class="fa-solid fa-circle-notch fa-spin"></i> Cargando billetera...
+            </div>
+        </div>
+
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <div class="icon-empty">
+                <i class="fa-solid fa-ticket"></i>
+            </div>
+            <h3>¡Está muy vacío aquí!</h3>
+            <p>Canjea tus puntos por premios increíbles.</p>
+            <button onclick="window.location.href='../catalogo/catalogo.html'" class="btn-primary">
+                Ir al Catálogo
+            </button>
+        </div>
+
+    </div>
+
+    <script src="mis_cupones.js"></script>
+</body>
+</html>

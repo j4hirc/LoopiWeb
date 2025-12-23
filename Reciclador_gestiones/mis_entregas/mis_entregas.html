@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Mis Entregas | Loopi Reciclador</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="mis_entregas.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fa-solid fa-truck-fast"></i>
+                <span>Loopi Reciclador</span>
+            </div>
+            <ul class="nav-menu">
+                <li>
+                    <a href="../reciclador.html" class="nav-link">
+                        <i class="fa-solid fa-arrow-left"></i> Volver al Panel
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <header class="header">
+        <div class="header-content">
+            <h1>Gestión de Entregas</h1>
+            <p>Organiza tus recolecciones y valida los puntos.</p>
+        </div>
+    </header>
+
+    <main class="dashboard-container">
+
+        <div class="filtros-container">
+            <button class="btn-filtro active" data-estado="PENDIENTE_RECOLECCION">
+                <i class="fa-regular fa-clock"></i> Pendientes
+            </button>
+            <button class="btn-filtro" data-estado="ACEPTADA">
+                <i class="fa-solid fa-truck"></i> En Curso
+            </button>
+            <button class="btn-filtro" data-estado="FINALIZADO">
+                <i class="fa-solid fa-check-circle"></i> Historial
+            </button>
+        </div>
+
+        <div class="grid-cards" id="gridEntregas">
+            </div>
+
+    </main>
+
+    <template id="tplEntrega">
+        <div class="entrega-card">
+            <div class="card-status-bar badge-estado"></div>
+            
+            <div class="entrega-body">
+                <div class="user-info">
+                    <div class="avatar-placeholder">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div>
+                        <h3 class="txtUsuario">Nombre Usuario</h3>
+                        <p class="txtDireccion"><i class="fa-solid fa-location-dot"></i> Dirección...</p>
+                    </div>
+                </div>
+                
+                <div class="meta-info">
+                    <span class="txtFecha"><i class="fa-regular fa-calendar"></i> 01/01/2025</span>
+                    <span class="txtMaterialesCount">0 materiales</span>
+                </div>
+            </div>
+
+            <div class="entrega-acciones">
+                <button class="btn-ver" title="Ver detalles">
+                    <i class="fa-solid fa-eye"></i> Detalle
+                </button>
+                <button class="btn-aceptar" title="Aceptar solicitud">
+                    <i class="fa-solid fa-check"></i> Aceptar
+                </button>
+                <button class="btn-rechazar" title="Rechazar solicitud">
+                    <i class="fa-solid fa-xmark"></i> Rechazar
+                </button>
+                <button class="btn-completar" title="Finalizar entrega">
+                    <i class="fa-solid fa-flag-checkered"></i> Finalizar
+                </button>
+            </div>
+        </div>
+    </template>
+
+    <div class="modal-overlay" id="modalDetalle">
+        <div class="modal-detalle">
+            <div class="modal-header-detalle">
+                <h3><i class="fa-solid fa-clipboard-list"></i> Detalle de Solicitud</h3>
+                <button class="btn-cerrar" onclick="cerrarModalDetalle()">✕</button>
+            </div>
+
+            <div class="modal-body-detalle" id="detalleContenido">
+                </div>
+
+            <div class="modal-footer-detalle">
+                <button class="btn-cancelar" onclick="cerrarModalDetalle()">Cerrar Ventana</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="mis_entregas.js"></script>
+</body>
+</html>

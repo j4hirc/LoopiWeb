@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canjear Puntos | Loopi</title>
+    <link rel="stylesheet" href="../styles.css"> <link rel="stylesheet" href="catalogo.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-left">
+            <a href="../inicio_usuario_normal.html" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Volver</a>
+            <div class="nav-logo" style="margin-left: 15px;">
+                <i class="fa-solid fa-gift"></i> Catálogo
+            </div>
+        </div>
+        
+        <div class="user-points-badge">
+            <span id="misPuntos">0</span> Pts
+        </div>
+    </nav>
+
+    <div class="catalogo-container">
+        
+        <header class="catalogo-header">
+            <h1>Recompensas Disponibles</h1>
+            <p>Canjea tus puntos por productos y descuentos exclusivos.</p>
+            
+            <div class="search-box">
+                <i class="fa-solid fa-search"></i>
+                <input type="text" id="buscador" placeholder="Buscar premios (ej: Entradas, Cupones...)">
+            </div>
+        </header>
+
+        <div id="gridPremios" class="grid-premios">
+            <div class="loading">Cargando premios...</div>
+        </div>
+
+    </div>
+
+    <script src="catalogo.js"></script>
+</body>
+</html>

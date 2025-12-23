@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Postulación Reciclador | Loopi</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="ser-reciclador.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-left">
+            <a href="../inicio_usuario_normal.html" class="nav-back">
+                <i class="fa-solid fa-arrow-left"></i> Volver
+            </a>
+        </div>
+        <div class="nav-logo">Postulación Loopi</div>
+    </nav>
+
+    <div class="main-container">
+        <div class="form-container">
+            <div class="form-header">
+                <div class="icon-header"><i class="fa-solid fa-handshake"></i></div>
+                <h2>Únete como Reciclador</h2>
+                <p>Completa tu perfil profesional para empezar a recibir solicitudes.</p>
+            </div>
+
+            <form id="formReciclador">
+                
+                <div class="form-section">
+                    <h3><i class="fa-solid fa-camera"></i> Identidad y Evidencia</h3>
+                    <p class="section-desc">Sube fotos claras (Max 5MB, solo JPG/PNG).</p>
+                    
+                    <div class="grid-2-col">
+                        <div class="upload-box" id="boxFoto">
+                            <input type="file" id="fotoProfesional" accept="image/png, image/jpeg, image/jpg" hidden>
+                            <div class="upload-content" onclick="document.getElementById('fotoProfesional').click()">
+                                <img id="previewFoto" src="" class="preview-hidden">
+                                <div id="placeholderFoto">
+                                    <i class="fa-solid fa-user-circle"></i>
+                                    <span>Tu Foto de Perfil</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="upload-box" id="boxEvidencia">
+                            <input type="file" id="evidenciaExperiencia" accept="image/png, image/jpeg, image/jpg" hidden>
+                            <div class="upload-content" onclick="document.getElementById('evidenciaExperiencia').click()">
+                                <img id="previewEvidencia" src="" class="preview-hidden">
+                                <div id="placeholderEvidencia">
+                                    <i class="fa-solid fa-file-contract"></i>
+                                    <span>Certificado / Evidencia</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="input-group" style="margin-top: 20px;">
+                        <label>Años de Experiencia</label>
+                        <input type="number" id="aniosExperiencia" class="input-field" placeholder="Ej: 2" min="0">
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3><i class="fa-solid fa-recycle"></i> ¿Qué reciclas?</h3>
+                    <p class="section-desc">Toca los materiales que aceptas.</p>
+                    <div id="materialesGrid" class="materials-grid">
+                        <div class="loading">Cargando materiales...</div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3><i class="fa-solid fa-clock"></i> Tu Horario</h3>
+                    <div class="horarios-container" id="containerHorarios"></div>
+                    <button type="button" class="btn-add-horario" onclick="agregarFilaHorario()">
+                        <i class="fa-solid fa-plus"></i> Agregar Turno
+                    </button>
+                </div>
+
+                <div class="form-section">
+                    <h3><i class="fa-solid fa-map-location-dot"></i> Base de Operaciones</h3>
+                    
+                    <div class="grid-2-col">
+                        <div class="input-group">
+                            <label>Nombre de tu Base / Sitio</label>
+                            <input type="text" id="nombreSitio" class="input-field" placeholder="Ej: Recicladora El Sol">
+                        </div>
+                        <div class="input-group">
+                            <label>Dirección Escrita</label>
+                            <input type="text" id="direccionTexto" class="input-field" placeholder="Calle principal y secundaria">
+                        </div>
+                    </div>
+
+                    <label class="map-label">Ubicación Exacta</label>
+                    <button type="button" id="btnGeo" class="btn-location">
+                        <i class="fa-solid fa-location-crosshairs"></i> Usar mi ubicación actual
+                    </button>
+                    
+                    <div id="mapaRegistro"></div>
+                    <div class="coords-display">
+                        <i class="fa-solid fa-map-pin"></i> <span id="txtLat">0.0</span>, <span id="txtLng">0.0</span>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit">Enviar Postulación</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="ser-reciclador.js"></script>
+</body>
+</html>

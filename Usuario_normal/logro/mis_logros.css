@@ -1,0 +1,298 @@
+:root {
+    /* Paleta de Colores Mejorada */
+    --primary-dark: #1E4D40;
+    --primary: #3A6958;
+    --primary-light: #6DB85C;
+    --accent-gold: #FBBF24;
+    --accent-gold-light: #FDE68A;
+    
+    --bg-main: #F8FAFC; /* Fondo más limpio */
+    --white: #FFFFFF;
+    --gray-light: #E2E8F0;
+    --gray-medium: #94A3B8;
+    --gray-dark: #475569;
+
+    --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+    --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.04);
+    --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+    --glow-green: 0 0 20px rgba(109, 184, 92, 0.4);
+}
+
+body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--bg-main);
+    color: var(--gray-dark);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* NAVBAR MODERNIZADO */
+.navbar {
+    background: var(--white);
+    padding: 15px 0;
+    box-shadow: var(--shadow-sm);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.nav-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.nav-back {
+    color: var(--gray-dark);
+    text-decoration: none;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 15px;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+    background: var(--bg-main);
+}
+.nav-back:hover { background: var(--gray-light); color: var(--primary); transform: translateX(-5px); }
+.nav-title { font-weight: 700; font-size: 1.2rem; color: var(--primary); }
+
+/* HEADER HERO */
+.main-content { padding-bottom: 50px; }
+
+.hero-header {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: var(--white);
+    text-align: center;
+    padding: 60px 20px 100px; /* Padding extra abajo para que las tarjetas se superpongan */
+    border-radius: 0 0 50px 50px;
+    margin-bottom: -60px; /* Superposición */
+    position: relative;
+    overflow: hidden;
+}
+
+/* Patrón de fondo sutil */
+.hero-header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    opacity: 0.2;
+}
+
+.trophy-container {
+    display: inline-block;
+    background: rgba(255,255,255,0.15);
+    padding: 20px;
+    border-radius: 50%;
+    margin-bottom: 20px;
+    backdrop-filter: blur(5px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    position: relative;
+}
+
+.trophy-icon {
+    font-size: 3.5rem;
+    color: var(--accent-gold);
+    filter: drop-shadow(0 4px 8px rgba(251, 191, 36, 0.5));
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.hero-header h1 { margin: 0; font-size: 2.2rem; font-weight: 800; letter-spacing: -0.5px; position: relative; }
+.hero-header p { margin: 10px 0 30px; font-size: 1.1rem; opacity: 0.9; position: relative; }
+
+/* BARRA DE PROGRESO AVANZADA */
+.progress-wrapper {
+    max-width: 500px;
+    margin: 0 auto;
+    background: rgba(255,255,255,0.1);
+    padding: 20px;
+    border-radius: 25px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+    position: relative;
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+.progress-percentage { color: var(--accent-gold); }
+
+.progress-track {
+    background: rgba(0,0,0,0.2);
+    border-radius: 50px;
+    height: 16px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.progress-fill {
+    background: linear-gradient(90deg, var(--accent-gold), var(--primary-light));
+    height: 100%;
+    border-radius: 50px;
+    width: 0%;
+    transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    box-shadow: 0 2px 10px rgba(109, 184, 92, 0.5);
+}
+
+/* Animación de rayas en la barra */
+.progress-stripe {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; bottom: 0; right: 0;
+    background-image: linear-gradient(
+        45deg,
+        rgba(255, 255, 255, 0.2) 25%,
+        transparent 25%,
+        transparent 50%,
+        rgba(255, 255, 255, 0.2) 50%,
+        rgba(255, 255, 255, 0.2) 75%,
+        transparent 75%,
+        transparent
+    );
+    background-size: 20px 20px;
+    animation: moveStripe 1s linear infinite;
+    border-radius: 50px;
+}
+@keyframes moveStripe { 0% { background-position: 0 0; } 100% { background-position: 20px 0; } }
+
+
+/* CONTAINER Y GRID */
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.grid-logros {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Tarjetas más anchas */
+    gap: 25px;
+    position: relative;
+    z-index: 10; /* Para que queden sobre el header */
+}
+
+/* --- TARJETAS (BASE) --- */
+.logro-card {
+    background: var(--white);
+    border-radius: 24px;
+    padding: 25px 20px;
+    text-align: center;
+    box-shadow: var(--shadow-md);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Efecto rebote suave */
+    position: relative;
+    overflow: hidden;
+    border: 1px solid transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* --- ESTILO DESBLOQUEADO (PREMIUM) --- */
+.logro-card.unlocked {
+    background: linear-gradient(160deg, #ffffff, #f0fff4);
+    border-color: #c6f6d5;
+}
+
+.logro-card.unlocked:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: var(--shadow-lg), var(--glow-green);
+    border-color: var(--primary-light);
+}
+
+/* --- ESTILO BLOQUEADO (MISTERIOSO) --- */
+.logro-card.locked {
+    background: linear-gradient(160deg, #f1f5f9, #e2e8f0);
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+}
+.logro-card.locked:hover { transform: translateY(-3px); }
+
+.logro-card.locked img {
+    filter: grayscale(100%) contrast(80%);
+    opacity: 0.4;
+    mix-blend-mode: multiply;
+}
+.logro-card.locked h3, .logro-card.locked p { color: var(--gray-medium); }
+
+/* ICONOS SUPERIORES */
+.status-overlay {
+    position: absolute;
+    top: 15px; right: 15px;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+    box-shadow: var(--shadow-sm);
+}
+.unlocked .status-overlay {
+    background: var(--primary-light); color: white;
+    background: linear-gradient(135deg, var(--primary-light), var(--primary));
+}
+.locked .status-overlay {
+    background: var(--gray-light); color: var(--gray-medium);
+}
+
+/* CONTENIDO TARJETA */
+.img-container {
+    height: 100px; width: 100px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 15px;
+    position: relative;
+}
+
+.logro-card img {
+    max-width: 85%; max-height: 85%;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+    transition: transform 0.3s;
+}
+.logro-card.unlocked:hover img { transform: scale(1.15) rotate(5deg); }
+
+.logro-card h3 {
+    font-size: 1.1rem; font-weight: 800; margin: 10px 0 5px;
+    color: var(--primary-dark); line-height: 1.3;
+}
+
+.logro-card p {
+    font-size: 0.9rem; color: var(--gray-dark); margin-bottom: 20px;
+    flex-grow: 1; /* Para alinear los badges abajo */
+    display: flex; align-items: center;
+}
+
+/* BADGE INFERIOR */
+.badge-puntos {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    width: 100%;
+    justify-content: center;
+}
+
+.unlocked .badge-puntos {
+    background: linear-gradient(90deg, var(--primary), var(--primary-light));
+    color: white;
+    box-shadow: 0 4px 10px rgba(109, 184, 92, 0.3);
+}
+
+.locked .badge-puntos {
+    background: var(--gray-light);
+    color: var(--gray-dark);
+    border: 1px solid var(--gray-medium);
+    opacity: 0.8;
+    font-size: 0.8rem;
+}

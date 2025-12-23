@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Panel Reciclador | Loopi</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="styles.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <img src="../Imagenes/logo_icon.png" class="logo-img" alt="Logo">
+                <span>Loopi Reciclador</span>
+            </div>
+
+            <input type="checkbox" id="menu-toggle">
+            <label for="menu-toggle" class="menu-icon"><i class="fa-solid fa-bars"></i></label>
+
+            <ul class="nav-menu">
+                <li><a href="#" id="btnAbrirPerfil"><i class="fa-solid fa-user"></i> Perfil</a></li>
+                <li><a href="#" id="btnCerrarSesion" class="btn-logout">
+                        <i class="fa-solid fa-right-from-bracket"></i> Salir
+                    </a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <header class="header">
+        <div class="header-content">
+            <div class="header-text">
+                <h1>Panel del Reciclador</h1>
+                <p>Gestiona tus entregas y actividad</p>
+            </div>
+
+            <div class="user-badge" id="saludoUsuario">
+                <i class="fa-solid fa-circle-user"></i> Cargando...
+            </div>
+        </div>
+    </header>
+
+    <main class="dashboard-container">
+        <h2 class="section-title">Accesos rápidos</h2>
+
+        <div class="grid-cards">
+            <div class="card card-teal" onclick="location.href='mis_entregas/mis_entregas.html'"
+                style="position: relative;">
+                <span class="badge-notificacion" id="badgeEntregas">0</span>
+
+                <div class="card-icon"><i class="fa-solid fa-truck"></i></div>
+                <div class="card-info">
+                    <h3>Mis Entregas</h3>
+                    <p>Solicitudes asignadas</p>
+                </div>
+            </div>
+
+            <div class="card card-blue" onclick="location.href='historial_entregas/historial_entregas.html'">
+                <div class="card-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                <div class="card-info">
+                    <h3>Historial</h3>
+                    <p>Entregas realizadas</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <section class="map-section">
+        <div class="section-header">
+            <h2>Explora tu zona</h2>
+            <div class="leyenda">
+                <span class="dot green"></span> Recolección
+                <span class="dot purple"></span> Canjes
+            </div>
+        </div>
+
+        <div class="filtros-container-center">
+            <span class="filtro-label">Filtrar por:</span>
+            <div id="contenedorBotonesMateriales" class="filtros-scroll-center">
+                <button class="btn-filtro active" data-id="todos">Todos</button>
+            </div>
+        </div>
+
+        <div class="mapa-wrapper">
+            <button id="btnMiUbicacion" class="btn-ubicacion-flotante" title="Mi ubicación">
+                <i class="fa-solid fa-location-crosshairs"></i>
+            </button>
+            <div id="mapaReciclador" class="mapa-container"></div>
+        </div>
+    </section>
+
+    <div class="modal-overlay-perfil" id="modalPerfil">
+        <div class="modal-container-perfil">
+            <div class="modal-header-perfil">
+                <span class="modal-title-perfil">Mi Perfil</span>
+                <button class="modal-close-perfil" onclick="cerrarModalPerfil()">✕</button>
+            </div>
+            <div class="modal-body-perfil">
+                <div class="profile-img-container">
+                    <img id="perfilPreview" src="https://via.placeholder.com/100" class="profile-img-preview">
+                </div>
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <label for="inputPerfilFoto" class="perfil-link-foto">Cambiar Foto</label>
+                    <input type="file" id="inputPerfilFoto" accept="image/*" style="display: none;">
+                    <input type="hidden" id="perfilFotoBase64">
+                </div>
+                <div class="perfil-grid">
+                    <div class="perfil-row">
+                        <div class="perfil-col">
+                            <label class="perfil-label">Primer Nombre</label>
+                            <input id="perfilPrimerNombre" class="perfil-input">
+                        </div>
+                        <div class="perfil-col">
+                            <label class="perfil-label">Segundo Nombre</label>
+                            <input id="perfilSegundoNombre" class="perfil-input">
+                        </div>
+                    </div>
+                    <div class="perfil-row">
+                        <div class="perfil-col">
+                            <label class="perfil-label">Apellido Paterno</label>
+                            <input id="perfilApellidoPaterno" class="perfil-input">
+                        </div>
+                        <div class="perfil-col">
+                            <label class="perfil-label">Apellido Materno</label>
+                            <input id="perfilApellidoMaterno" class="perfil-input">
+                        </div>
+                    </div>
+                    <div class="perfil-col">
+                        <label class="perfil-label">Correo</label>
+                        <input id="perfilCorreo" type="email" class="perfil-input">
+                    </div>
+                    <div class="perfil-col">
+                        <label class="perfil-label">Nueva Contraseña <small>(opcional)</small></label>
+                        <input id="perfilPassword" type="password" class="perfil-input" placeholder="******">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer-perfil">
+                <button class="btn-cancelar-perfil" onclick="cerrarModalPerfil()">Cancelar</button>
+                <button class="btn-guardar-perfil" onclick="guardarPerfil()">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="reciclador.js"></script>
+</body>
+
+</html>

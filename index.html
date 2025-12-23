@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loop - Reciclaje Inteligente</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    
+    <header>
+        <div class="logo">
+            <img src="Imagenes/logo_icon.png" alt="Loop" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3405/3405802.png'">
+            <span>Loopi</span>
+        </div>
+        
+        <div class="menu-btn" id="menu-btn">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+        </div>
+
+        <nav id="nav-menu">
+            <a href="#inicio" class="nav-link">Inicio</a>
+            <a href="#materiales" class="nav-link">Materiales</a>
+            <a href="#saber" class="nav-link">Aprende</a>
+            <a href="#contacto" class="nav-link">Contacto</a>
+            <a href="incio_de_sesion/login-registro.html" class="btn-login">Iniciar Sesión</a>
+        </nav>
+    </header>
+
+    <section class="hero" id="inicio">
+        <div class="hero-bg-shape shape-1"></div>
+        <div class="hero-bg-shape shape-2"></div>
+
+        <div class="hero-container">
+            <div class="hero-left animate-up">
+                <div class="hero-pill">🌿 Únete al cambio</div>
+                <h1>Ayudando al <span class="gradient-text">medio ambiente</span></h1>
+                <p>
+                    Recicla de forma inteligente, gana recompensas increíbles y únete a la comunidad que está cambiando el planeta. ¡Empieza hoy mismo!
+                </p>
+                <div class="hero-buttons">
+                    <button class="btn-primary">Descargar App</button>
+                    <a href="#materiales" class="btn-secondary">Ver Materiales</a>
+                </div>
+            </div>
+
+            <div class="hero-right animate-up delay-200">
+                <div class="video-card">
+                    <iframe 
+                        src="https://www.youtube.com/embed/uaI3PLmAJyM" 
+                        title="Video Loop" 
+                        frameborder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                        allowfullscreen>
+                    </iframe>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="features" id="saber">
+        <div class="section-header animate-up">
+            <h2 class="section-title">¿Cómo funciona?</h2>
+            <p class="section-subtitle">Es muy fácil empezar a reciclar con Loop.</p>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card animate-up">
+                <div class="feature-icon bg-green-light">⭐</div>
+                <h3>Gana Puntos</h3>
+                <p>Acumula Loopis por cada kilo que recicles.</p>
+            </div>
+            <div class="feature-card animate-up delay-100">
+                <div class="feature-icon bg-green-light">📍</div>
+                <h3>Puntos Cercanos</h3>
+                <p>Mapa en tiempo real de centros de acopio.</p>
+            </div>
+            <div class="feature-card animate-up delay-200">
+                <div class="feature-icon bg-green-light">📊</div>
+                <h3>Tu Impacto</h3>
+                <p>Visualiza cuánto CO2 has ahorrado.</p>
+            </div>
+            <div class="feature-card animate-up delay-300">
+                <div class="feature-icon bg-green-light">🎁</div>
+                <h3>Canjea Premios</h3>
+                <p>Usa tus puntos en comercios locales.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="materials" id="materiales">
+        <div class="section-header animate-up">
+            <h2 class="section-title">¿Qué reciclamos?</h2>
+            <p class="section-subtitle">Aceptamos una amplia variedad de materiales.</p>
+        </div>
+        
+        <div class="materials-grid" id="contenedor-materiales">
+            <div class="loading-spinner">Cargando materiales...</div>
+        </div>
+    </section>
+
+    <section class="sponsors">
+        <div class="section-header animate-up">
+            <h2 class="section-title">Nuestros Aliados</h2>
+            <p class="section-subtitle">Empresas comprometidas con el planeta.</p>
+        </div>
+        
+        <div class="sponsors-grid" id="contenedor-auspiciantes">
+            <div class="loading-spinner">Cargando aliados...</div>
+        </div>
+    </section>
+
+    <footer id="contacto">
+        <div class="footer-container">
+            <div class="footer-brand">
+                <h3>Loopi.</h3>
+                <p>Conectando personas con un futuro sostenible.</p>
+            </div>
+            <div class="footer-links">
+                <h4>Explora</h4>
+                <a href="#inicio">Inicio</a>
+                <a href="#materiales">Materiales</a>
+                <a href="#saber">Tutoriales</a>
+            </div>
+            <div class="footer-contact">
+                <h4>Contacto</h4>
+                <p>📍 Cuenca, Ecuador</p>
+                <p>📞 +593 99 123 1267</p>
+                <p>📧 hola@loopi.ec</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            © 2025 Loop Reciclaje Inteligente. Hecho con 💚.
+        </div>
+    </footer>
+
+    <script src="cargarDatos.js"></script>
+    <script>
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.animate-up').forEach(el => observer.observe(el));
+
+        const menuBtn = document.getElementById('menu-btn');
+        const navMenu = document.getElementById('nav-menu');
+        const navLinks = document.querySelectorAll('.nav-link');
+
+        menuBtn.addEventListener('click', () => {
+            menuBtn.classList.toggle('active');
+            navMenu.classList.toggle('active');
+        });
+
+ 
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                menuBtn.classList.remove('active');
+                navMenu.classList.remove('active');
+            });
+        });
+    </script>
+</body>
+</html>

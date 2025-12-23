@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estadísticas | Loopi</title>
+    
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="estadisticas.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-logo" onclick="window.history.back()" style="cursor: pointer;">
+            <i class="fa-solid fa-arrow-left" style="color: var(--primary); font-size: 1.2rem;"></i>
+            <span style="margin-left: 10px;">Volver</span>
+        </div>
+        <div class="nav-right">
+            <span style="font-weight: 600; color: var(--primary);">Estadísticas e Historial</span>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        
+        <h2 class="section-title">Resumen Total</h2>
+        <section class="stats-grid">
+            <div class="stat-card">
+                <div class="icon-stat green"><i class="fa-solid fa-weight-hanging"></i></div>
+                <div class="stat-info">
+                    <h3 id="totalKilos">0</h3>
+                    <p>Kg Reciclados</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="icon-stat blue"><i class="fa-solid fa-truck-ramp-box"></i></div>
+                <div class="stat-info">
+                    <h3 id="totalEntregas">0</h3>
+                    <p>Entregas</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="icon-stat gold"><i class="fa-solid fa-star"></i></div>
+                <div class="stat-info">
+                    <h3 id="totalPuntos">0</h3>
+                    <p>Puntos Ganados</p>
+                </div>
+            </div>
+        </section>
+
+        <h2 class="section-title" style="margin-top: 30px;">Análisis Gráfico</h2>
+        <section class="charts-container">
+            <div class="chart-box">
+                <h4>Materiales Reciclados (Kg)</h4>
+                <div class="canvas-wrapper">
+                    <canvas id="chartMateriales"></canvas>
+                </div>
+            </div>
+            <div class="chart-box">
+                <h4>Evolución Mensual</h4>
+                <div class="canvas-wrapper">
+                    <canvas id="chartMensual"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <h2 class="section-title" style="margin-top: 30px;">Historial de Entregas</h2>
+        <section class="history-container">
+            <div class="table-responsive">
+                <table id="tablaHistorial">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Estado</th>
+                            <th>Materiales</th>
+                            <th>Total Kg</th>
+                            <th>Puntos</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyHistorial">
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 20px;">Cargando datos...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </div>
+
+    <script src="estadisticas.js"></script>
+</body>
+</html>

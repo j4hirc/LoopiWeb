@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aprende | Loopi</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="../styles.css"> <link rel="stylesheet" href="aprende.css"> </head>
+<body>
+
+    <nav class="navbar-aprende">
+        <div class="nav-back" onclick="window.history.back()">
+            <i class="fa-solid fa-arrow-left"></i> Volver
+        </div>
+        <div class="nav-title">
+            <i class="fa-solid fa-seedling"></i> Zona Educativa
+        </div>
+    </nav>
+
+    <header class="learn-header">
+        <div class="header-content">
+            <h1>Aprende con Loopi</h1>
+            <p>Tips, guías y consejos para convertirte en un experto del reciclaje.</p>
+        </div>
+        <div class="header-decoration"></div>
+    </header>
+
+    <div class="main-content">
+        <div id="grid-multimedia" class="posts-grid">
+            <div class="loader-container">
+                <i class="fa-solid fa-circle-notch fa-spin"></i> Cargando contenido...
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-detalle" class="modal-overlay" onclick="cerrarModal(event)">
+        <div class="modal-content">
+            <button class="close-btn" onclick="cerrarModal(true)">✕</button>
+            
+            <div class="modal-img-wrapper">
+                <img id="modal-img" src="" alt="Detalle">
+            </div>
+            
+            <div class="modal-body">
+                <span class="modal-tag">Eco-Tip</span>
+                <h2 id="modal-titulo">Título del Post</h2>
+                <div class="modal-meta">
+                    <span id="modal-autor"><i class="fa-regular fa-user"></i> Loopi</span>
+                </div>
+                <div class="modal-text">
+                    <p id="modal-desc">Descripción completa...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="aprende.js"></script>
+</body>
+</html>

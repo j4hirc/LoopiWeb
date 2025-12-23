@@ -1,0 +1,280 @@
+/* ==========================
+   ESTILO GENERAL
+========================== */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Poppins", sans-serif;
+    margin: 0;
+    background: #fcfbe8;
+}
+
+.header {
+    background: #2D5A4A;
+    padding: 20px;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn-agregar {
+    background: #6DB85C;
+    color: white;
+    border: none;
+    padding: 10px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+/* ==========================
+   BUSCADOR
+========================== */
+.search-container {
+    padding: 20px;
+    max-width: 900px;
+    margin: auto;
+}
+
+#buscarAusp {
+    width: 100%;
+    padding: 12px;
+    font-size: 14px;
+    border-radius: 12px;
+    border: 2px solid #ccc;
+}
+
+/* ==========================
+   GRID CUADRADO
+========================== */
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 18px;
+    padding: 20px;
+    max-width: 1100px;
+    margin: auto;
+}
+
+.card-ausp {
+    background: white;
+    border-radius: 18px;
+    padding: 16px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    transition: 0.2s;
+}
+
+.card-ausp:hover {
+    transform: translateY(-3px);
+}
+
+.card-ausp img {
+    width: 100%;
+    height: 110px;
+    object-fit: contain;
+    margin-bottom: 10px;
+}
+
+.card-ausp h3 {
+    margin: 6px 0 4px;
+    font-size: 15px;
+    font-weight: bold;
+}
+
+.card-ausp .acciones {
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+
+.acciones button {
+    border: none;
+    background: none;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.btn-editar { color: #2196F3; }
+.btn-eliminar { color: #E53935; }
+
+/* ==========================
+   MODAL AUSPICIANTE
+========================== */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(5px);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-container {
+    width: 95%;
+    max-width: 430px;
+    background: white;
+    border-radius: 18px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+    animation: fadeScale 0.25s ease;
+    overflow: hidden;
+}
+
+@keyframes fadeScale {
+    from { transform: scale(0.85); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+}
+
+.modal-header {
+    background: #2D5A4A;
+    padding: 16px 20px;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.modal-close {
+    border: none;
+    background: transparent;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+/* Cuerpo del formulario bien uniforme */
+.modal-body {
+    padding: 20px 20px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px; /* separación uniforme entre elementos */
+}
+
+.modal-body label {
+    font-size: 13px;
+    color: #555;
+    margin-bottom: 2px;
+}
+
+/* Todos los campos con mismo estilo */
+.input-field {
+    width: 100%;
+    padding: 10px 11px;
+    border-radius: 10px;
+    border: 2px solid #DDDDDD;
+    font-size: 14px;
+    outline: none;
+    resize: vertical;
+    min-height: 42px;
+}
+
+.input-field:focus {
+    border-color: #2D5A4A;
+}
+
+/* Descripción un poco más alta pero manteniendo el estilo */
+#descripcionAusp {
+    min-height: 70px;
+}
+
+/* Sección imagen bien alineada */
+.image-section {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 4px;
+}
+
+#previewAusp {
+    width: 80px;
+    height: 80px;
+    background: #EEE;
+    border-radius: 12px;
+    object-fit: contain;
+    border: 1px solid #DDD;
+}
+
+.image-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.btn-upload {
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 2px solid #2D5A4A;
+    background: #fff;
+    color: #2D5A4A;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-upload:hover {
+    background: #2D5A4A;
+    color: white;
+}
+
+/* Footer del modal */
+.modal-footer {
+    padding: 12px 18px 16px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    border-top: 1px solid #eee;
+}
+
+.btn-cancelar {
+    background: transparent;
+    border: none;
+    color: #666;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.btn-guardar {
+    background: #6DB85C;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 10px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-guardar:hover {
+    background: #5aa14c;
+}
+
+/* Responsive pequeño: que no se desarme */
+@media (max-width: 480px) {
+    .modal-container {
+        max-width: 95%;
+    }
+
+    .image-section {
+        align-items: flex-start;
+    }
+
+    #previewAusp {
+        width: 70px;
+        height: 70px;
+    }
+}
+

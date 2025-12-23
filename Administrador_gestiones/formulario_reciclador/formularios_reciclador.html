@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loopi Admin - Solicitudes de Reciclador</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="formularios_reciclador.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+<header>
+    <h1>Solicitudes de Reciclador</h1>
+    <span>Pendientes: <strong id="count-badge">0</strong></span>
+</header>
+
+<div class="container" id="cards-container">
+    <p style="text-align:center; width:100%; color:#7f8c8d;">
+    </p>
+</div>
+
+<!-- Modal imagen -->
+<div class="modal" id="imageModal" onclick="this.style.display='none'">
+    <img id="modalImg" src="">
+</div>
+
+<script src="formularios_reciclador.js"></script>
+</body>
+</html>

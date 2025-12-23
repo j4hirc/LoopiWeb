@@ -1,0 +1,459 @@
+/* --- VARIABLES & RESET --- */
+:root {
+    --primary: #3A6958;
+    --primary-dark: #2c5043;
+    --accent: #6DB85C;
+    --bg-body: #F0F4F8;
+    --bg-card: #FFFFFF;
+    --text-main: #2D3748;
+    --text-light: #718096;
+    --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 10px 15px rgba(0, 0, 0, 0.1);
+    --radius: 16px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--bg-body);
+    color: var(--text-main);
+    min-height: 100vh;
+}
+
+/* --- NAVBAR --- */
+.navbar {
+    background: var(--bg-card);
+    padding: 0.8rem 2rem;
+    /* Reduje un poco el padding vertical para ajustar la imagen */
+    box-shadow: var(--shadow-sm);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* ESTILO DEL LOGO AJUSTADO */
+.nav-logo {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    /* Espacio entre imagen y texto */
+    text-transform: uppercase;
+    /* Opcional: hace que "LOOPI ADMIN" se vea más imponente */
+    letter-spacing: 0.5px;
+}
+
+/* IMAGEN DEL LOGO */
+.logo-img {
+    height: 45px;
+    /* Altura controlada */
+    width: auto;
+    object-fit: contain;
+}
+
+.nav-menu {
+    display: flex;
+    list-style: none;
+    gap: 2rem;
+    align-items: center;
+}
+
+.nav-menu a {
+    text-decoration: none;
+    color: var(--text-light);
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nav-menu a:hover,
+.nav-menu a.active {
+    color: var(--primary);
+}
+
+.btn-logout {
+    color: #e53e3e !important;
+}
+
+.btn-logout:hover {
+    background: #fff5f5;
+    padding: 5px 12px;
+    border-radius: 20px;
+}
+
+/* --- HEADER --- */
+.header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    padding: 3rem 2rem 5rem;
+    color: white;
+    margin-bottom: -3rem;
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.header-text h1 {
+    font-size: 2.2rem;
+    margin-bottom: 0.5rem;
+}
+
+.header-text p {
+    opacity: 0.9;
+    font-weight: 300;
+}
+
+.user-badge {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(5px);
+    padding: 10px 20px;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* --- DASHBOARD GRID --- */
+.dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem 4rem;
+}
+
+.section-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-light);
+    margin-bottom: 1.5rem;
+    margin-top: 1rem;
+}
+
+.grid-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1.5rem;
+}
+
+/* --- CARDS MODERNAS --- */
+.card {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid transparent;
+    position: relative !important;
+    overflow: visible !important;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
+    border-color: rgba(0, 0, 0, 0.05);
+}
+
+.card-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    flex-shrink: 0;
+}
+
+.card-info h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 0.2rem;
+}
+
+.card-info p {
+    font-size: 0.85rem;
+    color: var(--text-light);
+}
+
+/* Colores Específicos */
+.card-purple .card-icon {
+    background: #F3E5F5;
+    color: #8e24aa;
+}
+
+.card-purple:hover .card-icon {
+    background: #8e24aa;
+    color: white;
+}
+
+.card-blue .card-icon {
+    background: #E3F2FD;
+    color: #1e88e5;
+}
+
+.card-blue:hover .card-icon {
+    background: #1e88e5;
+    color: white;
+}
+
+.card-orange .card-icon {
+    background: #FFF3E0;
+    color: #fb8c00;
+}
+
+.card-orange:hover .card-icon {
+    background: #fb8c00;
+    color: white;
+}
+
+.card-pink .card-icon {
+    background: #FCE4EC;
+    color: #d81b60;
+}
+
+.card-pink:hover .card-icon {
+    background: #d81b60;
+    color: white;
+}
+
+.card-cyan .card-icon {
+    background: #E0F7FA;
+    color: #00acc1;
+}
+
+.card-cyan:hover .card-icon {
+    background: #00acc1;
+    color: white;
+}
+
+.card-yellow .card-icon {
+    background: #FFF8E1;
+    color: #fbc02d;
+}
+
+.card-yellow:hover .card-icon {
+    background: #fbc02d;
+    color: white;
+}
+
+.card-indigo .card-icon {
+    background: #E8EAF6;
+    color: #3949ab;
+}
+
+.card-indigo:hover .card-icon {
+    background: #3949ab;
+    color: white;
+}
+
+.card-slate .card-icon {
+    background: #ECEFF1;
+    color: #546e7a;
+}
+
+.card-slate:hover .card-icon {
+    background: #546e7a;
+    color: white;
+}
+
+.card-red .card-icon {
+    background: #FBE9E7;
+    color: #e64a19;
+}
+
+.card-red:hover .card-icon {
+    background: #e64a19;
+    color: white;
+}
+
+.card-green .card-icon {
+    background: #E0F2F1;
+    color: #00897b;
+}
+
+.card-green:hover .card-icon {
+    background: #00897b;
+    color: white;
+}
+
+
+/* --- RESPONSIVE --- */
+.menu-icon,
+#menu-toggle {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .header {
+        padding: 2rem 1.5rem 4rem;
+    }
+
+    .header-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .user-badge {
+        width: 100%;
+        justify-content: center;
+        margin-top: 10px;
+    }
+
+    .menu-icon {
+        display: block;
+        font-size: 1.5rem;
+        color: var(--primary);
+        cursor: pointer;
+    }
+
+    .nav-menu {
+        position: absolute;
+        top: 70px;
+        right: 0;
+        background: white;
+        flex-direction: column;
+        width: 100%;
+        padding: 1rem 0;
+        box-shadow: var(--shadow-md);
+        transform: translateY(-150%);
+        transition: 0.3s ease;
+        z-index: 99;
+    }
+
+    .nav-menu.active,
+    #menu-toggle:checked~.nav-menu {
+        transform: translateY(0);
+    }
+
+    .nav-menu li {
+        width: 100%;
+        text-align: center;
+    }
+
+    .nav-menu a {
+        justify-content: center;
+        padding: 10px;
+    }
+}
+
+.badge-notificacion {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    background: #e74c3c;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 50px;
+    min-width: 22px;
+    text-align: center;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* Para que la tarjeta pueda posicionar el badge */
+.card {
+    position: relative;
+}
+
+/* Color nuevo para reciclador */
+.card-teal {
+    background: linear-gradient(135deg, #1abc9c, #16a085);
+    color: white;
+}
+
+/* Para que la tarjeta aguante el globo flotante */
+.card {
+    position: relative;
+    overflow: visible;
+}
+
+/* El globo rojo flotante */
+.badge-notificacion {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: #ff4757;
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 700;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 6px;
+    border-radius: 50px;
+    border: 2px solid #fff;
+    box-shadow: 0 4px 8px rgba(255, 71, 87, 0.4);
+    z-index: 10;
+
+    /* Para centrar el número perfectamente */
+    display: none;
+    /* Se activa con JS */
+    align-items: center;
+    justify-content: center;
+
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popIn {
+    from {
+        transform: scale(0);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Efecto opcional de latido */
+.badge-notificacion.urgente {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7);
+    }
+
+    70% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 10px rgba(255, 71, 87, 0);
+    }
+
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(255, 71, 87, 0);
+    }
+}

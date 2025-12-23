@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Usuarios - Loopi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="usuarios.css">
+</head>
+<body>
+
+<header class="header">
+    <h2>Gestión de Usuario</h2>
+    <button class="btn-agregar" onclick="abrirModalNuevo()">+ Nuevo Usuario</button>
+</header>
+
+<section class="search-container">
+    <input type="text" id="buscarUsuario" placeholder="Buscar por nombre o correo..." oninput="filtrarUsuarios()">
+</section>
+
+<section id="gridUsuarios" class="grid-container">
+    <!-- Tarjetas generadas por JS -->
+</section>
+
+<!-- MODAL -->
+<div id="modalOverlay" class="modal-overlay">
+    <div class="modal-container">
+        <!-- Header modal -->
+        <div class="modal-header">
+            <h3 id="tituloModal">Nuevo Usuario</h3>
+            <button class="modal-close" onclick="cerrarModal()">✕</button>
+        </div>
+
+        <!-- Cuerpo con scroll -->
+        <div class="modal-body">
+            <!-- Foto -->
+            <div class="img-user-upload">
+                <img id="previewFoto" src="imgs/user-default.png" alt="Foto usuario">
+                <label class="btn-file">
+                    Cambiar foto
+                    <input type="file" id="fotoInput" accept="image/*" onchange="cargarImagen()">
+                </label>
+            </div>
+
+            <!-- Cédula -->
+            <div class="form-group">
+                <label for="cedula">Cédula de Identidad</label>
+                <input type="number" id="cedula" name="cedula" class="input-field" maxlength="10">
+            </div>
+
+            <!-- Nombres -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="primerNombre">1er Nombre</label>
+                    <input type="text" id="primerNombre" name="primerNombre" class="input-field">
+                </div>
+                <div class="form-group">
+                    <label for="segundoNombre">2do Nombre</label>
+                    <input type="text" id="segundoNombre" name="segundoNombre" class="input-field">
+                </div>
+            </div>
+
+            <!-- Apellidos -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="apellidoPaterno">Ap. Paterno</label>
+                    <input type="text" id="apellidoPaterno" name="apellidoPaterno" class="input-field">
+                </div>
+                <div class="form-group">
+                    <label for="apellidoMaterno">Ap. Materno</label>
+                    <input type="text" id="apellidoMaterno" name="apellidoMaterno" class="input-field">
+                </div>
+            </div>
+
+            <!-- Fecha nacimiento + género -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="fechaNacimiento">Nacimiento</label>
+                    <input type="date" id="fechaNacimiento" name="fechaNacimiento" class="input-field">
+                </div>
+                <div class="form-group">
+                    <label for="genero">Género</label>
+                    <select id="genero" name="genero" class="input-field">
+                        <option value="">Seleccione</option>
+                        <option value="M">Masculino</option>
+                        <option value="F">Femenino</option>
+                        <option value="O">Otro</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Correo -->
+            <div class="form-group">
+                <label for="correo">Correo electrónico</label>
+                <input type="email" id="correo" name="correo" class="input-field">
+            </div>
+
+            <!-- Password -->
+            <div class="form-group">
+                <label for="password">Contraseña (dejar vacío si no desea cambiar)</label>
+                <input type="password" id="password" name="password" class="input-field">
+            </div>
+
+            <!-- Parroquia -->
+            <div class="form-group">
+                <label for="parroquia">Parroquia de residencia</label>
+                <select id="parroquia" name="parroquia" class="input-field">
+                    <option value="">Seleccione una parroquia</option>
+                    <option value="El Batán">El Batán</option>
+                    <option value="Yanuncay">Yanuncay</option>
+                    <option value="Monay">Monay</option>
+                </select>
+            </div>
+
+            <!-- Puntos + Rango -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="puntos">Puntos</label>
+                    <input type="number" id="puntos" name="puntos" class="input-field">
+                </div>
+                <div class="form-group">
+                    <label for="rango">Rango</label>
+                    <select id="rango" name="rango" class="input-field">
+                        <option value="">Seleccione</option>
+                        <option value="Bronce">Bronce</option>
+                        <option value="Plata">Plata</option>
+                        <option value="Oro">Oro</option>
+                        <option value="Diamante">Diamante</option>
+                    </select>
+                </div>
+            </div>
+
+            <hr class="divider">
+
+            <!-- Roles -->
+            <div class="form-group">
+                <label>ROLES ASIGNADOS</label>
+                <div class="roles-container">
+                    <label>
+                        <input type="checkbox" class="rol-checkbox" value="Administrador">
+                        Admin
+                    </label>
+                    <label>
+                        <input type="checkbox" class="rol-checkbox" value="Reciclador">
+                        Reciclador
+                    </label>
+                    <label>
+                        <input type="checkbox" class="rol-checkbox" value="Usuario_normal">
+                        Cliente
+                    </label>
+                </div>
+            </div>
+
+            <!-- Estado -->
+            <div class="form-group switch-row">
+                <span>Usuario Activo</span>
+                <label class="switch">
+                    <input type="checkbox" id="estado" name="estado" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="modal-footer">
+            <button class="btn-cancelar" onclick="cerrarModal()">Cancelar</button>
+            <button class="btn-guardar" onclick="guardarUsuario()">Guardar Usuario</button>
+        </div>
+    </div>
+</div>
+
+<script src="usuarios.js"></script>
+</body>
+</html>

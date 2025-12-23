@@ -1,0 +1,196 @@
+:root {
+    --primary: #3A6958;
+    --bg-page: #F8FAFC;
+    --white: #FFFFFF;
+    --text-dark: #1E293B;
+    --text-gray: #64748B;
+    
+    --success-color: #10B981; /* Verde esmeralda */
+    --danger-color: #EF4444;  /* Rojo suave */
+    --warning-color: #F59E0B; /* Ambar */
+    
+    --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    --radius-md: 12px;
+}
+
+body {
+    background-color: var(--bg-page);
+    font-family: 'Poppins', sans-serif;
+    color: var(--text-dark);
+    margin: 0;
+}
+
+/* NAVBAR */
+.navbar {
+    background: var(--white);
+    padding: 15px 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    margin-bottom: 30px;
+}
+.nav-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.nav-logo { font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 8px; font-size: 1.1rem; }
+.nav-link { text-decoration: none; color: var(--text-gray); font-weight: 500; font-size: 0.9rem; transition: 0.2s; }
+.nav-link:hover { color: var(--primary); }
+
+/* HEADER */
+.main-content { max-width: 1000px; margin: 0 auto; padding: 0 20px 50px; }
+.page-header { margin-bottom: 30px; }
+.page-header h1 { font-size: 1.8rem; margin: 0 0 5px; color: var(--primary); }
+.page-header p { color: var(--text-gray); margin: 0; font-size: 0.95rem; }
+
+/* CONTROLES (BUSCADOR Y FILTROS) */
+.controls-area {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.search-box {
+    background: var(--white);
+    border: 1px solid #E2E8F0;
+    border-radius: 50px;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-grow: 1;
+    max-width: 400px;
+    box-shadow: var(--shadow-card);
+}
+.search-box input { border: none; outline: none; width: 100%; font-family: inherit; font-size: 0.9rem; color: var(--text-dark); }
+.search-box i { color: var(--text-gray); }
+
+.filtros { display: flex; gap: 8px; }
+.btn-filtro {
+    background: transparent;
+    border: 1px solid #CBD5E1;
+    padding: 8px 16px;
+    border-radius: 20px;
+    color: var(--text-gray);
+    font-weight: 500;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn-filtro:hover { background: #F1F5F9; }
+.btn-filtro.active {
+    background: var(--primary);
+    color: var(--white);
+    border-color: var(--primary);
+}
+
+/* GRID */
+.grid-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+/* --- TARJETA DE HISTORIAL (ESTILO MODERNO) --- */
+.history-card {
+    background: var(--white);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    position: relative;
+    transition: transform 0.2s ease;
+    border: 1px solid #F1F5F9;
+    display: flex;
+}
+.history-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+
+.card-status-strip { width: 6px; flex-shrink: 0; }
+.history-card.status-finalizado .card-status-strip { background: var(--success-color); }
+.history-card.status-cancelado .card-status-strip { background: var(--danger-color); }
+
+.card-content { padding: 20px; width: 100%; }
+
+.card-header-info {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;
+}
+.date-badge { font-size: 0.8rem; color: var(--text-gray); font-weight: 500; }
+.status-badge { 
+    font-size: 0.75rem; font-weight: 700; text-transform: uppercase; 
+    padding: 4px 10px; border-radius: 4px;
+}
+.history-card.status-finalizado .status-badge { background: #ECFDF5; color: var(--success-color); }
+.history-card.status-cancelado .status-badge { background: #FEF2F2; color: var(--danger-color); }
+
+.user-row { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.avatar-circle {
+    width: 42px; height: 42px; background: #F1F5F9; color: var(--text-gray);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+}
+.txtUsuario { margin: 0; font-size: 0.95rem; font-weight: 600; color: var(--text-dark); }
+.txtDireccion { margin: 2px 0 0; font-size: 0.8rem; color: var(--text-gray); }
+
+.card-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    padding-top: 15px; border-top: 1px dashed #E2E8F0;
+}
+.points-tag { font-size: 0.9rem; font-weight: 700; color: var(--primary); }
+.btn-ver-detalle {
+    background: none; border: none; color: var(--text-gray);
+    font-size: 0.85rem; font-weight: 500; cursor: pointer;
+    display: flex; align-items: center; gap: 5px;
+}
+.btn-ver-detalle:hover { color: var(--primary); }
+
+/* --- MODAL TIPO RECIBO --- */
+.modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    display: none; justify-content: center; align-items: center; z-index: 1000;
+    backdrop-filter: blur(2px);
+}
+
+.modal-receipt {
+    background: var(--white);
+    width: 90%; max-width: 450px;
+    border-radius: 16px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    animation: modalSlideUp 0.3s ease;
+}
+@keyframes modalSlideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.receipt-header {
+    background: #F8FAFC; padding: 15px 20px;
+    border-bottom: 1px solid #E2E8F0;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.receipt-header h3 { margin: 0; font-size: 1rem; color: var(--text-dark); }
+.btn-close-modal { background: none; border: none; font-size: 1.5rem; color: var(--text-gray); cursor: pointer; }
+
+.receipt-body { padding: 25px; }
+
+/* Estilos dentro del recibo */
+.receipt-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; }
+.receipt-label { color: var(--text-gray); }
+.receipt-value { font-weight: 600; color: var(--text-dark); }
+.receipt-divider { border-bottom: 2px dashed #E2E8F0; margin: 15px 0; }
+
+.material-list-item {
+    display: flex; justify-content: space-between;
+    padding: 8px 0; border-bottom: 1px solid #F1F5F9; font-size: 0.9rem;
+}
+.total-section { 
+    display: flex; justify-content: space-between; 
+    margin-top: 20px; font-size: 1.1rem; font-weight: 700; color: var(--primary);
+}
+
+.receipt-footer { padding: 15px 20px; text-align: center; background: #F8FAFC; border-top: 1px solid #E2E8F0; }
+.btn-close-action {
+    background: var(--white); border: 1px solid #CBD5E1;
+    padding: 8px 20px; border-radius: 6px; font-weight: 500; cursor: pointer; color: var(--text-dark);
+}
+.btn-close-action:hover { background: #F1F5F9; }

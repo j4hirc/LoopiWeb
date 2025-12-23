@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loopi Admin - Validaciones</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="solicitud_recoleccion.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+    <header class="admin-header">
+        <div class="logo-area">
+            <i class="fa-solid fa-shield-cat"></i>
+            <h1>Loopi Admin</h1>
+        </div>
+        <div class="badge-area">
+            <span>Pendientes:</span>
+            <strong id="count-badge" class="pulse-badge">0</strong>
+        </div>
+    </header>
+
+    <div class="main-wrapper">
+        <div class="container" id="cards-container">
+            <div class="loading-state">
+                <i class="fa-solid fa-circle-notch fa-spin"></i>
+                <p>Cargando solicitudes...</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="imageModal" onclick="this.style.display='none'">
+        <span class="close-modal"><i class="fa-solid fa-xmark"></i></span>
+        <img id="modalImg" src="" alt="Evidencia Ampliada">
+    </div>
+
+    <script src="solicitud_recoleccion.js"></script>
+</body>
+</html>

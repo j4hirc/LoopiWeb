@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Materiales</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="materiales.css">
+</head>
+<body>
+
+    <!-- ENCABEZADO -->
+    <header class="header">
+        <h1>Gestión de Materiales</h1>
+        <button id="btnNuevoMaterial" type="button" class="btn-agregar">
+            + Agregar Material
+        </button>
+    </header>
+
+    <div class="search-container">
+        <input type="text" id="searchInput"
+        placeholder="Buscar Material" autocomplete="on">
+    </div>
+
+    <!-- LISTA DE MATERIALES -->
+    <main class="contenedor" id="listaMateriales">
+        <!-- Las tarjetas de materiales se generan con JS -->
+    </main>
+
+    <!-- MODAL AGREGAR / EDITAR MATERIAL -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container" id="modalContainer">
+
+            <div class="modal-header">
+                <h2 id="modalTitle">Agregar Material</h2>
+                <button type="button" class="modal-close" id="btnCerrarModal">✕</button>
+            </div>
+
+            <form id="materialForm">
+
+                <!-- IMPORTANTE: hidden para ID -->
+                <input type="hidden" id="idMaterial" name="idMaterial">
+
+                <div class="modal-body">
+
+                    <label for="nombreMaterial">Nombre del Material</label>
+                    <input
+                        type="text"
+                        id="nombreMaterial"
+                        name="nombreMaterial"
+                        class="input-field"
+                        placeholder="Botellas Plásticas"
+                        required
+                    >
+
+                    <label for="descripcionMaterial">Descripción</label>
+                    <textarea
+                        id="descripcionMaterial"
+                        name="descripcionMaterial"
+                        class="input-field"
+                        rows="3"
+                        placeholder="Describe brevemente el material"
+                    ></textarea>
+
+                    <label>Imagen (Opcional)</label>
+                    <div class="image-section">
+                        <img
+                            id="previewImagenMaterial"
+                            src="https://cdn-icons-png.flaticon.com/512/685/685662.png"
+                            alt="Vista previa"
+                        >
+                        <div class="image-actions">
+                            <button
+                                type="button"
+                                class="btn-upload"
+                                id="btnSeleccionarImagen"
+                            >
+                                Subir Foto
+                            </button>
+                            <input
+                                type="file"
+                                id="imagenMaterial"
+                                name="imagenMaterial"
+                                accept="image/*"
+                                hidden
+                            >
+                        </div>
+                    </div>
+
+                    <label for="tipoMaterial">Tipo de Material</label>
+                    <input
+                        type="text"
+                        id="tipoMaterial"
+                        name="tipoMaterial"
+                        class="input-field"
+                        placeholder="Plástico, Papel, Vidrio..."
+                    >
+
+                    <label for="puntosKg">Puntos por Kg</label>
+                    <input
+                        type="number"
+                        id="puntosKg"
+                        name="puntosKg"
+                        class="input-field"
+                        placeholder="5"
+                        min="0"
+                        required
+                    >
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancelar" id="btnCancelar">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn-guardar" id="btnGuardar">
+                        Guardar
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+    <script src="materiales.js" defer></script>
+</body>
+</html>

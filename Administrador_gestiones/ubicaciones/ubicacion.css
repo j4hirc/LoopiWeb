@@ -1,0 +1,339 @@
+/* IMPORTANTE: Si quieres la fuente Poppins, asegúrate de importarla en el HTML o aquí */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+body {
+    margin: 0;
+    background: #fcfbe8;
+    font-family: "Poppins", sans-serif;
+}
+
+.header {
+    background: #2D5A4A;
+    padding: 20px;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn-agregar {
+    background: #6DB85C;
+    padding: 10px 16px;
+    border-radius: 10px;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.3s;
+}
+
+.btn-agregar:hover {
+    background: #5aa14b;
+}
+
+.search-container {
+    padding: 20px;
+    max-width: 900px;
+    margin: auto;
+}
+
+#buscarUbicacion {
+    width: 100%;
+    padding: 12px;
+    border-radius: 12px;
+    border: 2px solid #ccc;
+    box-sizing: border-box; /* Para que el padding no rompa el ancho */
+}
+
+/* GRID */
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+    padding: 20px;
+    max-width: 1200px;
+    margin: auto;
+}
+
+/* TARJETAS */
+.card-ubicacion {
+    background: white;
+    border-radius: 18px;
+    overflow: hidden;
+    padding: 0;
+    box-shadow: 0 6px 18px rgba(0,0,0,.12);
+    transition: .2s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.card-ubicacion:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 22px rgba(0,0,0,.18);
+}
+
+.card-img {
+    width: 100%;
+    height: 140px;
+    background-size: cover;
+    background-position: center;
+    background-color: #eee; /* Fondo gris si no carga imagen */
+}
+
+.card-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1; /* Empuja los botones al fondo */
+}
+
+.card-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #2D5A4A;
+}
+
+.card-sub {
+    font-size: 14px;
+    color: #444;
+}
+
+.card-coords {
+    background: #F6F6F6;
+    padding: 10px;
+    border-radius: 10px;
+    font-size: 13px;
+    color: #444;
+    margin-top: auto; /* Empuja hacia abajo */
+}
+
+.card-actions {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px;
+    border-top: 1px solid #eee;
+    background: #fafafa;
+}
+
+.btn-edit {
+    padding: 8px 14px;
+    background: #6DB85C;
+    border: none;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.btn-delete {
+    padding: 8px 14px;
+    background: #D9534F;
+    border: none;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+/* MODAL */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999; /* ESTO ES IMPORTANTE PARA QUE ESTÉ SOBRE EL MAPA */
+}
+
+.modal-container {
+    width: 95%;
+    max-width: 480px;
+    background: white;
+    border-radius: 18px;
+    animation: pop .25s ease;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    position: relative; /* Para el contexto de apilamiento */
+}
+
+@keyframes pop {
+    from { transform: scale(.7); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.modal-header {
+    padding: 16px;
+    background: #2D5A4A;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 18px 18px 0 0;
+}
+
+.modal-close {
+    background: rgba(255,255,255,.2);
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,.4);
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    color: white;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-body {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.input-field {
+    padding: 12px;
+    border-radius: 12px;
+    border: 2px solid #ccc;
+    font-family: inherit;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.img-row {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+}
+
+.img-preview {
+    width: 80px;
+    height: 80px;
+    border-radius: 12px;
+    background: #eee;
+    background-size: cover;
+    background-position: center;
+    border: 1px solid #ccc;
+    flex-shrink: 0;
+}
+
+/* ESTILOS DEL MAPA LEAFLET */
+.mapa-box {
+    width: 100%;
+    height: 250px; /* IMPORTANTE: Leaflet necesita altura definida */
+    border-radius: 12px;
+    margin-bottom: 12px;
+    border: 2px solid #ccc;
+    background-color: #e0e0e0; /* Color mientras carga */
+    z-index: 1; /* Para que los controles del mapa no se salgan */
+}
+
+.coords-box {
+    border: 2px solid #ccc;
+    padding: 12px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f9f9f9;
+}
+
+.modal-footer {
+    padding: 14px;
+    display: flex;
+    justify-content: end;
+    gap: 10px;
+    background: #f2f2f2;
+    border-radius: 0 0 18px 18px;
+}
+
+.btn-cancelar {
+    padding: 10px 16px;
+    background: #bbb;
+    border-radius: 10px;
+    border: none;
+    color: white;
+    cursor: pointer;
+}
+
+.btn-guardar {
+    padding: 10px 16px;
+    background: #6DB85C;
+    border-radius: 10px;
+    border: none;
+    color: white;
+    cursor: pointer;
+}
+
+/* Botón para abrir el mapa */
+.btn-mapa {
+    background: #007bff; /* Azul */
+    color: white;
+    border: none;
+    padding: 12px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s;
+}
+
+.btn-mapa:hover {
+    background: #0056b3;
+}
+
+/* Ajuste para que el mapa llene el modal secundario */
+#mapaLeaflet {
+    background: #e0e0e0;
+}
+
+.materiales-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+    margin-bottom: 15px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background: #f9f9f9;
+}
+
+.material-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.btn-gps {
+    background-color: #3498db; /* Azul */
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-right: 10px; /* Separación de la X */
+}
+
+.btn-gps:hover {
+    background-color: #2980b9;
+}
+
+/* Ajuste para que el header del modal no se rompa */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}

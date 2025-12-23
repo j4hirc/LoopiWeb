@@ -1,0 +1,220 @@
+body {
+    font-family: "Poppins", sans-serif;
+    margin: 0;
+    background: #fcfbe8;
+}
+
+/* HEADER */
+.header {
+    background: #2D5A4A;
+    padding: 20px;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn-agregar {
+    background: #6DB85C;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.btn-agregar:hover {
+    background: #5aaa51;
+}
+
+/* BUSCADOR */
+.search-container {
+    padding: 20px;
+    max-width: 900px;
+    margin: auto;
+}
+
+#buscarLogro {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    border: 2px solid #bbb;
+}
+
+/* GRID */
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px,1fr));
+    gap: 18px;
+    padding: 20px;
+    max-width: 1200px;
+    margin: auto;
+}
+
+.card-logro {
+    background: white;
+    border-radius: 18px;
+    padding: 18px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,.15);
+    transition: .2s ease;
+}
+
+.card-logro:hover {
+    transform: translateY(-5px);
+}
+
+.card-logro img {
+    width: 100%;
+    max-width: 100px;
+    height: 100px;
+    object-fit: contain;
+    margin-bottom: 10px;
+}
+
+.card-logro h3 {
+    font-size: 18px;
+    color: #2D5A4A;
+    margin: 6px 0;
+}
+
+.card-logro p {
+    font-size: 14px;
+    color: #666;
+    min-height: 40px;
+}
+
+.card-logro .puntos {
+    font-size: 16px;
+    margin-top: 5px;
+    font-weight: bold;
+    color: #6DB85C;
+}
+
+/* ICONOS */
+.acciones {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.acciones button {
+    font-size: 20px;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+.btn-editar { color: #2196F3; }
+.btn-eliminar { color: #E53935; }
+
+/* MODAL */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.55);
+    backdrop-filter: blur(4px);
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-container {
+    width: 95%;
+    max-width: 480px;
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    animation: zoom .25s ease;
+}
+
+@keyframes zoom {
+    from { transform: scale(.7); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+}
+
+.modal-header {
+    background: #2D5A4A;
+    color: white;
+    padding: 18px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.modal-close {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,.3);
+    background: rgba(255,255,255,.15);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: .2s ease;
+}
+
+.modal-close:hover {
+    background: rgba(255,255,255,.3);
+    transform: scale(1.15);
+}
+
+.modal-body {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.input-field {
+    padding: 12px;
+    border-radius: 12px;
+    border: 2px solid #ccc;
+}
+
+.image-section {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+#previewLogro {
+    width: 80px;
+    height: 80px;
+    background: #eee;
+    border-radius: 12px;
+    object-fit: contain;
+}
+
+.btn-upload {
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: 2px solid #2D5A4A;
+    background: transparent;
+    color: #2D5A4A;
+    cursor: pointer;
+}
+
+.modal-footer {
+    padding: 16px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.btn-cancelar {
+    background: #ccc;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 10px;
+}
+
+.btn-guardar {
+    background: #6DB85C;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 10px;
+}

@@ -1,0 +1,153 @@
+/* Heredamos variables de tu styles.css principal, 
+   pero definimos clases específicas aquí */
+
+.section-title {
+    color: var(--primary);
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+    border-left: 4px solid var(--secondary);
+    padding-left: 10px;
+}
+
+/* --- TARJETAS DE RESUMEN (STATS) --- */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.stat-card {
+    background: white;
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: transform 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
+}
+
+.icon-stat {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.icon-stat.green { background: #E8F5E9; color: #2ecc71; }
+.icon-stat.blue { background: #E3F2FD; color: #3498db; }
+.icon-stat.gold { background: #FFFDE7; color: #f1c40f; }
+
+.stat-info h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: var(--text-main);
+}
+
+.stat-info p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-light);
+}
+
+/* --- GRÁFICOS --- */
+.charts-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Dos columnas */
+    gap: 20px;
+}
+
+@media (max-width: 768px) {
+    .charts-container { grid-template-columns: 1fr; }
+}
+
+.chart-box {
+    background: white;
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: var(--shadow-sm);
+}
+
+.chart-box h4 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: var(--text-main);
+    text-align: center;
+}
+
+.canvas-wrapper {
+    position: relative;
+    height: 250px; /* Altura fija para el gráfico */
+    width: 100%;
+}
+
+/* --- TABLA HISTORIAL --- */
+.history-container {
+    background: white;
+    border-radius: 16px;
+    box-shadow: var(--shadow-sm);
+    padding: 20px;
+    overflow: hidden;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px;
+}
+
+thead {
+    background-color: #f8f9fa;
+}
+
+th {
+    padding: 12px 15px;
+    text-align: left;
+    font-size: 0.9rem;
+    color: var(--primary);
+    font-weight: 600;
+}
+
+td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+.badge-status {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.badge-status.finalizado { background: #E8F5E9; color: #2ecc71; }
+.badge-status.pendiente { background: #FFF3E0; color: #e67e22; }
+.badge-status.rechazado { background: #FFEBEE; color: #e74c3c; }
+
+.material-tag {
+    display: inline-block;
+    font-size: 0.8rem;
+    background: #f0f0f0;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-right: 4px;
+    margin-bottom: 2px;
+}

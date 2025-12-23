@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Recompensas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="recompensas.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+
+<body>
+
+<header class="header">
+    <h1>Gestión de Recompensas</h1>
+    <button id="btnNuevaRecompensa" class="btn-agregar">+ Agregar Recompensa</button>
+</header>
+
+<div class="search-container">
+    <input type="text" id="buscarRecompensa" placeholder="Buscar recompensa...">
+</div>
+
+<section id="gridRecompensas" class="grid-container"></section>
+
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal-container">
+
+        <div class="modal-header">
+            <h2 id="modalTitle">Nueva Recompensa</h2>
+            <button class="modal-close" id="btnCerrarModal">✕</button>
+        </div>
+
+        <form id="formRecompensa">
+            <input type="hidden" id="idRecompensa" name="idRecompensa">
+
+            <div class="modal-body">
+                <label>Nombre de la Recompensa</label>
+                <input type="text" id="nombreRecompensa" class="input-field" required>
+
+                <label>Descripción</label>
+                <textarea id="descripcionRecompensa" class="input-field" rows="2"></textarea>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label>Costo (Puntos)</label>
+                        <input type="number" id="costoRecompensa" class="input-field" required>
+                    </div>
+                    <div>
+                        <label>Auspiciante</label>
+                        <select id="auspicianteRecompensa" class="input-field" required>
+                            <option value="">Seleccione...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <label style="margin-top: 10px;">Dirección de Retiro</label>
+                <input type="text" id="direccionRecompensa" class="input-field" placeholder="Ej: Av. Loja y Don Bosco">
+
+                <label>Ubicación en Mapa</label>
+                <div style="display: flex; gap: 10px; align-items: center; background: #f9f9f9; padding: 10px; border-radius: 10px; border: 1px solid #ccc;">
+                    <button type="button" onclick="abrirModalMapa()" style="background: #007bff; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer;">
+                        📍 Abrir Mapa
+                    </button>
+                    <div style="font-size: 12px; color: #555;">
+                        Lat: <span id="txtLat">0.0</span> <br>
+                        Lng: <span id="txtLng">0.0</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn-cancelar" id="btnCancelar">Cancelar</button>
+                <button type="submit" class="btn-guardar">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalMapa" style="z-index: 99999; display: none;">
+    <div class="modal-container" style="height: 80vh; max-width: 800px; width: 95%;">
+        <div class="modal-header">
+            <span>Selecciona el punto exacto</span>
+            <button type="button" class="modal-close" onclick="cerrarModalMapa()">✕</button>
+        </div>
+        <div class="modal-body" style="padding: 0; display: flex; flex-direction: column; flex: 1;">
+            <div id="mapaLeaflet" style="width: 100%; height: 100%; min-height: 400px; background: #ddd;"></div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-cancelar" onclick="cerrarModalMapa()">Cancelar</button>
+            <button type="button" class="btn-guardar" onclick="confirmarCoordenadas()">Confirmar Ubicación</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="recompensas.js"></script>
+</body>
+</html>

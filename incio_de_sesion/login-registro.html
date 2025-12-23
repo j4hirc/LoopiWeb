@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loopi - Acceso</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="login-registro.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+<div class="container">
+    <a href="../index.html" class="back-home">← Volver al inicio</a>
+
+    <div class="forms-container">
+        
+        <div class="form-wrapper login-wrapper">
+            <h2 class="title">Iniciar Sesión</h2>
+            
+            <form action="#" id="form-login">
+                <div class="input-box">
+                    <label>Email</label>
+                    <input type="email" placeholder="ejemplo@correo.com" id="login-email" name="correo" required>
+                </div>
+                
+                <div class="input-box password-box">
+                    <label>Contraseña</label>
+                    <input type="password" placeholder="••••••••" required id="login-password" name="password" class="pass-input">
+                    <i class="fa-solid fa-eye toggle-pass"></i>
+                </div>
+
+                <p style="text-align: right; margin-top: 5px;">
+                    <a href="#" onclick="abrirModalRecuperar()" style="color: #2D5F4F; font-size: 0.8rem; text-decoration: underline;">
+                        ¿Olvidaste tu contraseña?
+                    </a>
+                </p>
+
+                <button type="submit" class="btn">Ingresar</button>
+            </form>
+            <p class="switch">
+                ¿No tienes cuenta? <span id="btn-ir-registro">Regístrate</span>
+            </p>
+        </div>
+
+        <div class="form-wrapper register-wrapper">
+            <h2 class="title">Crear Cuenta</h2>
+            
+            <form action="#" id="form-registro">
+                <div class="profile-upload-section">
+                    <label for="file-upload" class="avatar-circle">
+                        <i class="fa-solid fa-camera"></i>
+                        <img id="avatar-preview" src="#" alt="Foto" style="display:none;">
+                    </label>
+                    <input id="file-upload" type="file" accept="image/*" style="display:none;">
+                    <span class="upload-text">Toca para subir foto</span>
+                </div>
+
+                <div class="input-grid">
+                    <div class="input-box">
+                        <label>Cédula</label>
+                        <input type="text" id="cedula" maxlength="10" placeholder="010..." oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
+                    </div>
+
+                    <div class="input-box">
+                        <label>Primer nombre</label>
+                        <input type="text" id="registro-nombre1" required>
+                    </div>
+                    <div class="input-box">
+                        <label>Segundo nombre</label>
+                        <input type="text" id="registro-nombre2" placeholder="(Opcional)">
+                    </div>
+                    <div class="input-box">
+                        <label>Apellido paterno</label>
+                        <input type="text" id="registro-apellido1" required>
+                    </div>
+                    <div class="input-box">
+                        <label>Apellido materno</label>
+                        <input type="text" id="registro-apellido2" required>
+                    </div>
+                    <div class="input-box">
+                        <label>Email</label>
+                        <input type="email" id="registro-email" required>
+                    </div>
+                    <div class="input-box">
+                        <label>Fecha nacimiento</label>
+                        <input type="date" id="registro-fecha-nacimiento" required>
+                    </div>
+                    <div class="input-box">
+                        <label>Género</label>
+                        <select id="registro-genero" required>
+                            <option value="" disabled selected>Seleccione</option>
+                            <option value="M">Masculino</option>
+                            <option value="F">Femenino</option>
+                            <option value="O">Otro</option>
+                        </select>
+                    </div>
+                    <div class="input-box full-width-mobile">
+                        <label>Parroquia</label>
+                        <select id="registro-parroquia" required>
+                            <option value="" disabled selected>Cargando...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-box password-box">
+                        <label>Contraseña</label>
+                        <input type="password" required id="registro-password" class="pass-input">
+                        <i class="fa-solid fa-eye toggle-pass"></i>
+                    </div>
+                    <div class="input-box password-box">
+                        <label>Confirmar pass</label>
+                        <input type="password" required id="registro-password-confirm" class="pass-input">
+                        <i class="fa-solid fa-eye toggle-pass"></i>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn">Registrarme</button>
+            </form>
+            
+            <p class="switch">
+                ¿Ya tienes cuenta? <span id="btn-ir-login">Inicia sesión</span>
+            </p>
+        </div>
+
+    </div>
+
+    <div class="side-panel">
+        <div class="side-content">
+            <img src="../Imagenes/Logo.png" alt="Logo">
+            <h3 class="side-title">Bienvenido</h3>
+            <p class="side-text">Cuidar el planeta empieza contigo. Únete a nuestra comunidad de reciclaje inteligente.</p>
+        </div>
+    </div>
+
+</div>
+
+<script src="login-registro.js"></script>
+
+</body>
+</html>

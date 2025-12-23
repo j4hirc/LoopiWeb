@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reportes Globales | Admin</title>
+
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="reportes.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <div class="nav-logo" onclick="window.history.back()" style="cursor: pointer;">
+            <i class="fa-solid fa-arrow-left" style="color: var(--primary); font-size: 1.2rem;"></i>
+            <span style="margin-left: 10px;">Volver al Panel</span>
+        </div>
+        <div class="nav-right">
+            <span style="font-weight: 600; color: var(--primary);">Centro de Reportes</span>
+        </div>
+    </nav>
+
+    <div class="main-container" id="reporteContent">
+
+        <div class="report-header">
+            <div>
+                <h1 class="page-title">Panorama General de Reciclaje</h1>
+                <p class="page-subtitle">Análisis detallado del impacto ambiental global.</p>
+            </div>
+            <button class="btn-download" onclick="descargarPDF()">
+                <i class="fa-solid fa-file-pdf"></i> Exportar PDF
+            </button>
+        </div>
+
+        <section class="filters-card">
+            <div class="filter-header">
+                <i class="fa-solid fa-filter"></i> <span>Filtros de Datos</span>
+            </div>
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label>Fecha Inicio</label>
+                    <input type="date" id="filtroInicio" class="input-filter">
+                </div>
+                <div class="filter-group">
+                    <label>Fecha Fin</label>
+                    <input type="date" id="filtroFin" class="input-filter">
+                </div>
+                <div class="filter-group">
+                    <label>Estado</label>
+                    <select id="filtroEstado" class="input-filter">
+                        <option value="TODOS">Todos</option>
+                        <option value="FINALIZADO">Completados</option>
+                        <option value="PENDIENTE">Pendientes</option>
+                        <option value="CANCELADO">Cancelados / Rechazados</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Reciclador (Cédula)</label>
+                    <input type="text" id="filtroReciclador" class="input-filter" placeholder="Buscar por cédula...">
+                </div>
+                <div class="filter-actions">
+                    <button class="btn-reset" onclick="resetearFiltros()">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-icon green"><i class="fa-solid fa-earth-americas"></i></div>
+                <div class="kpi-content">
+                    <h3 id="totalKgGlobal">0.0</h3>
+                    <p>Kg Recolectados</p>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon blue"><i class="fa-solid fa-users"></i></div>
+                <div class="kpi-content">
+                    <h3 id="totalUsuarios">0</h3>
+                    <p>Usuarios Registrados</p>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon purple"><i class="fa-solid fa-truck-fast"></i></div>
+                <div class="kpi-content">
+                    <h3 id="totalRecolecciones">0</h3>
+                    <p>Solicitudes Filtradas</p>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon gold"><i class="fa-solid fa-star"></i></div>
+                <div class="kpi-content">
+                    <h3 id="totalPuntos">0</h3>
+                    <p>Puntos Globales</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="charts-row">
+            <div class="chart-card">
+                <div class="chart-title">
+                    <h4>Distribución por Material</h4>
+                    <i class="fa-solid fa-chart-pie"></i>
+                </div>
+                <div class="canvas-holder">
+                    <canvas id="chartMaterialesGlobal"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">
+                    <h4>Top 5 Recicladores</h4>
+                    <i class="fa-solid fa-trophy"></i>
+                </div>
+                <div class="canvas-holder">
+                    <canvas id="chartTopRecicladores"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section class="charts-row full-width">
+            <div class="chart-card">
+                <div class="chart-title">
+                    <h4>Tendencia de Reciclaje (Mensual)</h4>
+                    <i class="fa-solid fa-chart-line"></i>
+                </div>
+                <div class="canvas-holder wide">
+                    <canvas id="chartTendencia"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section class="details-section">
+            <div class="section-top">
+                <h3>Desglose por Reciclador</h3>
+                <span class="badge-count" id="countRecicladores">0 encontrados</span>
+            </div>
+            <div class="table-wrap">
+                <table id="tablaRecicladores">
+                    <thead>
+                        <tr>
+                            <th>Reciclador</th>
+                            <th>Cédula</th>
+                            <th>Entregas</th>
+                            <th>Total Kg</th>
+                            <th>Material Principal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyRecicladores">
+                        <tr>
+                            <td colspan="5" style="text-align:center">Cargando datos...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="details-section" style="margin-top: 30px;">
+            <div class="section-top">
+                <h3>Top Usuarios</h3>
+                <span class="badge-count" id="countUsuariosTop">0 usuarios</span>
+            </div>
+            <div class="table-wrap">
+                <table id="tablaTopUsuarios">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Usuario</th>
+                            <th>Cédula</th>
+                            <th>Rango</th>
+                            <th>Total Reciclado</th>
+                            <th>Puntos Ganados</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyTopUsuarios">
+                        <tr><td colspan="6" style="text-align:center">Calculando ranking...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </div>
+
+    <script src="reportes.js"></script>
+</body>
+
+</html>

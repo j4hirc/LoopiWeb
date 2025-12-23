@@ -1,0 +1,815 @@
+const API_BASE = 'https://api-loopi.onrender.com/api';
+
+let map;
+let usuarioLogueado;
+let listaFavoritos = [];
+let notificaciones = [];
+
+let todasLasUbicaciones = [];
+let recyclingLayer;
+let rewardLayer;
+
+let marcadorMiUbicacion = null;
+let ubicacionActual = null;
+
+let notificacionesCargadas = false;
+
+document.addEventListener("DOMContentLoaded", async () => {
+  const btnLogout = document.getElementById("btnLogout");
+  if (btnLogout) {
+    btnLogout.addEventListener("click", logout);
+  }
+
+  const btnMiUbicacion = document.getElementById("btnMiUbicacion");
+  if (btnMiUbicacion) {
+    btnMiUbicacion.addEventListener("click", () => {
+      obtenerUbicacionActual();
+    });
+  }
+
+  const btnAbrirPerfil = document.getElementById("btnAbrirPerfil");
+  if (btnAbrirPerfil)
+    btnAbrirPerfil.addEventListener("click", (e) => {
+      e.preventDefault();
+      abrirModalPerfil();
+    });
+
+  const usuarioStr = localStorage.getItem("usuario");
+  if (!usuarioStr) {
+    window.location.href = "../incio_de_sesion/login-registro.html";
+    return;
+  }
+  usuarioLogueado = JSON.parse(usuarioStr);
+
+  await recargarUsuarioDesdeBackend();
+  cargarInfoUsuario();
+
+  // 2. Iniciar Mapa y Capas
+  initMap();
+
+  // 3. Cargar Datos
+  await cargarNotificaciones();
+  await cargarMisFavoritos();
+  await cargarFiltrosMateriales();
+  await cargarPuntosReciclaje();
+  await cargarPuntosRecompensa();
+
+  const inputPerfilFoto = document.getElementById("inputPerfilFoto");
+  if (inputPerfilFoto)
+    inputPerfilFoto.addEventListener("change", cargarImagenPerfil);
+
+  const modalPerfil = document.getElementById("modalPerfil");
+  if (modalPerfil)
+    modalPerfil.addEventListener("click", (e) => {
+      if (e.target === modalPerfil) cerrarModalPerfil();
+    });
+
+  const btnUbicacion = document.getElementById("btnMiUbicacion");
+  if (btnUbicacion) btnUbicacion.onclick = obtenerUbicacionActual;
+
+});
+
+
+function initMap() {
+  const lat = -2.9001;
+  const lng = -79.0059;
+
+  map = L.map("mapaUsuario").setView([lat, lng], 13);
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "© OpenStreetMap contributors",
+  }).addTo(map);
+
+  recyclingLayer = L.layerGroup().addTo(map);
+  rewardLayer = L.layerGroup().addTo(map);
+}
+
+const iconPuntoFijo = L.divIcon({
+  className: "custom-div-icon",
+  html: `
+    <div style='background-color:#2ecc71; width:35px; height:35px; border-radius:50%; border:2px solid white; display:flex; justify-content:center; align-items:center; box-shadow:0 3px 5px rgba(0,0,0,0.3);'>
+        <i class='fa-solid fa-recycle' style='color:white; font-size:18px;'></i>
+    </div>`,
+  iconSize: [35, 35],
+  iconAnchor: [17, 17],
+  popupAnchor: [0, -20]
+});
+
+const iconRecicladorMovil = L.divIcon({
+  className: "custom-div-icon",
+  html: `
+    <div style='background-color:#3498db; width:35px; height:35px; border-radius:50%; border:2px solid white; display:flex; justify-content:center; align-items:center; box-shadow:0 3px 5px rgba(0,0,0,0.3);'>
+        <i class='fa-solid fa-user' style='color:white; font-size:16px;'></i>
+    </div>`,
+  iconSize: [35, 35],
+  iconAnchor: [17, 17],
+  popupAnchor: [0, -20]
+});
+
+const iconRecompensa = L.divIcon({
+  className: "custom-div-icon",
+  html: "<div style='background-color:#8E44AD; width:30px; height:30px; border-radius:50%; border:2px solid white; display:flex; justify-content:center; align-items:center; box-shadow:0 3px 5px rgba(0,0,0,0.3);'><i class='fa-solid fa-gift' style='color:white;'></i></div>",
+  iconSize: [30, 42],
+  iconAnchor: [15, 42],
+});
+
+async function cargarFiltrosMateriales() {
+  const contenedor = document.getElementById("contenedorBotonesMateriales");
+  if (!contenedor) return;
+
+  contenedor.innerHTML = "";
+
+  const btnTodos = document.createElement("button");
+  btnTodos.className = "btn-filtro active";
+  btnTodos.innerText = "Todos";
+  btnTodos.onclick = () => filtrarMapa("todos", btnTodos);
+  contenedor.appendChild(btnTodos);
+
+  try {
+    const res = await fetch(`${API_BASE}/materiales`);
+    if (res.ok) {
+      const materiales = await res.json();
+      materiales.forEach((mat) => {
+        const btn = document.createElement("button");
+        btn.className = "btn-filtro";
+        btn.innerText = mat.nombre;
+        btn.onclick = () => filtrarMapa(mat.id_material, btn);
+        contenedor.appendChild(btn);
+      });
+    }
+  } catch (e) {
+    console.error("Error cargando materiales:", e);
+  }
+}
+
+async function cargarPuntosReciclaje() {
+  try {
+    const res = await fetch(`${API_BASE}/ubicacion_reciclajes`);
+    if (res.ok) {
+      todasLasUbicaciones = await res.json();
+      renderizarMarcadoresReciclaje(todasLasUbicaciones);
+    }
+  } catch (e) {
+    console.error("Error cargando puntos reciclaje", e);
+  }
+}
+
+window.filtrarMapa = function (idMaterial, btnElement) {
+  document
+    .querySelectorAll(".btn-filtro")
+    .forEach((b) => b.classList.remove("active"));
+  btnElement.classList.add("active");
+
+  if (idMaterial === "todos") {
+    renderizarMarcadoresReciclaje(todasLasUbicaciones);
+  } else {
+    const filtradas = todasLasUbicaciones.filter((ubicacion) => {
+      if (
+        !ubicacion.materialesAceptados ||
+        ubicacion.materialesAceptados.length === 0
+      )
+        return false;
+      return ubicacion.materialesAceptados.some(
+        (um) => um.material && um.material.id_material === idMaterial
+      );
+    });
+    renderizarMarcadoresReciclaje(filtradas);
+  }
+};
+
+function renderizarMarcadoresReciclaje(listaPuntos) {
+  if (recyclingLayer) recyclingLayer.clearLayers();
+
+  listaPuntos.forEach((p) => {
+    if (p.latitud && p.longitud) {
+      
+      const esReciclador = p.reciclador !== null && p.reciclador !== undefined;
+
+      if (esReciclador && p.reciclador.estado === false) {
+          return; 
+      }
+
+      const iconoUsar = esReciclador ? iconRecicladorMovil : iconPuntoFijo;
+      const etiquetaTipo = esReciclador ? "Reciclador Móvil" : "Punto de Reciclaje";
+      const colorTitulo = esReciclador ? "#3498db" : "#2ecc71"; // Azul o Verde
+
+      const idUbicacion = p.id_ubicacion_reciclaje || p.id_ubicacion;
+      const esFav = verificarSiEsFavoritoBD(idUbicacion);
+
+      let materialesHTML = "";
+      if (p.materialesAceptados && p.materialesAceptados.length > 0) {
+        materialesHTML = `<div style="margin-top:5px; display:flex; flex-wrap:wrap; gap:3px; justify-content:center;">`;
+        p.materialesAceptados.forEach((um) => {
+          if (um.material) {
+            materialesHTML += `<span style="font-size:9px; background:#e8f5e9; color:#2e7d32; padding:2px 5px; border-radius:4px;">${um.material.nombre}</span>`;
+          }
+        });
+        materialesHTML += `</div>`;
+      }
+
+      const marker = L.marker([p.latitud, p.longitud], { icon: iconoUsar });
+
+      const popupContent = `
+        <div style="text-align:center; min-width:170px;">
+            <div style="font-size:10px; font-weight:bold; color:${colorTitulo}; text-transform:uppercase; margin-bottom:2px;">
+                ${etiquetaTipo}
+            </div>
+            <h4 style="margin:0; color:#3A6958;">${p.nombre}</h4>
+            <p style="font-size:11px; color:#555;">${p.direccion}</p>
+            ${materialesHTML}
+
+            <button onclick="abrirRuta(${p.latitud}, ${p.longitud})"
+              style="
+                margin-top:8px;
+                background:#2ecc71;
+                color:white;
+                border:none;
+                padding:6px 10px;
+                border-radius:6px;
+                cursor:pointer;
+                font-size:11px;">
+              🧭 Ver ruta
+            </button>
+
+            <div style="margin-top:6px;">
+              <i class="fa-solid fa-heart fav-icon ${esFav ? "activo" : ""}"
+                 onclick="toggleFavoritoBD(event, this, ${idUbicacion})"
+                 style="cursor:pointer;"></i>
+            </div>
+        </div>
+      `;
+
+      marker.bindPopup(popupContent);
+      marker.addTo(recyclingLayer);
+    }
+  });
+}
+async function cargarPuntosRecompensa() {
+  try {
+    const res = await fetch(`${API_BASE}/recompensas`);
+    const recompensas = await res.json();
+
+    if (rewardLayer) rewardLayer.clearLayers();
+
+    recompensas.forEach((r) => {
+      if (r.latitud && r.longitud) {
+        const marker = L.marker([r.latitud, r.longitud], {
+          icon: iconRecompensa,
+        });
+        const popupContent = `
+                    <div style="text-align:center;">
+                        <h4 style="margin:0; color:#8E44AD;">${r.nombre}</h4>
+                        <p style="margin:5px 0; font-size:12px;">${
+                          r.direccion || "Ubicación de canje"
+                        }</p>
+                        <strong style="color:#E67E22;">${
+                          r.costoPuntos
+                        } Puntos</strong><br>
+                        <button onclick="verDetalleRecompensa(${
+                          r.id_recompensa
+                        })" 
+                            style="margin-top:5px; background:#8E44AD; color:white; border:none; border-radius:4px; cursor:pointer; padding:3px 8px; font-size:11px;">
+                            Ver más
+                        </button>
+                    </div>`;
+        marker.bindPopup(popupContent);
+        marker.addTo(rewardLayer);
+      }
+    });
+  } catch (e) {
+    console.error("Error cargando recompensas", e);
+  }
+}
+
+function obtenerUbicacionActual() {
+  if (!navigator.geolocation) {
+    return Swal.fire(
+      "Error",
+      "Tu navegador no soporta geolocalización",
+      "error"
+    );
+  }
+
+  Swal.fire({
+    title: "Obteniendo ubicación...",
+    text: "Por favor permite el acceso a tu ubicación",
+    allowOutsideClick: false,
+    didOpen: () => Swal.showLoading(),
+  });
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      Swal.close();
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+
+      coordenadas = { lat: lat, lng: lng };
+
+      map.setView([lat, lng], 16);
+
+      ubicacionActual = { lat, lng };
+
+      if (marcadorMiUbicacion) {
+        map.removeLayer(marcadorMiUbicacion);
+      }
+
+      marcadorMiUbicacion = L.marker([lat, lng]).addTo(map);
+
+      document.getElementById("txtLat").innerText = lat.toFixed(5);
+      document.getElementById("txtLng").innerText = lng.toFixed(5);
+
+      const btn = document.getElementById("btnGeo");
+      btn.innerHTML = '<i class="fa-solid fa-check"></i> Ubicación encontrada';
+      setTimeout(() => {
+        btn.innerHTML =
+          '<i class="fa-solid fa-location-crosshairs"></i> Usar mi ubicación actual';
+      }, 3000);
+    },
+    (error) => {
+      Swal.close();
+      let msg = "No se pudo obtener la ubicación.";
+      if (error.code === 1)
+        msg = "Debes permitir el acceso a la ubicación en tu navegador.";
+      Swal.fire("Error", msg, "error");
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+}
+
+function abrirRuta(latDestino, lngDestino) {
+  if (!ubicacionActual) {
+    Swal.fire(
+      "Ubicación requerida",
+      "Primero presiona 'Usar mi ubicación actual'",
+      "info"
+    );
+    return;
+  }
+
+  const { lat, lng } = ubicacionActual;
+
+  const url = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${latDestino},${lngDestino}&travelmode=driving`;
+  window.open(url, "_blank");
+}
+
+
+async function recargarUsuarioDesdeBackend() {
+  try {
+    const cedula = usuarioLogueado.cedula;
+    const res = await fetch(`${API_BASE}/usuarios/${cedula}`);
+    if (!res.ok) throw new Error("No se pudo obtener usuario");
+    const usuarioActualizado = await res.json();
+    usuarioLogueado = usuarioActualizado;
+    localStorage.setItem("usuario", JSON.stringify(usuarioActualizado));
+  } catch (e) {
+    console.error("Error actualizando usuario:", e);
+  }
+}
+
+function cargarInfoUsuario() {
+  document.getElementById("nombreUsuarioNav").innerText =
+    usuarioLogueado.primer_nombre;
+  document.getElementById("puntosActuales").innerText =
+    usuarioLogueado.puntos_actuales || 0;
+
+  if (usuarioLogueado.foto && usuarioLogueado.foto.length > 20) {
+    let fotoLimpia = usuarioLogueado.foto.replace(/(\r\n|\n|\r)/gm, "");
+    if (!fotoLimpia.startsWith("data:image"))
+      fotoLimpia = `data:image/png;base64,${fotoLimpia}`;
+    document.getElementById("imgPerfilNav").src = fotoLimpia;
+  }
+
+  const lblRango = document.getElementById("rangoUsuario");
+  const imgRango = document.getElementById("imgRango");
+
+  if (usuarioLogueado.rango) {
+    lblRango.innerText = usuarioLogueado.rango.nombre_rango;
+    if (
+      usuarioLogueado.rango.imagen &&
+      usuarioLogueado.rango.imagen.length > 10
+    ) {
+      let imgClean = usuarioLogueado.rango.imagen.replace(/(\r\n|\n|\r)/gm, "");
+      if (!imgClean.startsWith("data:image"))
+        imgClean = `data:image/png;base64,${imgClean}`;
+      imgRango.src = imgClean;
+      imgRango.style.display = "block";
+    } else {
+      imgRango.style.display = "none";
+      lblRango.innerText = `🌱 ${usuarioLogueado.rango.nombre_rango}`;
+    }
+  } else {
+    lblRango.innerText = "Sin Rango";
+    imgRango.style.display = "none";
+  }
+}
+
+function logout() {
+  Swal.fire({
+    title: "¿Salir?",
+    text: "Se cerrará tu sesión",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    confirmButtonText: "Sí, salir",
+  }).then((result) => {
+    if (result.isConfirmed) {
+      localStorage.removeItem("usuario");
+      window.location.href = "../incio_de_sesion/login-registro.html";
+    }
+  });
+}
+
+function verDetalleRecompensa(id) {
+  window.location.href = `catalogo/catalogo.html?id=${id}`;
+}
+
+function toggleMenu() {
+  document.getElementById("userMenu").classList.toggle("active");
+}
+
+/* ================= LÓGICA DE FAVORITOS ================= */
+
+async function cargarMisFavoritos() {
+  try {
+    const cedula = usuarioLogueado.cedula;
+    const res = await fetch(`${API_BASE}/favoritos/usuario/${cedula}`);
+    if (res.ok) listaFavoritos = await res.json();
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+function verificarSiEsFavoritoBD(idUbicacion) {
+  return listaFavoritos.some(
+    (f) => f.ubicacion && f.ubicacion.id_ubicacion_reciclaje === idUbicacion
+  );
+}
+
+async function toggleFavoritoBD(event, iconElement, idUbicacion) {
+  event.stopPropagation();
+  const favoritoExistente = listaFavoritos.find(
+    (f) => f.ubicacion && f.ubicacion.id_ubicacion_reciclaje === idUbicacion
+  );
+
+  try {
+    if (favoritoExistente) {
+      const res = await fetch(
+        `${API_BASE}/favoritos/${favoritoExistente.id_favorito}`,
+        { method: "DELETE" }
+      );
+      if (res.ok) {
+        iconElement.classList.remove("activo");
+        listaFavoritos = listaFavoritos.filter(
+          (f) => f.id_favorito !== favoritoExistente.id_favorito
+        );
+        Swal.fire({
+          icon: "info",
+          title: "Eliminado",
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 1500,
+        });
+      }
+    } else {
+      const payload = {
+        usuario: { cedula: usuarioLogueado.cedula },
+        ubicacion: { id_ubicacion_reciclaje: idUbicacion },
+      };
+      const res = await fetch(`${API_BASE}/favoritos`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        const nuevoFav = await res.json();
+        iconElement.classList.add("activo");
+        listaFavoritos.push(nuevoFav);
+        Swal.fire({
+          icon: "success",
+          title: "Guardado",
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 1500,
+        });
+      }
+    }
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+
+function abrirModalPerfil() {
+  const modal = document.getElementById("modalPerfil");
+  const prev = document.getElementById("perfilPreview");
+
+  document.getElementById("perfilPrimerNombre").value =
+    usuarioLogueado.primer_nombre || "";
+  document.getElementById("perfilSegundoNombre").value =
+    usuarioLogueado.segundo_nombre || "";
+  document.getElementById("perfilApellidoPaterno").value =
+    usuarioLogueado.apellido_paterno || "";
+  document.getElementById("perfilApellidoMaterno").value =
+    usuarioLogueado.apellido_materno || "";
+  document.getElementById("perfilCorreo").value = usuarioLogueado.correo || "";
+  document.getElementById("perfilPassword").value = "";
+
+  if (usuarioLogueado.foto && usuarioLogueado.foto.length > 20) {
+    let foto = usuarioLogueado.foto.replace(/(\r\n|\n|\r)/gm, "");
+    if (!foto.startsWith("data:image")) foto = `data:image/png;base64,${foto}`;
+    prev.src = foto;
+  } else {
+    prev.src = "https://via.placeholder.com/100";
+  }
+  modal.style.display = "flex";
+}
+
+function cerrarModalPerfil() {
+  document.getElementById("modalPerfil").style.display = "none";
+}
+
+function cargarImagenPerfil() {
+  const input = document.getElementById("inputPerfilFoto");
+  const prev = document.getElementById("perfilPreview");
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    prev.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function guardarPerfil() {
+  try {
+    const passInput = document.getElementById("perfilPassword").value.trim();
+    
+    const payload = {
+      cedula: usuarioLogueado.cedula,
+      primer_nombre: document.getElementById("perfilPrimerNombre").value.trim(),
+      segundo_nombre: document.getElementById("perfilSegundoNombre").value.trim(),
+      apellido_paterno: document.getElementById("perfilApellidoPaterno").value.trim(),
+      apellido_materno: document.getElementById("perfilApellidoMaterno").value.trim(),
+      correo: document.getElementById("perfilCorreo").value.trim(),
+      foto: document.getElementById("perfilPreview").src,
+      estado: true,
+      password: passInput !== "" ? passInput : null 
+    };
+
+    const res = await fetch(`${API_BASE}/usuarios/${usuarioLogueado.cedula}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (res.ok) {
+      const actualizado = await res.json();
+
+      const usuarioLigero = { ...actualizado };
+      usuarioLigero.foto = null; 
+      
+      try {
+          localStorage.setItem("usuario", JSON.stringify(usuarioLigero));
+      } catch(e) {
+          console.warn("Storage lleno, pero no importa.");
+      }
+
+      usuarioLogueado = actualizado;
+      cargarInfoUsuario();
+
+      Swal.fire({
+          icon: 'success',
+          title: '¡Perfil Actualizado!',
+          text: 'Tus datos se han guardado correctamente.',
+          confirmButtonColor: '#2ecc71',
+          confirmButtonText: 'Genial'
+      }).then(() => {
+          cerrarModalPerfil();
+      });
+
+    } else {
+      const errorText = await res.text();
+      console.error("Error Backend:", errorText);
+      Swal.fire("Error", "No se pudo actualizar.", "error");
+    }
+  } catch (e) {
+    console.error(e);
+    Swal.fire("Error", "Fallo de conexión con el servidor", "error");
+  }
+}
+
+
+async function cargarNotificaciones() {
+
+  try {
+    const res = await fetch(
+      `${API_BASE}/notificaciones/usuario/${usuarioLogueado.cedula}`
+    );
+    if (!res.ok) return;
+
+    notificaciones = await res.json();
+    notificacionesCargadas = true; 
+
+    renderNotificaciones();
+    actualizarContadorVisual(); 
+  } catch (e) {
+    console.error("Error cargando notificaciones", e);
+  }
+}
+
+function actualizarContadorVisual() {
+  const badge = document.getElementById("contadorNotificaciones");
+  const noLeidas = notificaciones.filter((n) => !n.leido).length;
+
+  if (noLeidas > 0) {
+    badge.innerText = noLeidas;
+    badge.style.display = "block"; 
+  } else {
+    badge.style.display = "none";
+  }
+}
+
+async function actualizarContadorNotificaciones() {
+  try {
+    const badge = document.getElementById("contadorNotificaciones");
+    const res = await fetch(
+      `${API_BASE}/notificaciones/contar/${usuarioLogueado.cedula}`
+    );
+    if (!res.ok) return;
+    const total = await res.json();
+    if (total > 0) {
+      badge.innerText = total;
+      badge.style.display = "block";
+    } else {
+      badge.style.display = "none";
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+function renderNotificaciones() {
+  const contenedor = document.getElementById("listaNotificaciones");
+  if (!notificaciones.length) {
+    contenedor.innerHTML = `<p class="noti-vacia">No tienes notificaciones</p>`;
+    return;
+  }
+  contenedor.innerHTML = "";
+  notificaciones.forEach((n) => {
+    const div = document.createElement("div");
+    div.className = `noti-item ${n.leido ? "" : "no-leida"}`;
+    div.innerHTML = `<div class="noti-titulo">${n.titulo}</div><div class="noti-mensaje">${n.mensaje}</div>`;
+    div.onclick = () => abrirNotificacion(n);
+    contenedor.appendChild(div);
+  });
+}
+
+function abrirNotificacion(n) {
+  if (!n.entidad_referencia || !n.id_referencia) return;
+  switch (n.entidad_referencia) {
+    case "SOLICITUD":
+    case "SOLICITUD_RECOLECCION":
+      break;
+    case "CANJEO":
+      window.location.href = `cupones/mis_cupones.html`;
+      break;
+    case "LOGRO":
+      abrirModalRangos();
+      break;
+    default:
+      console.warn("Tipo no manejado:", n.entidad_referencia);
+  }
+}
+
+async function marcarNotificacionesLeidas() {
+  notificaciones.forEach((n) => (n.leido = true));
+  renderNotificaciones(); 
+
+  try {
+    await fetch(
+      `${API_BASE}/notificaciones/marcar-leidas/${usuarioLogueado.cedula}`,
+      {
+        method: "PUT",
+      }
+    );
+  } catch (e) {
+    console.error("Error marcando leídas", e);
+  }
+}
+
+function toggleNotificaciones() {
+  const panel = document.getElementById("panelNotificaciones");
+  const esVisible = panel.classList.contains("active");
+
+  if (esVisible) {
+    panel.classList.remove("active");
+  } else {
+    panel.classList.add("active");
+
+    const badge = document.getElementById("contadorNotificaciones");
+    if (badge.style.display !== "none") {
+      badge.style.display = "none"; 
+      marcarNotificacionesLeidas();
+    }
+  }
+}
+
+async function abrirModalRangos() {
+  const modal = document.getElementById("modalRangos");
+  modal.style.display = "flex";
+
+  const container = document.getElementById("listaRangosContainer");
+  const barra = document.getElementById("barraProgresoGlobal");
+  const texto = document.getElementById("textoProgreso");
+
+  container.innerHTML =
+    '<p style="text-align:center; padding:20px;">Calculando datos...</p>';
+
+  try {
+    const resRangos = await fetch(`${API_BASE}/rangos`);
+    if (!resRangos.ok) throw new Error("Error obteniendo rangos");
+    let rangos = await resRangos.json();
+
+    rangos.sort((a, b) => a.id_rango - b.id_rango);
+
+    const cedula = usuarioLogueado.cedula;
+    const resCount = await fetch(
+      `${API_BASE}/solicitud_recolecciones/contar/${cedula}`
+    );
+    let totalRecolecciones = 0;
+
+    if (resCount.ok) {
+      totalRecolecciones = await resCount.json(); // Número entero (ej: 12, 27, 30)
+    }
+
+    renderizarCaminoRangos(rangos, totalRecolecciones);
+
+    const recoleccionesEnNivelActual = totalRecolecciones % 25;
+    const porcentaje = (recoleccionesEnNivelActual / 25) * 100;
+    const faltan = 25 - recoleccionesEnNivelActual;
+
+    if (barra) barra.style.width = `${porcentaje}%`;
+
+    if (texto) {
+      texto.innerHTML = `
+                Total entregas: <b>${totalRecolecciones}</b> <br>
+                Faltan <b>${faltan}</b> para el siguiente rango.
+            `;
+    }
+  } catch (e) {
+    console.error(e);
+    container.innerHTML =
+      '<p style="text-align:center; color:red;">Error al cargar datos</p>';
+  }
+}
+
+function cerrarModalRangos() {
+  document.getElementById("modalRangos").style.display = "none";
+}
+
+function renderizarCaminoRangos(rangos, totalReal) {
+  const container = document.getElementById("listaRangosContainer");
+  container.innerHTML = "";
+
+  const idRangoCalculado = Math.floor(totalReal / 25) + 1;
+
+  rangos.forEach((rango) => {
+    let claseEstado = "";
+    let iconoEstado = '<i class="fa-solid fa-lock"></i>'; // Futuro
+
+    if (rango.id_rango < idRangoCalculado) {
+      claseEstado = "passed"; // Pasado
+      iconoEstado = '<i class="fa-solid fa-check-circle"></i>';
+    } else if (rango.id_rango === idRangoCalculado) {
+      claseEstado = "current"; // Actual
+      iconoEstado = '<i class="fa-solid fa-star"></i>';
+    }
+
+    let imgSrc = "https://via.placeholder.com/50?text=?";
+    if (rango.imagen && rango.imagen.length > 20) {
+      let imgClean = rango.imagen.replace(/(\r\n|\n|\r)/gm, "");
+      if (!imgClean.startsWith("data:image")) {
+        imgClean = `data:image/png;base64,${imgClean}`;
+      }
+      imgSrc = imgClean;
+    }
+
+    const recoleccionesMeta = rango.id_rango * 25;
+
+    const card = document.createElement("div");
+    card.className = `rango-card ${claseEstado}`;
+    card.innerHTML = `
+            <img src="${imgSrc}" class="rango-img" alt="${rango.nombre_rango}">
+            <div class="rango-info">
+                <h4>${rango.nombre_rango}</h4>
+                <p>Se alcanza a las ${recoleccionesMeta} entregas</p>
+            </div>
+            <div class="status-icon">
+                ${iconoEstado}
+            </div>
+        `;
+    container.appendChild(card);
+  });
+}

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Logros</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="logros.css">
+</head>
+
+<body>
+
+    <!-- 🟩 Barra superior -->
+    <header class="header">
+        <h1>Gestión de Logros</h1>
+        <button id="btnNuevoLogro" class="btn-agregar">+ Agregar Logro</button>
+    </header>
+
+    <!-- 🔍 Barra de búsqueda -->
+    <div class="search-container">
+        <input type="text" id="buscarLogro" placeholder="Buscar logros...">
+    </div>
+
+    <!-- 🟦 GRID -->
+    <section id="gridLogros" class="grid-container"></section>
+
+    <!-- 🟧 MODAL -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+
+            <!-- HEADER DEL MODAL -->
+            <div class="modal-header">
+                <h2 id="modalTitle">Nuevo Logro</h2>
+
+                <button class="modal-close" id="btnCerrarModal">
+                    <svg width="18" height="18" viewBox="0 0 24 24">
+                        <path fill="white"
+                            d="M18.3 5.71 12 12l6.3 6.29-1.41 1.41L12 14.83l-4.89 4.87-1.41-1.41L10.59 12 4.29 5.71 5.7 4.29 12 10.59l6.3-6.3z" />
+                    </svg>
+                </button>
+            </div>
+
+            <form id="formLogro">
+
+                <input type="hidden" id="idLogro" name="idLogro">
+
+                <div class="modal-body">
+
+                    <label>Nombre del Logro</label>
+                    <input type="text" id="nombreLogro" name="nombreLogro" class="input-field" required>
+
+                    <label>Descripción / Requisito</label>
+                    <textarea id="descripcionLogro" name="descripcionLogro" class="input-field" rows="3"></textarea>
+
+                    <label>Insignia</label>
+                    <div class="image-section">
+                        <img id="previewLogro" src="https://cdn-icons-png.flaticon.com/512/1828/1828884.png">
+
+                        <div class="image-actions">
+                            <button type="button" id="btnImagenLogro" class="btn-upload">Subir Insignia</button>
+                            <input type="file" id="insigniaLogro" name="insigniaLogro" hidden accept="image/*">
+                        </div>
+                    </div>
+
+                    <label>Puntos Necesarios para Desbloquear</label>
+                    <input type="number" id="puntosLogro" name="puntosLogro" class="input-field" min="0" required
+                        placeholder="Ej: 100 (El usuario necesita 100 pts para ganar esto)">
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancelar" id="btnCancelar">Cancelar</button>
+                    <button type="submit" class="btn-guardar">Guardar</button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <script src="logros.js"></script>
+</body>
+
+</html>

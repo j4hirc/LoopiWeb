@@ -1,0 +1,192 @@
+:root {
+    /* Paleta Rústica Eco */
+    --primary: #2e8b57;
+    --primary-dark: #1b5e20;
+    --accent: #e67e22;
+    --bg-body: #fdfbf7;
+    --text-dark: #2d3436;
+    
+    /* Colores Retro (Estudio) */
+    --card-color-1: #aed581; 
+    --card-color-2: #81d4fa; 
+    --card-color-3: #ce93d8; 
+    --card-color-4: #ffcc80;
+    
+    --shadow-card: 15px 15px 0px rgba(0,0,0,0.85); /* Sombra más fuerte */
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--bg-body);
+    color: var(--text-dark);
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    min-height: 100vh;
+}
+
+/* NAVBAR (Flotante) */
+.navbar-aprende {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 30px 5%;
+    position: absolute;
+    width: 100%;
+    top: 0;
+    z-index: 100;
+}
+.nav-back {
+    cursor: pointer;
+    font-weight: 800;
+    color: var(--primary-dark);
+    background: rgba(255,255,255,0.9);
+    padding: 12px 25px;
+    border-radius: 50px;
+    border: 3px solid var(--primary-dark);
+    transition: 0.3s;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    box-shadow: 5px 5px 0px rgba(0,0,0,0.2);
+}
+.nav-back:hover { 
+    transform: translate(-3px, -3px);
+    box-shadow: 8px 8px 0px rgba(0,0,0,0.3);
+    background: var(--primary); 
+    color: white; 
+}
+.nav-title { 
+    font-weight: 900; 
+    color: var(--primary-dark); 
+    font-size: 1.5rem; 
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* HEADER (Título Grande) */
+.learn-header {
+    text-align: center;
+    padding-top: 120px;
+    padding-bottom: 20px;
+}
+.learn-header h1 {
+    font-size: 4rem;
+    color: var(--primary-dark);
+    margin-bottom: 10px;
+    text-shadow: 3px 3px 0px rgba(0,0,0,0.1);
+}
+.learn-header p { font-size: 1.4rem; color: #555; font-weight: 500; }
+
+/* --- ZONA DE ESTUDIO (CARRUSEL 3D GIGANTE) --- */
+.main-content {
+    width: 100%;
+    /* Altura mayor para tarjetas grandes */
+    height: 750px; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    perspective: 1200px; 
+    overflow: hidden; /* Importante para que el scroll del mouse no mueva la página */
+}
+
+.posts-grid {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* --- TARJETAS GIGANTES --- */
+.post-card {
+    position: absolute;
+    /* TAMAÑO AUMENTADO */
+    width: 420px; 
+    height: 620px;
+    
+    background: white;
+    border-radius: 40px;
+    border: 4px solid #111;
+    cursor: pointer;
+    transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+    
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 25px;
+    box-shadow: var(--shadow-card);
+    transform-origin: center center;
+}
+
+/* Colores alternados */
+.post-card:nth-child(4n+1) { background-color: var(--card-color-1); }
+.post-card:nth-child(4n+2) { background-color: var(--card-color-2); }
+.post-card:nth-child(4n+3) { background-color: var(--card-color-3); }
+.post-card:nth-child(4n+4) { background-color: var(--card-color-4); }
+
+/* IMAGEN CIRCULAR GRANDE */
+.img-container {
+    width: 320px;
+    height: 320px;
+    background: #000;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 4px solid #111;
+    margin-top: 40px;
+    z-index: 1;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
+}
+.img-container img { width: 100%; height: 100%; object-fit: cover; }
+
+/* ETIQUETA TÍTULO */
+.card-body {
+    position: absolute;
+    bottom: 50px;
+    width: 85%;
+    background: white;
+    border: 3px solid #111;
+    padding: 18px;
+    text-align: center;
+    box-shadow: 8px 8px 0px rgba(0,0,0,0.15);
+    z-index: 2;
+    border-radius: 15px;
+}
+.card-title {
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: #111;
+    margin: 0;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: 1px;
+}
+
+/* MODAL (Estilo Estudio) */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; justify-content: center; align-items: center; padding: 30px; backdrop-filter: blur(8px); }
+.modal-content { background: #fff; width: 100%; max-width: 1000px; border-radius: 30px; overflow: hidden; display: grid; grid-template-columns: 1.2fr 0.8fr; box-shadow: 0 30px 80px rgba(0,0,0,0.7); max-height: 85vh; border: 4px solid #111; }
+.modal-img-wrapper { background: #f0f0f0; height: 100%; display: flex; align-items: center; justify-content: center; border-right: 4px solid #111; }
+.modal-img-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+.modal-body { padding: 50px; overflow-y: auto; }
+.close-btn { position: absolute; top: 25px; right: 25px; background: #fff; border: 3px solid #111; font-size: 1.5rem; cursor: pointer; border-radius: 50%; width: 50px; height: 50px; box-shadow: 5px 5px 0px rgba(0,0,0,1); transition: 0.2s; }
+.close-btn:hover { transform: translate(-2px, -2px); box-shadow: 7px 7px 0px #000; }
+
+#modal-titulo { font-size: 2.5rem; color: #111; margin-bottom: 25px; line-height: 1.1; font-weight: 900; text-transform: uppercase; }
+.modal-text { font-size: 1.2rem; line-height: 1.8; color: #444; }
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .main-content { height: 600px; }
+    .post-card { width: 340px; height: 500px; }
+    .img-container { width: 240px; height: 240px; }
+}
+@media (max-width: 768px) {
+    .main-content { height: 550px; }
+    .post-card { width: 280px; height: 440px; }
+    .img-container { width: 200px; height: 200px; }
+    .modal-content { grid-template-columns: 1fr; }
+    .learn-header h1 { font-size: 2.5rem; }
+}

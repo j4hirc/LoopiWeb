@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Historial de Recolecciones | Loopi</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="historial_entregas.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <span>Historial</span>
+            </div>
+            <ul class="nav-menu">
+                <li>
+                    <a href="../reciclador.html" class="nav-link">
+                        <i class="fa-solid fa-arrow-left"></i> Volver al Panel
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <header class="page-header">
+            <h1>Mis Actividades Pasadas</h1>
+            <p>Registro completo de tus recolecciones finalizadas y canceladas.</p>
+        </header>
+
+        <div class="controls-area">
+            <div class="search-box">
+                <i class="fa-solid fa-search"></i>
+                <input type="text" id="buscarHistorial" placeholder="Buscar por cliente, dirección...">
+            </div>
+
+            <div class="filtros">
+                <button class="btn-filtro active" data-estado="TODOS">Todo</button>
+                <button class="btn-filtro" data-estado="FINALIZADO">Completadas</button>
+                <button class="btn-filtro" data-estado="CANCELADO">Canceladas</button>
+            </div>
+        </div>
+
+        <div class="grid-cards" id="gridHistorial">
+            </div>
+    </div>
+
+    <template id="tplHistorial">
+        <div class="history-card">
+            <div class="card-status-strip"></div> <div class="card-content">
+                <div class="card-header-info">
+                    <span class="date-badge">📅 01 Ene</span>
+                    <span class="status-badge">Finalizado</span>
+                </div>
+
+                <div class="user-row">
+                    <div class="avatar-circle">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div>
+                        <h3 class="txtUsuario">Nombre Usuario</h3>
+                        <p class="txtDireccion">Dirección...</p>
+                    </div>
+                </div>
+
+                <div class="card-footer">
+                    <span class="points-tag">🏆 +0 pts</span>
+                    <button class="btn-ver-detalle">
+                        Ver Detalles <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <div class="modal-overlay" id="modalDetalle">
+        <div class="modal-receipt">
+            <div class="receipt-header">
+                <h3>Resumen de Recolección</h3>
+                <button class="btn-close-modal" onclick="cerrarModalDetalle()">×</button>
+            </div>
+            
+            <div class="receipt-body" id="detalleContenido">
+                </div>
+
+            <div class="receipt-footer">
+                <button class="btn-close-action" onclick="cerrarModalDetalle()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="historial_entregas.js"></script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Multimedia</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="multimedia.css">
+</head>
+<body>
+
+<header class="header">
+    <h2>Gestión de Multimedia</h2>
+    <button class="btn-agregar" id="btnNuevo">+ Nuevo Contenido</button>
+</header>
+
+<div class="search-container">
+    <input type="text" id="searchInput" placeholder="Buscar contenido...">
+</div>
+
+<div class="grid-container" id="gridMultimedia"></div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal-container">
+
+        <div class="modal-header">
+            <span id="modalTitle">Nuevo Contenido</span>
+            <button class="modal-close" id="btnCerrar">✕</button>
+        </div>
+
+        <form id="formMultimedia" class="modal-body">
+            <input type="hidden" id="idMultimedia">
+
+            <label>Imagen</label>
+            <div class="img-row">
+                <div class="img-preview" id="previewImg"></div>
+                <input type="file" id="imagen" accept="image/*">
+            </div>
+
+            <label>Título</label>
+            <input type="text" id="titulo" class="input-field" required>
+
+            <label>Descripción</label>
+            <textarea id="descripcion" class="input-field" rows="3"></textarea>
+        </form>
+
+        <div class="modal-footer">
+            <button class="btn-cancelar" id="btnCancelar">Cancelar</button>
+            <button class="btn-guardar" id="btnGuardar">Guardar</button>
+        </div>
+
+    </div>
+</div>
+
+<script src="multimedia.js"></script>
+</body>
+</html>

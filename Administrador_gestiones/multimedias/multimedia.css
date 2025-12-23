@@ -1,0 +1,173 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+body {
+    margin: 0;
+    background: #fcfbe8;
+    font-family: Poppins, sans-serif;
+}
+
+.header {
+    background: #2D5A4A;
+    padding: 20px;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn-agregar {
+    background: #6DB85C;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 10px;
+    color: white;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.search-container {
+    max-width: 900px;
+    margin: 20px auto;
+    padding: 0 20px;
+}
+
+#searchInput {
+    width: 100%;
+    padding: 12px;
+    border-radius: 12px;
+    border: 2px solid #ccc;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+    padding: 20px;
+    max-width: 1200px;
+    margin: auto;
+}
+
+.card {
+    background: white;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 6px 18px rgba(0,0,0,.12);
+    display: flex;
+    flex-direction: column;
+}
+
+.card img {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+}
+
+.card-body {
+    padding: 14px;
+    flex: 1;
+}
+
+.card-title {
+    font-weight: 700;
+    color: #2D5A4A;
+}
+
+.card-desc {
+    font-size: 14px;
+    color: #555;
+}
+
+.card-actions {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px;
+    border-top: 1px solid #eee;
+}
+
+.card-actions button {
+    border: none;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: white;
+}
+
+.btn-edit { background: #6DB85C; }
+.btn-delete { background: #D9534F; }
+
+/* MODAL */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-container {
+    background: white;
+    border-radius: 18px;
+    width: 95%;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-header {
+    background: #2D5A4A;
+    color: white;
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.modal-body {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.input-field {
+    padding: 12px;
+    border-radius: 12px;
+    border: 2px solid #ccc;
+}
+
+.img-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.img-preview {
+    width: 80px;
+    height: 80px;
+    border-radius: 12px;
+    background: #eee center/cover no-repeat;
+    border: 1px solid #ccc;
+}
+
+.modal-footer {
+    padding: 14px;
+    display: flex;
+    justify-content: end;
+    gap: 10px;
+}
+
+.btn-guardar {
+    background: #6DB85C;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 10px;
+}
+
+.btn-cancelar {
+    background: #bbb;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 10px;
+}
