@@ -5,7 +5,6 @@ document.addEventListener("DOMContentLoaded", () => {
     cargarAuspiciantes();
 });
 
-
 async function cargarMateriales() {
     const contenedor = document.getElementById("contenedor-materiales");
     
@@ -28,12 +27,16 @@ async function cargarMateriales() {
         materiales.forEach(mat => {
             let imagenHtml = '';
             
-            if (mat.imagen && mat.imagen.length > 50) {
-                const limpia = mat.imagen.replace(/(\r\n|\n|\r)/gm, "");
-                const src = limpia.startsWith("data:image") ? limpia : `data:image/png;base64,${limpia}`;
+            if (mat.imagen && mat.imagen.length > 5) {
+                let src = mat.imagen;
+                
+                if (!src.startsWith("http") && !src.startsWith("data:")) {
+                    src = `data:image/png;base64,${mat.imagen}`;
+                }
+
                 imagenHtml = `<img src="${src}" alt="${mat.nombre}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%;">`;
             } else {
-                imagenHtml = `<div class="material-icon blue">♻️</div>`;
+                imagenHtml = `<div class="material-icon blue" style="font-size: 30px;">♻️</div>`;
             }
 
             const card = document.createElement("div");
@@ -41,9 +44,9 @@ async function cargarMateriales() {
             
             card.innerHTML = `
                 ${imagenHtml}
-                <div>${mat.nombre}</div>
-                <div style="font-size: 0.8rem; color: #666;">${mat.descripcion || mat.tipo_material}</div>
-                <div style="font-size: 0.7rem; color: #2D5A4A; font-weight: bold; margin-top: 5px;">
+                <div style="font-weight:bold; margin-top:5px;">${mat.nombre}</div>
+                <div style="font-size: 0.8rem; color: #666; text-align:center;">${mat.descripcion || mat.tipo_material || ''}</div>
+                <div style="font-size: 0.75rem; color: #2D5A4A; font-weight: bold; margin-top: 5px; background:#e8f5e9; padding:2px 8px; border-radius:10px;">
                     ${mat.puntos_por_kg} Pts/Kg
                 </div>
             `;
@@ -77,11 +80,14 @@ async function cargarAuspiciantes() {
         }
 
         auspiciantes.forEach(aus => {
-            let imagenSrc = 'https://cdn-icons-png.flaticon.com/512/929/929494.png'; // Placeholder
+            let imagenSrc = 'https://cdn-icons-png.flaticon.com/512/929/929494.png'; 
             
-            if (aus.imagen && aus.imagen.length > 20) {
-                const limpia = aus.imagen.replace(/(\r\n|\n|\r)/gm, "");
-                imagenSrc = limpia.startsWith("data:image") ? limpia : `data:image/png;base64,${limpia}`;
+            if (aus.imagen && aus.imagen.length > 5) {
+                if (aus.imagen.startsWith("http") || aus.imagen.startsWith("data:")) {
+                    imagenSrc = aus.imagen;
+                } else {
+                    imagenSrc = `data:image/png;base64,${aus.imagen}`;
+                }
             }
 
             const card = document.createElement("div");
@@ -89,7 +95,7 @@ async function cargarAuspiciantes() {
 
             card.innerHTML = `
                 <div class="sponsor-logo" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;">
-                    <img src="${imagenSrc}" alt="${aus.nombre}" style="max-width: 80px; max-height: 80px; object-fit: contain;">
+                    <img src="${imagenSrc}" alt="${aus.nombre}" style="width: 80px; height: 80px; object-fit: contain;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/929/929494.png'">
                     <span style="font-size: 1rem; font-weight: bold; color: #333;">${aus.nombre}</span>
                 </div>
                 <p style="font-size: 0.8rem; text-align: center; color: #666; margin-top: 5px; padding: 0 10px;">

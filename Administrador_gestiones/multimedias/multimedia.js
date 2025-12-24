@@ -1,5 +1,4 @@
 const BASE_URL = 'https://api-loopi.onrender.com';
-
 const API_URL = `${BASE_URL}/api/multimedias`;
 
 const grid = document.getElementById('gridMultimedia');
@@ -17,6 +16,7 @@ const previewImg = document.getElementById('previewImg');
 const searchInput = document.getElementById('searchInput');
 
 let cache = [];
+let fotoNuevaFile = null; 
 
 document.addEventListener('DOMContentLoaded', cargar);
 
@@ -28,6 +28,7 @@ btnGuardar.onclick = guardar;
 imagenInput.onchange = () => {
     const file = imagenInput.files[0];
     if (file) {
+        fotoNuevaFile = file; // Guardamos el archivo para enviarlo luego
         const reader = new FileReader();
         reader.onload = e => previewImg.style.backgroundImage = `url(${e.target.result})`;
         reader.readAsDataURL(file);
@@ -43,16 +44,22 @@ searchInput.oninput = () => {
 };
 
 function abrirModal() {
+    resetForm();
     modal.style.display = 'flex';
 }
 
 function cerrarModal() {
     modal.style.display = 'none';
+    resetForm();
+}
+
+function resetForm() {
     idInput.value = '';
     tituloInput.value = '';
     descripcionInput.value = '';
     imagenInput.value = '';
     previewImg.style.backgroundImage = '';
+    fotoNuevaFile = null;
 }
 
 async function cargar() {
@@ -75,9 +82,11 @@ function render(lista) {
         let imageUrl = 'https://via.placeholder.com/150?text=Sin+Img';
         
         if (m.imagenes) {
-            imageUrl = m.imagenes.startsWith('data:') 
-                ? m.imagenes 
-                : `data:image/png;base64,${m.imagenes}`;
+            if (m.imagenes.startsWith('http') || m.imagenes.startsWith('data:')) {
+                imageUrl = m.imagenes;
+            } else {
+                imageUrl = `data:image/png;base64,${m.imagenes}`;
+            }
         }
 
         card.innerHTML = `
@@ -97,61 +106,59 @@ function render(lista) {
 
 window.editar = (id) => {
     const m = cache.find(x => x.id_multimedia === id);
+    if(!m) return;
+
+    resetForm(); 
+
     idInput.value = id;
     tituloInput.value = m.titulo;
     descripcionInput.value = m.descripcion;
     
     if (m.imagenes) {
-        const imageUrl = m.imagenes.startsWith('data:') 
-            ? m.imagenes 
-            : `data:image/png;base64,${m.imagenes}`;
-            
+        let imageUrl = m.imagenes;
+        if (!imageUrl.startsWith('http') && !imageUrl.startsWith('data:')) {
+             imageUrl = `data:image/png;base64,${m.imagenes}`;
+        }
         previewImg.style.backgroundImage = `url(${imageUrl})`;
-    } else {
-        previewImg.style.backgroundImage = '';
     }
     
-    abrirModal();
+    modal.style.display = 'flex'; // Abrimos modal directo
 };
 
 async function guardar() {
-    const file = imagenInput.files[0];
-    let fotoBase64 = null;
-
-    if (file) {
-        fotoBase64 = await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result); // Esto devuelve "data:image/png;base64,..."
-            reader.onerror = error => reject(error);
-        });
-    }
-
-    const data = {
+    const id = idInput.value;
+    
+    const dataObj = {
         titulo: tituloInput.value,
-        descripcion: descripcionInput.value
+        descripcion: descripcionInput.value,
+        imagenes: null // El backend gestiona la foto por separado
     };
 
-    if (fotoBase64) {
-        data.imagenes = fotoBase64; 
+    const formData = new FormData();
+    formData.append("datos", JSON.stringify(dataObj));
+
+    if (fotoNuevaFile) {
+        formData.append("archivo", fotoNuevaFile);
     }
-    const id = idInput.value;
+
     const url = id ? `${API_URL}/${id}` : API_URL;
     const method = id ? 'PUT' : 'POST';
 
     try {
+
         const res = await fetch(url, { 
             method: method, 
-            headers: {
-                'Content-Type': 'application/json' 
-            },
-            body: JSON.stringify(data)
+            body: formData 
         });
 
-        if(!res.ok) throw new Error("Error en la petición");
+        if(!res.ok) {
+            const errText = await res.text();
+            throw new Error("Error en la petición: " + errText);
+        }
 
         cerrarModal();
-        cargar(); // Recargar la lista
+        cargar(); 
+        alert("Guardado correctamente");
     } catch (error) {
         console.error("Error al guardar:", error);
         alert("Error al guardar el contenido.");
@@ -160,6 +167,8 @@ async function guardar() {
 
 window.eliminar = async (id) => {
     if (!confirm('¿Eliminar este contenido?')) return;
-    await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-    cargar();
+    try {
+        await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+        cargar();
+    } catch(e) { console.error(e); }
 };

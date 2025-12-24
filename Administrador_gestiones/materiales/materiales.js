@@ -12,6 +12,7 @@ const inputImagen = document.getElementById('imagenMaterial');
 const previewImagen = document.getElementById('previewImagenMaterial');
 
 let materialesCache = []; 
+let fotoNuevaFile = null; 
 
 document.addEventListener('DOMContentLoaded', () => {
     listarMateriales();
@@ -37,15 +38,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 function abrirModal() {
+    resetForm();
     modalOverlay.classList.add('show');
 }
 
 function cerrarModal() {
     modalOverlay.classList.remove('show');
+    resetForm();
+}
+
+function resetForm() {
     form.reset();
     document.getElementById('idMaterial').value = '';
     previewImagen.src = 'https://cdn-icons-png.flaticon.com/512/685/685662.png';
     document.getElementById('modalTitle').textContent = 'Agregar Material';
+    fotoNuevaFile = null; 
 }
 
 window.cargarDatosEdicion = function(id) {
@@ -58,16 +65,18 @@ window.cargarDatosEdicion = function(id) {
     document.getElementById('tipoMaterial').value = material.tipo_material; 
     document.getElementById('puntosKg').value = material.puntos_por_kg; 
     
-    if(material.imagen && material.imagen.length > 20) {
-        previewImagen.src = material.imagen.startsWith('data:image') 
-            ? material.imagen 
-            : `data:image/png;base64,${material.imagen}`;
+    if(material.imagen && material.imagen.length > 5) {
+        let imgUrl = material.imagen;
+        if (!imgUrl.startsWith('http') && !imgUrl.startsWith('data:')) {
+             imgUrl = `data:image/png;base64,${material.imagen}`;
+        }
+        previewImagen.src = imgUrl;
     } else {
         previewImagen.src = 'https://cdn-icons-png.flaticon.com/512/685/685662.png';
     }
 
     document.getElementById('modalTitle').textContent = 'Editar Material';
-    abrirModal();
+    modalOverlay.classList.add('show');
 };
 
 
@@ -90,7 +99,6 @@ async function guardarMaterial(e) {
     const id = document.getElementById('idMaterial').value;
     const nombre = document.getElementById('nombreMaterial').value.trim();
     const puntos = parseFloat(document.getElementById('puntosKg').value);
-    const imagenSrc = previewImagen.src;
 
     if (isNaN(puntos) || puntos <= 0) {
         return alert("⚠️ Los puntos por Kg deben ser mayor a 0.");
@@ -98,27 +106,26 @@ async function guardarMaterial(e) {
 
     const nombreDuplicado = materialesCache.some(m => {
         const mismoNombre = m.nombre.toLowerCase() === nombre.toLowerCase();
-        if (id) {
-            return mismoNombre && m.id_material != id;
-        }
+        if (id) return mismoNombre && m.id_material != id;
         return mismoNombre;
     });
 
-    if (nombreDuplicado) {
-        return alert("Ya existe un material con ese nombre.");
-    }
-
-    if (imagenSrc.includes("flaticon")) {
-        return alert("Debes seleccionar una imagen para el material.");
-    }
+    if (nombreDuplicado) return alert("Ya existe un material con ese nombre.");
 
     const materialData = {
         nombre: nombre,
         descripcion: document.getElementById('descripcionMaterial').value,
         tipo_material: document.getElementById('tipoMaterial').value, 
         puntos_por_kg: puntos,
-        imagen: imagenSrc 
+        imagen: null // Backend maneja la foto aparte
     };
+
+    const formData = new FormData();
+    formData.append("datos", JSON.stringify(materialData));
+
+    if (fotoNuevaFile) {
+        formData.append("archivo", fotoNuevaFile);
+    }
 
     const metodo = id ? 'PUT' : 'POST';
     const url = id ? `${API_URL}/${id}` : API_URL;
@@ -126,8 +133,7 @@ async function guardarMaterial(e) {
     try {
         const response = await fetch(url, {
             method: metodo,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(materialData)
+            body: formData 
         });
 
         if (response.ok) {
@@ -135,6 +141,8 @@ async function guardarMaterial(e) {
             listarMateriales(); 
             alert(id ? 'Material actualizado correctamente' : 'Material creado correctamente');
         } else {
+            const errText = await response.text();
+            console.error(errText);
             alert('Error al guardar. Verifica los datos.');
         }
     } catch (error) {
@@ -166,8 +174,14 @@ function renderizarLista(materiales) {
 
     materiales.forEach(mat => {
         let imgUrl = 'https://cdn-icons-png.flaticon.com/512/685/685662.png';
-        if (mat.imagen && mat.imagen.length > 20) {
-            imgUrl = mat.imagen.startsWith('data:image') ? mat.imagen : `data:image/png;base64,${mat.imagen}`;
+        
+        // Soporte URL y Base64
+        if (mat.imagen && mat.imagen.length > 5) {
+            if (mat.imagen.startsWith('http') || mat.imagen.startsWith('data:')) {
+                imgUrl = mat.imagen;
+            } else {
+                imgUrl = `data:image/png;base64,${mat.imagen}`;
+            }
         }
 
         const card = document.createElement('div');
@@ -176,7 +190,7 @@ function renderizarLista(materiales) {
         card.innerHTML = `
             <div class="card-icono">
                 <div class="card-icono-inner">
-                    <img src="${imgUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:12px;">
+                    <img src="${imgUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:12px;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/685/685662.png'">
                 </div>
             </div>
             <div class="card-info">
@@ -203,15 +217,17 @@ function renderizarLista(materiales) {
 function procesarImagen(event) {
     const file = event.target.files[0];
     if (file) {
-        // Validación extra de tipo y tamaño
         if (!file.type.startsWith('image/')) {
             alert("Solo se permiten imágenes");
             return;
         }
         if (file.size > 2 * 1024 * 1024) { 
-            alert("La imagen es muy pesada (Máx 2MB)");
+            alert("La imagen es muy pesada (Máx 5MB)");
             return;
         }
+
+   
+        fotoNuevaFile = file;
 
         const reader = new FileReader();
         reader.onload = function(e) {

@@ -203,14 +203,18 @@ async function finalizarEntregaBackend(id, puntos) {
     }
 }
 
-// --- MODAL DETALLE (CORREGIDO PARA CORREO) ---
 function abrirDetalle(entrega) {
     const cont = document.getElementById("detalleContenido");
     
     let evidenciaHtml = "";
-    if(entrega.fotoEvidencia) {
-        let src = entrega.fotoEvidencia.startsWith("data:") ? entrega.fotoEvidencia : `data:image/jpeg;base64,${entrega.fotoEvidencia}`;
-        evidenciaHtml = `<p><strong>Evidencia:</strong></p><img src="${src}" class="detalle-foto">`;
+    if(entrega.fotoEvidencia && entrega.fotoEvidencia.length > 5) {
+        let src = entrega.fotoEvidencia;
+        
+        if (!src.startsWith("http") && !src.startsWith("data:")) {
+            src = `data:image/jpeg;base64,${entrega.fotoEvidencia}`;
+        }
+
+        evidenciaHtml = `<p><strong>Evidencia:</strong></p><img src="${src}" class="detalle-foto" onerror="this.src='https://via.placeholder.com/300x200?text=Error+Carga'">`;
     }
 
     let matsHtml = "";
@@ -225,7 +229,6 @@ function abrirDetalle(entrega) {
         });
     }
 
-    // CORREO DEL SOLICITANTE
     const correoUsuario = entrega.solicitante.correo || "usuario@loopi.com";
 
     cont.innerHTML = `

@@ -26,6 +26,7 @@ async function cargarTableroLogros(cedula) {
         
         const todosLosLogros = await resTodos.json();
         const misLogros = resMios.ok ? await resMios.json() : [];
+        
         const misLogrosIds = new Set(misLogros.map(l => l.id_logro));
 
         contenedor.innerHTML = "";
@@ -57,11 +58,16 @@ function crearTarjeta(logro, desbloqueado) {
     const div = document.createElement("div");
     div.className = `logro-card ${desbloqueado ? 'unlocked' : 'locked'}`;
 
-    let imgUrl = logro.imagen_logro;
-    if(!imgUrl || imgUrl.length < 20) imgUrl = 'https://cdn-icons-png.flaticon.com/512/1828/1828884.png';
-    else if(!imgUrl.startsWith('data:') && !imgUrl.startsWith('http')) {
-        imgUrl = `data:image/png;base64,${imgUrl}`;
+    let imgUrl = 'https://cdn-icons-png.flaticon.com/512/1828/1828884.png'; // Default
+
+    if (logro.imagen_logro && logro.imagen_logro.length > 5) {
+        if (logro.imagen_logro.startsWith('http') || logro.imagen_logro.startsWith('data:')) {
+            imgUrl = logro.imagen_logro;
+        } else {
+            imgUrl = `data:image/png;base64,${logro.imagen_logro}`;
+        }
     }
+
 
     const iconOverlay = `<div class="status-overlay">
         <i class="fa-solid ${desbloqueado ? 'fa-check' : 'fa-lock'}"></i>
@@ -74,7 +80,7 @@ function crearTarjeta(logro, desbloqueado) {
     div.innerHTML = `
         ${iconOverlay}
         <div class="img-container">
-            <img src="${imgUrl}" alt="Logro">
+            <img src="${imgUrl}" alt="Logro" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1828/1828884.png'">
         </div>
         <h3>${logro.nombre}</h3>
         <p>${logro.descripcion || 'Sigue reciclando para descubrir este logro.'}</p>
@@ -89,7 +95,8 @@ function actualizarProgreso(obtenidos, total) {
     const porcentaje = Math.round((obtenidos / total) * 100);
     
     const barra = document.getElementById("barraProgreso");
-    barra.style.width = `${porcentaje}%`;
+    if(barra) barra.style.width = `${porcentaje}%`;
     
-    document.getElementById("textoProgreso").innerText = `${porcentaje}% Completado`;
+    const texto = document.getElementById("textoProgreso");
+    if(texto) texto.innerText = `${porcentaje}% Completado`;
 }

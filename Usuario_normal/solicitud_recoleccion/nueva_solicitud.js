@@ -6,7 +6,7 @@ let markersLayer;
 let allPuntos = []; 
 
 let selectedLocationId = null;
-let fotoBase64 = null;
+let fotoEvidenciaFile = null; // CAMBIO: Guardamos el archivo, no el string Base64
 let detallesList = [];
 let materialesGlobales = [];
 
@@ -18,6 +18,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   initMap();
   await cargarMaterialesGlobales(); 
   await cargarDatosIniciales();
+  
+  // Configurar subida con compresión
   setupImageUpload();
 
   document.getElementById("btnAddMaterial").addEventListener("click", agregarMaterialALista);
@@ -79,8 +81,6 @@ async function cargarDatosIniciales() {
       const idPreSeleccionado = localStorage.getItem('preSelectedUbicacionId');
       
       if (idPreSeleccionado) {
-          console.log("Auto-seleccionando punto ID:", idPreSeleccionado);
-          
           const puntoTarget = allPuntos.find(p => (p.id_ubicacion_reciclaje || p.id) == idPreSeleccionado);
           
           if (puntoTarget) {
@@ -94,9 +94,7 @@ async function cargarDatosIniciales() {
                   nombreShow, 
                   esReciclador
               );
-
-              }
-
+          }
           localStorage.removeItem('preSelectedUbicacionId');
       }
     }
@@ -193,7 +191,7 @@ window.seleccionarPuntoDesdePopup = function (id, nombre, esReciclador) {
 
   nombreDiv.innerHTML = `<span style="color:${colorHTML}; font-weight:bold; font-size:1.1em;">${iconoHTML} ${nombre}</span>`;
   infoDiv.style.display = "block";
-  infoDiv.style.borderLeft = `5px solid ${colorHTML}`; // Toque visual
+  infoDiv.style.borderLeft = `5px solid ${colorHTML}`;
 
   const puntoSeleccionado = allPuntos.find(p => (p.id_ubicacion_reciclaje || p.id) == id);
 
@@ -274,7 +272,6 @@ function agregarMaterialALista() {
   const idMat = select.value;
   const peso = parseFloat(inputCant.value);
 
-  
   if (!selectedLocationId) {
       return Swal.fire("Espera", "Primero selecciona un punto en el mapa.", "warning");
   }
@@ -342,6 +339,7 @@ window.borrarItem = function (index) {
   validarFormulario();
 };
 
+// --- CONFIGURACIÓN DE SUBIDA DE IMAGEN (COMPRESIÓN) ---
 function setupImageUpload() {
   const input = document.getElementById("inputFoto");
   const preview = document.getElementById("imgPreview");
@@ -349,26 +347,82 @@ function setupImageUpload() {
 
   if (!input) return;
 
-  input.addEventListener("change", function () {
+  input.addEventListener("change", async function () {
     const file = this.files[0];
     if (file) {
-        if (file.size > 5 * 1024 * 1024) {
-            Swal.fire("Archivo muy grande", "La foto debe pesar menos de 5MB", "error");
-            this.value = ""; // Limpiar input
+        if (!file.type.startsWith('image/')) {
+            Swal.fire("Error", "Solo se permiten imágenes", "error");
+            this.value = "";
             return;
         }
 
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            preview.src = e.target.result;
-            preview.style.display = "block";
-            if (uploadText) uploadText.style.display = "none";
-            fotoBase64 = e.target.result.split(",")[1];
-            validarFormulario();
-        };
-        reader.readAsDataURL(file);
+        try {
+            const archivoComprimido = await comprimirImagen(file);
+            
+            fotoEvidenciaFile = archivoComprimido;
+
+            // 3. Previsualizar
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                preview.src = e.target.result;
+                preview.style.display = "block";
+                if (uploadText) uploadText.style.display = "none";
+                validarFormulario();
+            };
+            reader.readAsDataURL(archivoComprimido);
+
+        } catch (error) {
+            console.error(error);
+            Swal.fire("Error", "No se pudo procesar la imagen", "error");
+        }
     }
   });
+}
+
+async function comprimirImagen(archivo) {
+    return new Promise((resolve, reject) => {
+        const maxWidth = 800; // Redimensionar si pasa de 800px
+        const quality = 0.7;  // Bajar calidad al 70%
+
+        const reader = new FileReader();
+        reader.readAsDataURL(archivo);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                let width = img.width;
+                let height = img.height;
+
+                if (width > maxWidth) {
+                    height *= maxWidth / width;
+                    width = maxWidth;
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob((blob) => {
+                    if (!blob) {
+                        reject(new Error("Error al comprimir imagen"));
+                        return;
+                    }
+                    const archivoComprimido = new File([blob], archivo.name, {
+                        type: 'image/jpeg',
+                        lastModified: Date.now(),
+                    });
+                    
+                    console.log(`Compresión: ${(archivo.size/1024).toFixed(2)}KB -> ${(archivoComprimido.size/1024).toFixed(2)}KB`);
+                    resolve(archivoComprimido);
+                }, 'image/jpeg', quality);
+            };
+            img.onerror = (error) => reject(error);
+        };
+        reader.onerror = (error) => reject(error);
+    });
 }
 
 function validarFormulario() {
@@ -377,7 +431,7 @@ function validarFormulario() {
 
   const condiciones = 
       selectedLocationId && 
-      fotoBase64 && 
+      fotoEvidenciaFile && // Validamos que exista el archivo
       fecha && 
       detallesList.length > 0;
 
@@ -401,17 +455,26 @@ async function enviarSolicitud() {
   }
   const usuarioObj = JSON.parse(usuarioLocal);
 
-  const payload = {
+  const datosObj = {
     solicitante: { cedula: usuarioObj.cedula },
     ubicacion: { id_ubicacion_reciclaje: selectedLocationId },
-    fotoEvidencia: fotoBase64,
-    estado: "PENDIENTE",
+    fotoEvidencia: null, // Backend lo maneja por separado
+    estado: "VERIFICACION_ADMIN", // Estado inicial corregido
     fecha_recoleccion_estimada: document.getElementById("inputFecha").value,
     detalles: detallesList.map(d => ({
         material: { id_material: d.material.id_material },
         cantidad_kg: d.cantidad_kg
     }))
   };
+
+  const formData = new FormData();
+  formData.append("datos", JSON.stringify(datosObj));
+  
+  if (fotoEvidenciaFile) {
+      formData.append("archivo", fotoEvidenciaFile);
+  } else {
+      return Swal.fire("Falta foto", "Debes subir una foto de evidencia", "warning");
+  }
 
   try {
     Swal.fire({ 
@@ -423,8 +486,7 @@ async function enviarSolicitud() {
 
     const response = await fetch(`${API_BASE}/solicitud_recolecciones`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: formData,
     });
 
     if (response.ok) {
@@ -439,7 +501,7 @@ async function enviarSolicitud() {
     } else {
       const txt = await response.text();
       console.error(txt);
-      Swal.fire("Error", "No se pudo guardar la solicitud.", "error");
+      Swal.fire("Error", "No se pudo guardar la solicitud. Revisa la consola.", "error");
     }
   } catch (e) {
     console.error(e);

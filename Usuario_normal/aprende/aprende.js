@@ -24,13 +24,16 @@ async function cargarMultimedia() {
 
         cardsData.forEach((item, index) => {
             
-            let imgUrl = 'https://via.placeholder.com/400x400'; // Imagen por defecto
+            let imgUrl = 'https://via.placeholder.com/400x400?text=Sin+Imagen'; // Default
 
-            if (item.imagenes) {
-                imgUrl = item.imagenes.startsWith('data:') 
-                    ? item.imagenes 
-                    : `data:image/png;base64,${item.imagenes}`;
+            if (item.imagenes && item.imagenes.length > 5) {
+                if (item.imagenes.startsWith('http') || item.imagenes.startsWith('data:')) {
+                    imgUrl = item.imagenes;
+                } else {
+                    imgUrl = `data:image/png;base64,${item.imagenes}`;
+                }
             }
+
 
             const card = document.createElement("div");
             card.className = "post-card";
@@ -45,7 +48,7 @@ async function cargarMultimedia() {
 
             card.innerHTML = `
                 <div class="img-container">
-                    <img src="${imgUrl}" alt="${item.titulo}" onerror="this.src='https://via.placeholder.com/400x400'">
+                    <img src="${imgUrl}" alt="${item.titulo}" onerror="this.src='https://via.placeholder.com/400x400?text=Error'">
                 </div>
                 <div class="card-body">
                     <h3 class="card-title">${item.titulo}</h3>
@@ -58,24 +61,25 @@ async function cargarMultimedia() {
         actualizarCarrusel();
 
         const scrollZone = document.querySelector('.main-content');
-        
-        scrollZone.addEventListener('wheel', (e) => {
-            e.preventDefault(); 
-            
-            if (isScrolling) return; 
-            
-            isScrolling = true;
-            
-            if (e.deltaY > 0) {
-                if (currentIndex < cardsData.length - 1) currentIndex++;
-            } else {
-                if (currentIndex > 0) currentIndex--;
-            }
-            
-            actualizarCarrusel();
-            
-            setTimeout(() => { isScrolling = false; }, 300); // 300ms de espera
-        }, { passive: false });
+        if(scrollZone) {
+            scrollZone.addEventListener('wheel', (e) => {
+                e.preventDefault(); 
+                
+                if (isScrolling) return; 
+                
+                isScrolling = true;
+                
+                if (e.deltaY > 0) {
+                    if (currentIndex < cardsData.length - 1) currentIndex++;
+                } else {
+                    if (currentIndex > 0) currentIndex--;
+                }
+                
+                actualizarCarrusel();
+                
+                setTimeout(() => { isScrolling = false; }, 300); // Debounce
+            }, { passive: false });
+        }
 
     } catch (e) {
         console.error(e);
@@ -123,14 +127,22 @@ function actualizarCarrusel() {
 }
 
 function abrirModal(item, imgUrl) {
-    document.getElementById("modal-img").src = imgUrl;
-    document.getElementById("modal-titulo").innerText = item.titulo;
-    document.getElementById("modal-desc").innerText = item.descripcion || "Sin descripción.";
-    document.getElementById("modal-detalle").style.display = "flex";
+    const modalImg = document.getElementById("modal-img");
+    if(modalImg) modalImg.src = imgUrl;
+
+    const modalTitulo = document.getElementById("modal-titulo");
+    if(modalTitulo) modalTitulo.innerText = item.titulo;
+
+    const modalDesc = document.getElementById("modal-desc");
+    if(modalDesc) modalDesc.innerText = item.descripcion || "Sin descripción.";
+
+    const modalDetalle = document.getElementById("modal-detalle");
+    if(modalDetalle) modalDetalle.style.display = "flex";
 }
 
 function cerrarModal(force = false) {
-    if (force || event.target.id === "modal-detalle") {
-        document.getElementById("modal-detalle").style.display = "none";
+    const modal = document.getElementById("modal-detalle");
+    if (modal && (force || event.target.id === "modal-detalle")) {
+        modal.style.display = "none";
     }
 }

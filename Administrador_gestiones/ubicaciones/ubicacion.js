@@ -1,9 +1,7 @@
-
 const API_URL = 'https://api-loopi.onrender.com/api/ubicacion_reciclajes';
 const API_PARROQUIAS = 'https://api-loopi.onrender.com/api/parroquias';
 const API_RECICLADORES = 'https://api-loopi.onrender.com/api/usuarios/recicladores';
 const API_MATERIALES = 'https://api-loopi.onrender.com/api/materiales';
-
 
 const gridUbicaciones = document.getElementById("gridUbicaciones");
 const searchInput = document.getElementById("buscarUbicacion");
@@ -21,13 +19,13 @@ let marker;
 let coordenadasSeleccionadas = null; 
 let coordenadasTemporales = null;    
 
+let fotoNuevaFile = null;
 
 document.addEventListener("DOMContentLoaded", () => {
     cargarParroquias();
     cargarRecicladores();
     cargarMateriales();
     listarUbicaciones();
-
 
     inputImagen.addEventListener("change", procesarImagen);
 
@@ -41,14 +39,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-
-
 function abrirModal() {
     resetearFormulario();
     document.getElementById("tituloModal").innerText = "Nueva Ubicación";
     modalOverlay.style.display = "flex";
 }
-
 
 async function cargarMateriales() {
     const container = document.getElementById("containerMateriales");
@@ -98,7 +93,6 @@ window.cargarDatosEdicion = async function (id) {
     if (selectParroquia.options.length <= 1) await cargarParroquias();
     if (selectReciclador.options.length <= 1) await cargarRecicladores();
 
-
     if (ubi.parroquia) {
         selectParroquia.value = ubi.parroquia.id_parroquia;
     }
@@ -108,7 +102,6 @@ window.cargarDatosEdicion = async function (id) {
     } else {
         selectReciclador.value = "";
     }
-
 
     if (ubi.materialesAceptados && ubi.materialesAceptados.length > 0) {
         ubi.materialesAceptados.forEach(item => {
@@ -124,9 +117,12 @@ window.cargarDatosEdicion = async function (id) {
         actualizarTextoCoords(ubi.latitud, ubi.longitud);
     }
 
-    if (ubi.foto && ubi.foto.length > 20) {
-        document.getElementById("fotoBase64").value = ubi.foto;
-        previewImagen.style.backgroundImage = `url(${ubi.foto})`;
+    if (ubi.foto && ubi.foto.length > 5) {
+        let fotoSrc = ubi.foto;
+        if (!fotoSrc.startsWith("http") && !fotoSrc.startsWith("data:")) {
+             fotoSrc = `data:image/png;base64,${ubi.foto}`;
+        }
+        previewImagen.style.backgroundImage = `url(${fotoSrc})`;
     }
 
     modalOverlay.style.display = "flex";
@@ -137,17 +133,16 @@ function cerrarModal() {
 }
 
 function resetearFormulario() {
-    // ... (Tus campos existentes) ...
     document.getElementById("idUbicacion").value = "";
     document.getElementById("nombrePunto").value = "";
     document.getElementById("direccion").value = "";
     selectParroquia.value = "";
     selectReciclador.value = "";
-    document.getElementById("fotoBase64").value = "";
-    previewImagen.style.backgroundImage = "none";
-    inputImagen.value = "";
     
-
+    fotoNuevaFile = null;
+    inputImagen.value = "";
+    previewImagen.style.backgroundImage = "none";
+    
     const checkboxes = document.querySelectorAll('input[name="materiales"]');
     checkboxes.forEach(cb => cb.checked = false);
 
@@ -161,24 +156,20 @@ function actualizarTextoCoords(lat, lng) {
     document.getElementById("txtLng").innerText = lng.toFixed(6);
 }
 
-// --- FUNCIONES DEL MAPA (MODAL SECUNDARIO) ---
 
 window.abrirModalMapa = function () {
     modalMapa.style.display = "flex";
 
-    // Esperamos 300ms a que el modal aparezca para iniciar Leaflet
     setTimeout(() => {
         iniciarMapa();
-        map.invalidateSize(); // ¡IMPORTANTE! Redimensiona el mapa
+        map.invalidateSize(); 
 
-        // Si ya hay coordenadas, centramos ahí
         if (coordenadasSeleccionadas) {
             colocarMarcador(coordenadasSeleccionadas.lat, coordenadasSeleccionadas.lng);
             map.setView([coordenadasSeleccionadas.lat, coordenadasSeleccionadas.lng], 15);
         } else {
-            // Si es nuevo, centramos en Cuenca
             map.setView([-2.9001, -79.0059], 13);
-            if (marker) map.removeLayer(marker); // Limpiamos marcador viejo si existe
+            if (marker) map.removeLayer(marker); 
         }
     }, 300);
 }
@@ -198,9 +189,8 @@ window.confirmarCoordenadas = function () {
 }
 
 function iniciarMapa() {
-    if (map) return; // Si ya existe, no lo recreamos
+    if (map) return; 
 
-    // OJO: Aquí usamos 'mapaLeaflet', el ID del div en el segundo modal
     map = L.map('mapaLeaflet').setView([-2.9001, -79.0059], 13);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -218,7 +208,6 @@ function colocarMarcador(lat, lng) {
     coordenadasTemporales = { lat: lat, lng: lng };
 }
 
-// --- CATALOGOS ---
 
 async function cargarParroquias() {
     try {
@@ -248,19 +237,12 @@ async function cargarRecicladores() {
                 opt.textContent = `${r.primer_nombre} ${r.apellido_paterno}`;
                 selectReciclador.appendChild(opt);
             });
-            console.log("Recicladores cargados correctamente");
-            return true;
-        } else {
-            console.error("La respuesta no es un array:", data);
-            return false;
-        }
+        } 
     } catch (e) { 
         console.error("Error en el fetch de recicladores:", e); 
-        return false;
     }
 }
 
-// --- CRUD ---
 
 async function listarUbicaciones() {
     try {
@@ -277,7 +259,6 @@ window.guardarUbicacion = async function () {
     const direccion = document.getElementById("direccion").value;
     const idParroquia = selectParroquia.value;
     const idReciclador = selectReciclador.value;
-    const fotoBase64 = document.getElementById("fotoBase64").value;
 
     if (!nombre || !coordenadasSeleccionadas || !idParroquia) {
         alert("Faltan datos (Nombre, Parroquia o Mapa)");
@@ -289,41 +270,45 @@ window.guardarUbicacion = async function () {
         objReciclador = { cedula: parseInt(idReciclador) }; 
     }
 
-    // 1. RECOLECTAR MATERIALES SELECCIONADOS
     const checkboxes = document.querySelectorAll('input[name="materiales"]:checked');
     const listaMateriales = Array.from(checkboxes).map(cb => {
-        // Estructura que espera tu Backend (UbicacionMaterial)
         return {
             material: { id_material: parseInt(cb.value) }
         };
     });
 
-    // 2. ARMAR EL PAYLOAD
-    const payload = {
+    const datosObj = {
         nombre: nombre,
         direccion: direccion,
         latitud: coordenadasSeleccionadas.lat,
         longitud: coordenadasSeleccionadas.lng,
-        foto: fotoBase64,
+        foto: null, 
         parroquia: { id_parroquia: parseInt(idParroquia) },
         reciclador: objReciclador,
-        materialesAceptados: listaMateriales // <--- AQUÍ VA LA LISTA
+        materialesAceptados: listaMateriales 
     };
+
+    const formData = new FormData();
+    formData.append("datos", JSON.stringify(datosObj));
+
+    if (fotoNuevaFile) {
+        formData.append("archivo", fotoNuevaFile);
+    }
 
     const metodo = id ? "PUT" : "POST";
     const url = id ? `${API_URL}/${id}` : API_URL;
 
     try {
+        // Enviar sin Content-Type manual
         const res = await fetch(url, {
             method: metodo,
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
+            body: formData 
         });
 
         if (res.ok) {
             cerrarModal();
             listarUbicaciones();
-            alert(`Ubicación guardada con ${listaMateriales.length} materiales.`);
+            alert(`Ubicación guardada correctamente.`);
         } else {
             const errorText = await res.text();
             console.error("Error backend:", errorText);
@@ -332,15 +317,17 @@ window.guardarUbicacion = async function () {
     } catch (e) { console.error(e); }
 };
 
-// --- RENDERIZADO ---
 
 function renderizarGrid(lista) {
     gridUbicaciones.innerHTML = "";
     lista.forEach(ubi => {
         let imgUrl = 'https://placehold.co/300x150?text=Sin+Imagen';
-        if (ubi.foto && ubi.foto.length > 20) {
-            let limpia = ubi.foto.replace(/(\r\n|\n|\r)/gm, "");
-            imgUrl = limpia.startsWith("data:image") ? limpia : `data:image/jpeg;base64,${limpia}`;
+        if (ubi.foto && ubi.foto.length > 5) {
+            if (ubi.foto.startsWith("http") || ubi.foto.startsWith("data:")) {
+                imgUrl = ubi.foto;
+            } else {
+                imgUrl = `data:image/jpeg;base64,${ubi.foto}`;
+            }
         }
 
         let txtReciclador = '<span style="color:#999">Sin Asignar</span>';
@@ -368,9 +355,9 @@ function renderizarGrid(lista) {
 function procesarImagen(e) {
     const file = e.target.files[0];
     if (file) {
+        fotoNuevaFile = file;
         const reader = new FileReader();
         reader.onload = (ev) => {
-            document.getElementById("fotoBase64").value = ev.target.result;
             previewImagen.style.backgroundImage = `url(${ev.target.result})`;
         };
         reader.readAsDataURL(file);
@@ -402,7 +389,6 @@ window.obtenerUbicacionActual = function() {
 
             if (map) {
                 map.setView([lat, lng], 18); 
-                
                 colocarMarcador(lat, lng);
             }
 
@@ -426,4 +412,4 @@ window.obtenerUbicacionActual = function() {
             maximumAge: 0
         }
     );
-};
+}

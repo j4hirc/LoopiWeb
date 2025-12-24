@@ -1,4 +1,3 @@
-
 const API_URL = 'https://api-loopi.onrender.com/api/auspiciantes';
 
 const gridAuspiciantes = document.getElementById('gridAuspiciantes');
@@ -14,12 +13,12 @@ const inpNombre = document.getElementById('nombreAusp');
 const inpCodigo = document.getElementById('codigoAusp');
 const inpDescripcion = document.getElementById('descripcionAusp');
 
-// Imagen
 const btnImagen = document.getElementById('btnImagenAusp');
 const inputImagen = document.getElementById('imagenAusp');
 const previewImagen = document.getElementById('previewAusp');
 
 let auspiciantesCache = [];
+let fotoNuevaFile = null; // Variable para la foto real
 
 document.addEventListener('DOMContentLoaded', () => {
     listarAuspiciantes();
@@ -29,7 +28,11 @@ document.addEventListener('DOMContentLoaded', () => {
         modalOverlay.style.display = 'flex';
     });
 
-    const cerrar = () => { if(modalOverlay) modalOverlay.style.display = 'none'; };
+    const cerrar = () => { 
+        if(modalOverlay) modalOverlay.style.display = 'none'; 
+        limpiarFormulario();
+    };
+    
     if(btnCerrarModal) btnCerrarModal.addEventListener('click', cerrar);
     if(btnCancelar) btnCancelar.addEventListener('click', cerrar);
 
@@ -81,18 +84,26 @@ async function guardarAuspiciante(e) {
     if (!codigo) return alert("El código es obligatorio.");
     if (!desc) return alert("La descripción es obligatoria.");
 
+    // Validar imagen
     if (imagenSrc.includes("flaticon")) {
         return alert("⚠️ Debes subir una imagen para el auspiciante.");
     }
 
     const id = inpId.value;
     
-    const data = {
+    const dataObj = {
         nombre: nombre,
         codigo: codigo,
         descripcion: desc,
-        imagen: imagenSrc // Base64
+        imagen: null 
     };
+
+    const formData = new FormData();
+    formData.append("datos", JSON.stringify(dataObj));
+
+    if (fotoNuevaFile) {
+        formData.append("archivo", fotoNuevaFile);
+    }
 
     const metodo = id ? 'PUT' : 'POST';
     const url = id ? `${API_URL}/${id}` : API_URL;
@@ -103,8 +114,7 @@ async function guardarAuspiciante(e) {
 
         const response = await fetch(url, {
             method: metodo,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
+            body: formData
         });
 
         if (response.ok) {
@@ -113,7 +123,12 @@ async function guardarAuspiciante(e) {
             alert(id ? 'Actualizado correctamente' : 'Creado correctamente');
         } else {
             const errorText = await response.text();
-            alert('Error al guardar: ' + errorText);
+            try {
+                const errJson = JSON.parse(errorText);
+                alert('Error: ' + (errJson.mensaje || errorText));
+            } catch {
+                alert('Error al guardar: ' + errorText);
+            }
         }
     } catch (error) {
         console.error(error);
@@ -138,15 +153,19 @@ window.cargarEdicion = function(id) {
     const item = auspiciantesCache.find(a => a.id_auspiciante == id);
     if (!item) return;
 
+    limpiarFormulario(); 
+
     inpId.value = item.id_auspiciante;
     inpNombre.value = item.nombre || "";
     inpCodigo.value = item.codigo || "";
     inpDescripcion.value = item.descripcion || "";
 
-    if (item.imagen && item.imagen.length > 50) {
-        previewImagen.src = item.imagen.startsWith('data:image') 
-            ? item.imagen 
-            : `data:image/png;base64,${item.imagen}`;
+    if (item.imagen && item.imagen.length > 5) {
+        let imgUrl = item.imagen;
+        if (!imgUrl.startsWith('http') && !imgUrl.startsWith('data:')) {
+             imgUrl = `data:image/png;base64,${item.imagen}`;
+        }
+        previewImagen.src = imgUrl;
     } else {
         previewImagen.src = 'https://cdn-icons-png.flaticon.com/512/747/747543.png';
     }
@@ -173,8 +192,13 @@ function renderizarGrid(lista) {
         const id = item.id_auspiciante;
 
         let imgUrl = 'https://cdn-icons-png.flaticon.com/512/747/747543.png';
-        if (item.imagen && item.imagen.length > 50) {
-            imgUrl = item.imagen.startsWith('data:image') ? item.imagen : `data:image/png;base64,${item.imagen}`;
+        
+        if (item.imagen && item.imagen.length > 5) {
+            if (item.imagen.startsWith('http') || item.imagen.startsWith('data:')) {
+                imgUrl = item.imagen;
+            } else {
+                imgUrl = `data:image/png;base64,${item.imagen}`;
+            }
         }
 
         const card = document.createElement('div');
@@ -196,31 +220,84 @@ function renderizarGrid(lista) {
 function limpiarFormulario() {
     if(form) form.reset();
     if(inpId) inpId.value = '';
-    // Reseteamos a la imagen default para que la validación funcione
     if(previewImagen) previewImagen.src = 'https://cdn-icons-png.flaticon.com/512/747/747543.png';
     const title = document.getElementById('modalTitle');
     if(title) title.innerText = 'Agregar Auspiciante';
+    
+    fotoNuevaFile = null; 
 }
 
-function procesarImagen(event) {
+async function procesarImagen(event) {
     const file = event.target.files[0];
-    if (file) {
-        if (!file.type.startsWith('image/')) {
-            alert('Solo se permiten imágenes.');
-            inputImagen.value = "";
-            return;
-        }
-        if (file.size > 2 * 1024 * 1024) {
-            alert('Imagen muy pesada (máx 2MB).');
-            inputImagen.value = "";
-            return;
-        }
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+        alert('Solo se permiten imágenes.');
+        inputImagen.value = "";
+        return;
+    }
+
+    try {
+        const archivoComprimido = await comprimirImagen(file);
+        
+        fotoNuevaFile = archivoComprimido;
+
         const reader = new FileReader();
         reader.onload = (e) => {
             if(previewImagen) previewImagen.src = e.target.result;
         };
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(archivoComprimido);
+
+    } catch (error) {
+        console.error("Error al comprimir:", error);
+        alert("No se pudo procesar la imagen");
     }
+}
+
+async function comprimirImagen(archivo) {
+    return new Promise((resolve, reject) => {
+        const maxWidth = 800; 
+        const quality = 0.7;  
+
+        const reader = new FileReader();
+        reader.readAsDataURL(archivo);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                let width = img.width;
+                let height = img.height;
+
+                if (width > maxWidth) {
+                    height *= maxWidth / width;
+                    width = maxWidth;
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob((blob) => {
+                    if (!blob) {
+                        reject(new Error("Error al comprimir imagen"));
+                        return;
+                    }
+                    const archivoComprimido = new File([blob], archivo.name, {
+                        type: 'image/jpeg',
+                        lastModified: Date.now(),
+                    });
+                    
+                    console.log(`Compresión: ${(archivo.size/1024).toFixed(2)}KB -> ${(archivoComprimido.size/1024).toFixed(2)}KB`);
+                    resolve(archivoComprimido);
+                }, 'image/jpeg', quality);
+            };
+            img.onerror = (error) => reject(error);
+        };
+        reader.onerror = (error) => reject(error);
+    });
 }
 
 function escapeHtml(text) {

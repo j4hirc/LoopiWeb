@@ -1,8 +1,9 @@
 const API_BASE = 'https://api-loopi.onrender.com/api';
 
 let map, marker, coordenadas;
-let fotoBase64 = null;
-let evidenciaBase64 = null;
+// CAMBIO: Ya no guardamos strings Base64, sino objetos File
+let fotoPerfilFile = null;
+let evidenciaFile = null;
 let materialesSeleccionados = new Set();
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -19,47 +20,116 @@ document.addEventListener("DOMContentLoaded", async () => {
     cargarMateriales();
     agregarFilaHorario(); // Una fila por defecto
 
-    setupImageUpload('fotoProfesional', 'previewFoto', 'placeholderFoto', res => fotoBase64 = res);
-    setupImageUpload('evidenciaExperiencia', 'previewEvidencia', 'placeholderEvidencia', res => evidenciaBase64 = res);
+    // Configuración de inputs de imagen con compresión
+    setupImageUpload('fotoProfesional', 'previewFoto', 'placeholderFoto', (file) => fotoPerfilFile = file);
+    setupImageUpload('evidenciaExperiencia', 'previewEvidencia', 'placeholderEvidencia', (file) => evidenciaFile = file);
 
     document.getElementById("btnGeo").addEventListener("click", obtenerUbicacionActual);
     document.getElementById("formReciclador").addEventListener("submit", enviarFormulario);
 });
 
+// --- FUNCIÓN DE CARGA Y COMPRESIÓN DE IMÁGENES ---
 function setupImageUpload(inputId, imgId, placeholderId, callback) {
     const input = document.getElementById(inputId);
-    input.addEventListener('change', function() {
+    input.addEventListener('change', async function() {
         const file = this.files[0];
         if(!file) return;
 
+        // 1. Validar Tipo
         if(!file.type.startsWith('image/')) {
             Swal.fire("Archivo inválido", "Solo se permiten imágenes (JPG, PNG).", "error");
             this.value = "";
             return;
         }
 
-        if(file.size > 5 * 1024 * 1024) {
-            Swal.fire("Archivo muy pesado", "La imagen no debe superar los 5MB.", "warning");
+        // 2. Validar tamaño inicial (opcional, igual vamos a comprimir)
+        // Si es mayor a 10MB avisamos, sino comprimimos
+        if(file.size > 10 * 1024 * 1024) {
+            Swal.fire("Archivo muy pesado", "Intenta con una imagen menor a 10MB.", "warning");
             this.value = "";
             return;
         }
 
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const preview = document.getElementById(imgId);
-            const placeholder = document.getElementById(placeholderId);
+        try {
+            // 3. Comprimir Imagen
+            // Mostramos un loading o cambiamos cursor
+            document.body.style.cursor = 'wait';
             
-            preview.src = e.target.result;
-            preview.style.display = 'block'; 
-            preview.classList.remove('preview-hidden');
-            preview.classList.add('preview-image');
-            
-            if(placeholder) placeholder.style.display = 'none'; 
+            const archivoComprimido = await comprimirImagen(file);
 
-            const base64Clean = e.target.result.split(',')[1];
-            callback(base64Clean);
+            // 4. Guardar archivo comprimido en variable global (callback)
+            callback(archivoComprimido);
+
+            // 5. Generar vista previa
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById(imgId);
+                const placeholder = document.getElementById(placeholderId);
+                
+                preview.src = e.target.result;
+                preview.style.display = 'block'; 
+                preview.classList.remove('preview-hidden');
+                preview.classList.add('preview-image');
+                
+                if(placeholder) placeholder.style.display = 'none'; 
+                document.body.style.cursor = 'default';
+            };
+            reader.readAsDataURL(archivoComprimido);
+
+        } catch (error) {
+            console.error(error);
+            Swal.fire("Error", "No se pudo procesar la imagen", "error");
+            document.body.style.cursor = 'default';
+        }
+    });
+}
+
+// --- LÓGICA DE COMPRESIÓN (Menor a 2MB garantizado) ---
+async function comprimirImagen(archivo) {
+    return new Promise((resolve, reject) => {
+        const maxWidth = 1000; // Un buen tamaño para documentos
+        const quality = 0.7;   // Calidad suficiente para leer texto
+
+        const reader = new FileReader();
+        reader.readAsDataURL(archivo);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                let width = img.width;
+                let height = img.height;
+
+                // Redimensionar si es muy grande
+                if (width > maxWidth) {
+                    height *= maxWidth / width;
+                    width = maxWidth;
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob((blob) => {
+                    if (!blob) {
+                        reject(new Error("Error al comprimir"));
+                        return;
+                    }
+                    // Crear archivo nuevo
+                    const archivoFinal = new File([blob], archivo.name, {
+                        type: 'image/jpeg',
+                        lastModified: Date.now(),
+                    });
+                    
+                    console.log(`Compresión: ${(archivo.size/1024).toFixed(2)}KB -> ${(archivoFinal.size/1024).toFixed(2)}KB`);
+                    resolve(archivoFinal);
+                }, 'image/jpeg', quality);
+            };
+            img.onerror = (e) => reject(e);
         };
-        reader.readAsDataURL(file);
+        reader.onerror = (e) => reject(e);
     });
 }
 
@@ -68,13 +138,25 @@ async function verificarEstadoReciclador(cedula) {
         const res = await fetch(`${API_BASE}/formularios_reciclador/usuario/${cedula}`);
         if(res.ok) {
             const form = await res.json();
+            // Si existe formulario, verificamos estado
             if(form.aprobado === true) {
                 redirigirConMensaje("¡Ya eres Reciclador!", "Tu cuenta ya está activa.", "success", "../inicio_usuario_normal.html");
+            } else if (form.aprobado === false) {
+                 // Si fue rechazado, permitimos ver el mensaje pero quizás no reenviar inmediatamente sin editar (opcional)
+                 // Por ahora lo tratamos como proceso pendiente o rechazado
+                 Swal.fire({
+                    title: "Solicitud Rechazada",
+                    text: "Motivo: " + (form.observacion_admin || "Sin detalles"),
+                    icon: "error"
+                 });
+                 // Aquí podrías dejar que edite sobre el mismo formulario (PUT) o crear uno nuevo si borraste el anterior.
             } else {
                 redirigirConMensaje("Solicitud en proceso", "Ya enviaste una solicitud. Espera la respuesta.", "info", "../inicio_usuario_normal.html");
             }
         }
-    } catch(e) { console.log("Usuario nuevo, puede postular."); }
+    } catch(e) { 
+        console.log("Usuario nuevo, puede postular."); 
+    }
 }
 
 function redirigirConMensaje(titulo, texto, icono, url) {
@@ -118,8 +200,16 @@ async function cargarMateriales() {
         list.forEach(m => {
             const div = document.createElement("div");
             div.className = "material-option";
+            
+            // Soporte URL y Base64
             let img = "https://cdn-icons-png.flaticon.com/512/9638/9638363.png"; 
-            if(m.imagen && m.imagen.startsWith("data:image")) img = m.imagen;
+            if(m.imagen && m.imagen.length > 5) {
+                if(m.imagen.startsWith("http") || m.imagen.startsWith("data:")) {
+                    img = m.imagen;
+                } else {
+                    img = `data:image/png;base64,${m.imagen}`;
+                }
+            }
 
             div.innerHTML = `<img src="${img}"><span>${m.nombre}</span>`;
             div.onclick = () => {
@@ -155,8 +245,8 @@ async function enviarFormulario(e) {
     e.preventDefault();
     const usuario = JSON.parse(localStorage.getItem("usuario"));
 
-    if(!fotoBase64) return Swal.fire("Falta Foto", "Sube tu foto de perfil.", "warning");
-    if(!evidenciaBase64) return Swal.fire("Falta Evidencia", "Sube tu certificado o evidencia.", "warning");
+    if(!fotoPerfilFile) return Swal.fire("Falta Foto", "Sube tu foto de perfil profesional.", "warning");
+    if(!evidenciaFile) return Swal.fire("Falta Evidencia", "Sube tu certificado o evidencia.", "warning");
     if(materialesSeleccionados.size === 0) return Swal.fire("Materiales", "Selecciona al menos un material.", "warning");
     if(!coordenadas) return Swal.fire("Ubicación", "Marca tu ubicación en el mapa.", "warning");
 
@@ -170,36 +260,45 @@ async function enviarFormulario(e) {
 
     if(horarios.length === 0) return Swal.fire("Horario", "Define tu horario de trabajo.", "warning");
 
-    const payload = {
+    const datosObj = {
         usuario: { cedula: usuario.cedula },
         anios_experiencia: parseInt(document.getElementById("aniosExperiencia").value) || 0,
         nombre_sitio: document.getElementById("nombreSitio").value.trim(),
         ubicacion: document.getElementById("direccionTexto").value.trim(),
         latitud: coordenadas.lat,
         longitud: coordenadas.lng,
-        foto_perfil_profesional: fotoBase64,
-        evidencia_experiencia: evidenciaBase64,
+        foto_perfil_profesional: null, 
+        evidencia_experiencia: null,
         horarios: horarios,
         materiales: Array.from(materialesSeleccionados).map(id => ({ material: { id_material: id } })),
         aprobado: null,
         observacion_admin: "Pendiente"
     };
 
+    // 2. Crear FormData
+    const formData = new FormData();
+    formData.append("datos", JSON.stringify(datosObj));
+    formData.append("fotoPerfil", fotoPerfilFile);
+    formData.append("evidencia", evidenciaFile);
+
     try {
         Swal.fire({ title: "Enviando...", didOpen: () => Swal.showLoading() });
+        
         const res = await fetch(`${API_BASE}/formularios_reciclador`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
+            body: formData
         });
 
         if(res.ok) {
             Swal.fire("¡Enviado!", "Tu solicitud será revisada por un administrador.", "success")
                 .then(() => window.location.href = "../inicio_usuario_normal.html");
         } else {
-            throw new Error("Error backend");
+            const errText = await res.text();
+            console.error("Backend Error:", errText);
+            throw new Error("Error en el servidor");
         }
     } catch(e) {
+        console.error(e);
         Swal.fire("Error", "No se pudo enviar la solicitud. Intenta luego.", "error");
     }
 }
