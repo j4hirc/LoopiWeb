@@ -1,7 +1,7 @@
 const API_BASE = 'https://api-loopi.onrender.com/api';
 
 let map, marker, coordenadas;
-// CAMBIO: Ya no guardamos strings Base64, sino objetos File
+// Variables para guardar los archivos (File)
 let fotoPerfilFile = null;
 let evidenciaFile = null;
 let materialesSeleccionados = new Set();
@@ -14,6 +14,25 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     const usuario = JSON.parse(usuarioStr);
 
+    // --- 1. VALIDACIÓN DE ROL: Si ya es reciclador, lo sacamos ---
+    const yaEsReciclador = usuario.roles.some(r => (r.id_rol || r.rol?.id_rol) === 2);
+
+    if (yaEsReciclador) {
+        Swal.fire({
+            title: "¡Ya eres Reciclador!",
+            text: "Tu perfil ya tiene los permisos necesarios. No necesitas registrarte de nuevo.",
+            icon: "info",
+            confirmButtonColor: "#3A6958",
+            confirmButtonText: "Ir al Inicio",
+            allowOutsideClick: false
+        }).then(() => {
+            window.location.href = "../inicio_usuario_normal.html";
+        });
+        return; // Detenemos la ejecución del resto del script
+    }
+    // -------------------------------------------------------------
+
+    // Si no es reciclador, verificamos si ya tiene una solicitud pendiente
     verificarEstadoReciclador(usuario.cedula);
 
     initMap();
@@ -35,15 +54,14 @@ function setupImageUpload(inputId, imgId, placeholderId, callback) {
         const file = this.files[0];
         if(!file) return;
 
-        // 1. Validar Tipo
+        // Validar Tipo
         if(!file.type.startsWith('image/')) {
             Swal.fire("Archivo inválido", "Solo se permiten imágenes (JPG, PNG).", "error");
             this.value = "";
             return;
         }
 
-        // 2. Validar tamaño inicial (opcional, igual vamos a comprimir)
-        // Si es mayor a 10MB avisamos, sino comprimimos
+        // Validar tamaño inicial (opcional, igual vamos a comprimir)
         if(file.size > 10 * 1024 * 1024) {
             Swal.fire("Archivo muy pesado", "Intenta con una imagen menor a 10MB.", "warning");
             this.value = "";
@@ -51,16 +69,15 @@ function setupImageUpload(inputId, imgId, placeholderId, callback) {
         }
 
         try {
-            // 3. Comprimir Imagen
-            // Mostramos un loading o cambiamos cursor
+            // Comprimir Imagen
             document.body.style.cursor = 'wait';
             
             const archivoComprimido = await comprimirImagen(file);
 
-            // 4. Guardar archivo comprimido en variable global (callback)
+            // Guardar archivo comprimido en variable global
             callback(archivoComprimido);
 
-            // 5. Generar vista previa
+            // Generar vista previa
             const reader = new FileReader();
             reader.onload = function(e) {
                 const preview = document.getElementById(imgId);
@@ -87,8 +104,8 @@ function setupImageUpload(inputId, imgId, placeholderId, callback) {
 // --- LÓGICA DE COMPRESIÓN (Menor a 2MB garantizado) ---
 async function comprimirImagen(archivo) {
     return new Promise((resolve, reject) => {
-        const maxWidth = 1000; // Un buen tamaño para documentos
-        const quality = 0.7;   // Calidad suficiente para leer texto
+        const maxWidth = 1000; 
+        const quality = 0.7;   
 
         const reader = new FileReader();
         reader.readAsDataURL(archivo);
@@ -99,7 +116,6 @@ async function comprimirImagen(archivo) {
                 let width = img.width;
                 let height = img.height;
 
-                // Redimensionar si es muy grande
                 if (width > maxWidth) {
                     height *= maxWidth / width;
                     width = maxWidth;
@@ -117,7 +133,6 @@ async function comprimirImagen(archivo) {
                         reject(new Error("Error al comprimir"));
                         return;
                     }
-                    // Crear archivo nuevo
                     const archivoFinal = new File([blob], archivo.name, {
                         type: 'image/jpeg',
                         lastModified: Date.now(),
@@ -138,19 +153,17 @@ async function verificarEstadoReciclador(cedula) {
         const res = await fetch(`${API_BASE}/formularios_reciclador/usuario/${cedula}`);
         if(res.ok) {
             const form = await res.json();
-            // Si existe formulario, verificamos estado
+            // Si el backend devuelve un formulario, analizamos el estado
             if(form.aprobado === true) {
                 redirigirConMensaje("¡Ya eres Reciclador!", "Tu cuenta ya está activa.", "success", "../inicio_usuario_normal.html");
             } else if (form.aprobado === false) {
-                 // Si fue rechazado, permitimos ver el mensaje pero quizás no reenviar inmediatamente sin editar (opcional)
-                 // Por ahora lo tratamos como proceso pendiente o rechazado
                  Swal.fire({
                     title: "Solicitud Rechazada",
-                    text: "Motivo: " + (form.observacion_admin || "Sin detalles"),
+                    text: "Motivo: " + (form.observacion_admin || "Sin detalles. Intenta contactar al admin."),
                     icon: "error"
                  });
-                 // Aquí podrías dejar que edite sobre el mismo formulario (PUT) o crear uno nuevo si borraste el anterior.
             } else {
+                // Aprobado es null (Pendiente)
                 redirigirConMensaje("Solicitud en proceso", "Ya enviaste una solicitud. Espera la respuesta.", "info", "../inicio_usuario_normal.html");
             }
         }
@@ -201,7 +214,6 @@ async function cargarMateriales() {
             const div = document.createElement("div");
             div.className = "material-option";
             
-            // Soporte URL y Base64
             let img = "https://cdn-icons-png.flaticon.com/512/9638/9638363.png"; 
             if(m.imagen && m.imagen.length > 5) {
                 if(m.imagen.startsWith("http") || m.imagen.startsWith("data:")) {
@@ -241,6 +253,7 @@ function agregarFilaHorario() {
     document.getElementById("containerHorarios").appendChild(div);
 }
 
+// --- ENVÍO CON FORMDATA ---
 async function enviarFormulario(e) {
     e.preventDefault();
     const usuario = JSON.parse(localStorage.getItem("usuario"));
@@ -275,7 +288,6 @@ async function enviarFormulario(e) {
         observacion_admin: "Pendiente"
     };
 
-    // 2. Crear FormData
     const formData = new FormData();
     formData.append("datos", JSON.stringify(datosObj));
     formData.append("fotoPerfil", fotoPerfilFile);
