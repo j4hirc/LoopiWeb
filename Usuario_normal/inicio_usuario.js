@@ -57,9 +57,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   await cargarPuntosReciclaje();
   await cargarPuntosRecompensa();
   
-  // NUEVO: Cargar Parroquias para el perfil
+  // Cargar Parroquias para el perfil
   await cargarParroquiasEnPerfil();
 
+  // Configurar subida de foto con compresión
   const inputPerfilFoto = document.getElementById("inputPerfilFoto");
   if (inputPerfilFoto)
     inputPerfilFoto.addEventListener("change", cargarImagenPerfil);
@@ -321,15 +322,20 @@ function obtenerUbicacionActual() {
 
       marcadorMiUbicacion = L.marker([lat, lng]).addTo(map);
 
-      document.getElementById("txtLat").innerText = lat.toFixed(5);
-      document.getElementById("txtLng").innerText = lng.toFixed(5);
+      // Si existe el elemento txtLat (a veces no existe en esta vista)
+      if(document.getElementById("txtLat")) {
+          document.getElementById("txtLat").innerText = lat.toFixed(5);
+          document.getElementById("txtLng").innerText = lng.toFixed(5);
+      }
 
       const btn = document.getElementById("btnGeo");
-      btn.innerHTML = '<i class="fa-solid fa-check"></i> Ubicación encontrada';
-      setTimeout(() => {
-        btn.innerHTML =
-          '<i class="fa-solid fa-location-crosshairs"></i> Usar mi ubicación actual';
-      }, 3000);
+      if(btn) {
+          btn.innerHTML = '<i class="fa-solid fa-check"></i> Ubicación encontrada';
+          setTimeout(() => {
+            btn.innerHTML =
+              '<i class="fa-solid fa-location-crosshairs"></i> Usar mi ubicación actual';
+          }, 3000);
+      }
     },
     (error) => {
       Swal.close();
@@ -368,15 +374,8 @@ async function recargarUsuarioDesdeBackend() {
 
     usuarioLogueado = usuarioActualizado;
 
-    // Guardamos en LocalStorage (sin la foto pesada, solo URL o null)
-    const usuarioLigero = { ...usuarioActualizado };
-    // usuarioLigero.foto = null; // YA NO BORRAMOS LA FOTO PORQUE ES URL CORTA
-    
-    try {
-        localStorage.setItem("usuario", JSON.stringify(usuarioLigero));
-    } catch (storageError) {
-        console.warn("Storage lleno, pero no importa.");
-    }
+    // Guardamos en LocalStorage
+    localStorage.setItem("usuario", JSON.stringify(usuarioActualizado));
 
   } catch (e) {
     console.error("Error actualizando usuario:", e);
@@ -406,9 +405,10 @@ function cargarInfoUsuario() {
       usuarioLogueado.rango.imagen &&
       usuarioLogueado.rango.imagen.length > 10
     ) {
-      let imgClean = usuarioLogueado.rango.imagen.replace(/(\r\n|\n|\r)/gm, "");
-      if (!imgClean.startsWith("data:image"))
+      let imgClean = usuarioLogueado.rango.imagen;
+      if (!imgClean.startsWith("http") && !imgClean.startsWith("data:")) {
         imgClean = `data:image/png;base64,${imgClean}`;
+      }
       imgRango.src = imgClean;
       imgRango.style.display = "block";
     } else {
@@ -559,21 +559,82 @@ function cerrarModalPerfil() {
   document.getElementById("modalPerfil").style.display = "none";
 }
 
-function cargarImagenPerfil() {
+// --- CARGA DE IMAGEN CON COMPRESIÓN ---
+async function cargarImagenPerfil() {
   const input = document.getElementById("inputPerfilFoto");
   const prev = document.getElementById("perfilPreview");
   const file = input.files[0];
   if (!file) return;
 
-  // 1. Guardar para enviar después
-  fotoNuevaFile = file;
+  if (!file.type.startsWith('image/')) {
+      Swal.fire("Error", "Solo imágenes permitidas", "error");
+      input.value = "";
+      return;
+  }
 
-  // 2. Previsualizar
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    prev.src = e.target.result;
-  };
-  reader.readAsDataURL(file);
+  try {
+      // 1. Comprimir
+      const archivoComprimido = await comprimirImagen(file);
+      
+      // 2. Guardar para enviar después
+      fotoNuevaFile = archivoComprimido;
+
+      // 3. Previsualizar
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        prev.src = e.target.result;
+      };
+      reader.readAsDataURL(archivoComprimido);
+
+  } catch (error) {
+      console.error(error);
+      Swal.fire("Error", "No se pudo procesar la imagen", "error");
+  }
+}
+
+// --- FUNCIÓN DE COMPRESIÓN ---
+async function comprimirImagen(archivo) {
+    return new Promise((resolve, reject) => {
+        const maxWidth = 500; // Avatar pequeño, 500px es suficiente
+        const quality = 0.7;
+
+        const reader = new FileReader();
+        reader.readAsDataURL(archivo);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                let width = img.width;
+                let height = img.height;
+
+                if (width > maxWidth) {
+                    height *= maxWidth / width;
+                    width = maxWidth;
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob((blob) => {
+                    if (!blob) {
+                        reject(new Error("Error al comprimir imagen"));
+                        return;
+                    }
+                    const archivoComprimido = new File([blob], archivo.name, {
+                        type: 'image/jpeg',
+                        lastModified: Date.now(),
+                    });
+                    resolve(archivoComprimido);
+                }, 'image/jpeg', quality);
+            };
+            img.onerror = (e) => reject(e);
+        };
+        reader.onerror = (e) => reject(e);
+    });
 }
 
 // --- GUARDAR PERFIL CON FORMDATA ---
@@ -595,9 +656,7 @@ async function guardarPerfil() {
       apellido_materno: document.getElementById("perfilApellidoMaterno").value.trim(),
       correo: document.getElementById("perfilCorreo").value.trim(),
       
-      // La foto la maneja el backend por separado si hay archivo nuevo
-      // Si no, mantenemos la actual
-      foto: usuarioLogueado.foto, 
+      foto: null, // Backend maneja esto si hay archivo nuevo
 
       estado: true,
       parroquia: { id_parroquia: parseInt(idParroquia) },
@@ -614,7 +673,7 @@ async function guardarPerfil() {
  
     Swal.fire({ title: 'Guardando...', didOpen: () => Swal.showLoading() });
 
-    // 3. Enviar (sin Content-Type manual)
+    // 3. Enviar
     const res = await fetch(`${API_BASE}/usuarios/${usuarioLogueado.cedula}`, {
       method: "PUT",
       body: formData, 
@@ -636,7 +695,7 @@ async function guardarPerfil() {
       Swal.fire({
           icon: 'success',
           title: '¡Perfil Actualizado!',
-          text: 'Tu parroquia y foto se han guardado.',
+          text: 'Tus datos se han guardado.',
           confirmButtonColor: '#2ecc71',
       }).then(() => {
           cerrarModalPerfil();
@@ -866,8 +925,8 @@ function renderizarCaminoRangos(rangos, totalReal) {
 
     let imgSrc = "https://via.placeholder.com/50?text=?";
     if (rango.imagen && rango.imagen.length > 20) {
-      let imgClean = rango.imagen.replace(/(\r\n|\n|\r)/gm, "");
-      if (!imgClean.startsWith("data:image")) {
+      let imgClean = rango.imagen;
+      if (!imgClean.startsWith("http") && !imgClean.startsWith("data:")) {
         imgClean = `data:image/png;base64,${imgClean}`;
       }
       imgSrc = imgClean;
