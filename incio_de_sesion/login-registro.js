@@ -1,6 +1,5 @@
 const API_URL = 'https://api-loopi.onrender.com/api';
 
-
 document.addEventListener("DOMContentLoaded", async () => {
     cargarParroquias();
     setupUIEvents();
@@ -29,7 +28,7 @@ function setupUIEvents() {
     document.getElementById("file-upload")?.addEventListener("change", function () {
         const file = this.files[0];
         if (!file) return;
-        window.avatarImageFile = file;
+        window.avatarImageFile = file; // Guardamos el archivo real
         const reader = new FileReader();
         reader.onload = (e) => {
             const img = document.getElementById("avatar-preview");
@@ -59,7 +58,7 @@ async function cargarParroquias() {
     } catch (e) { console.error("Error parroquias:", e); }
 }
 
-
+// LOGIN (Este se queda igual porque login no sube fotos)
 document.getElementById("form-login")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const correo = document.getElementById("login-email").value.trim();
@@ -113,10 +112,7 @@ document.getElementById("form-registro")?.addEventListener("submit", async (e) =
     if (!esMayorDeEdad(fechaNac)) return Swal.fire("Error", "Debes ser mayor de 12 años", "warning");
     if (!parroquiaId) return Swal.fire("Atención", "Selecciona una parroquia", "warning");
 
-    let fotoBase64 = null;
-    if (window.avatarImageFile) fotoBase64 = await toBase64(window.avatarImageFile);
-
-    const usuario = {
+    const usuarioObj = {
         cedula: parseInt(cedula),
         primer_nombre: document.getElementById("registro-nombre1").value.trim(),
         segundo_nombre: document.getElementById("registro-nombre2").value.trim(),
@@ -128,11 +124,18 @@ document.getElementById("form-registro")?.addEventListener("submit", async (e) =
         password: pass1,
         puntos_actuales: 0,
         estado: false,
-        foto: fotoBase64,
+        foto: null, 
         parroquia: { id_parroquia: parseInt(parroquiaId) },
         rango: { id_rango: 1 }, 
         roles: [ { rol: { id_rol: 3 } } ]
     };
+
+    const formData = new FormData();
+    formData.append("datos", JSON.stringify(usuarioObj)); // JSON convertido a texto
+
+    if (window.avatarImageFile) {
+        formData.append("archivo", window.avatarImageFile);
+    }
 
     try {
         Swal.fire({ 
@@ -143,8 +146,7 @@ document.getElementById("form-registro")?.addEventListener("submit", async (e) =
 
         const res = await fetch(`${API_URL}/usuarios`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(usuario),
+            body: formData, 
         });
         const data = await res.json();
 
@@ -275,8 +277,6 @@ async function cambiarPasswordBackend(correo, token, nuevaPass) {
     } catch(e) { Swal.fire("Error", "No se pudo actualizar", "error"); }
 }
 
-
-
 function extraerRol(r) {
     if (r.rol && r.rol.id_rol) return r.rol;
     if (r.id_rol) return r;
@@ -300,6 +300,10 @@ function redirigirUsuario(rolObj, usuario) {
         apellido: usuario.apellido_paterno,
         correo: usuario.correo,
         id_parroquia: usuario.parroquia ? (usuario.parroquia.id_parroquia || usuario.parroquia.id) : null,
+        
+        // Foto: Si ya viene el link de Supabase, lo guardamos.
+        foto: usuario.foto, 
+        
         rol_seleccionado: { 
             id_rol: rolObj.id_rol, 
             nombre: rolObj.nombre 

@@ -9,7 +9,6 @@ const searchInput = document.getElementById('buscarUsuario');
 const modalOverlay = document.getElementById('modalOverlay');
 const tituloModal = document.getElementById('tituloModal');
 
-
 const inpCedula = document.getElementById('cedula');
 const inpNombre1 = document.getElementById('primerNombre');
 const inpNombre2 = document.getElementById('segundoNombre');
@@ -42,6 +41,9 @@ document.addEventListener('DOMContentLoaded', () => {
     listarUsuarios();
     
     searchInput.addEventListener('input', filtrarUsuarios);
+    
+    // --- IMPORTANTE: Activa la previsualización al elegir archivo ---
+    inpFoto.addEventListener('change', cargarImagen);
 });
 
 async function cargarParroquiasEnSelect() {
@@ -80,6 +82,7 @@ async function listarUsuarios() {
     } catch (e) { console.error(e); }
 }
 
+// --- FUNCIÓN MODIFICADA PARA FORM-DATA (NUBE) ---
 async function guardarUsuario() {
     if (!inpCedula.value || !inpNombre1.value || !inpApellido1.value || !inpCorreo.value) {
         return alert("Completa los campos obligatorios (*)");
@@ -91,25 +94,21 @@ async function guardarUsuario() {
     const cedula = parseInt(inpCedula.value);
     const correo = inpCorreo.value.trim().toLowerCase();
 
+    // Validaciones locales (opcional, el backend también valida)
     if (!isEditMode) {
         const cedulaExiste = usuariosCache.some(u => u.cedula === cedula);
-        if (cedulaExiste) {
-            return alert("Error: Ya existe un usuario registrado con esa CÉDULA.");
-        }
+        if (cedulaExiste) return alert("Error: Ya existe un usuario registrado con esa CÉDULA.");
     }
 
     const correoExiste = usuariosCache.some(u => {
         const mismoCorreo = u.correo.toLowerCase() === correo;
-        if (isEditMode) {
-            return mismoCorreo && u.cedula !== cedula;
-        }
+        if (isEditMode) return mismoCorreo && u.cedula !== cedula;
         return mismoCorreo;
     });
 
-    if (correoExiste) {
-        return alert("Error: Ese CORREO ya está siendo usado por otro usuario.");
-    }
+    if (correoExiste) return alert("Error: Ese CORREO ya está siendo usado.");
 
+    // 1. Preparar Roles
     const rolesSeleccionados = [];
     document.querySelectorAll('.rol-checkbox:checked').forEach(chk => {
         const nombreUpper = chk.value.toUpperCase();
@@ -119,10 +118,8 @@ async function guardarUsuario() {
         });
     });
 
-    let fotoBase64 = imgPreview.src;
-    if(fotoBase64.includes("flaticon")) fotoBase64 = null; // No guardar la imagen por defecto
-
-    const data = {
+    // 2. Preparar Objeto JSON (SIN LA FOTO BASE64)
+    const dataObj = {
         cedula: cedula,
         primer_nombre: inpNombre1.value,
         segundo_nombre: inpNombre2.value,
@@ -131,7 +128,7 @@ async function guardarUsuario() {
         genero: selGenero.value,
         fecha_nacimiento: inpFecha.value,
         correo: correo,
-        foto: fotoBase64,
+        foto: null, // El backend maneja la foto por separado
         estado: switchEstado.checked,
         puntos_actuales: parseInt(inpPuntos.value) || 0,
         parroquia: selParroquia.value ? { id_parroquia: parseInt(selParroquia.value) } : null,
@@ -139,23 +136,32 @@ async function guardarUsuario() {
         roles: rolesSeleccionados
     };
 
-    if (inpPassword.value) data.password = inpPassword.value;
+    if (inpPassword.value) dataObj.password = inpPassword.value;
 
-    const url = isEditMode ? `${API_URL}/${data.cedula}` : API_URL;
+    // 3. Crear FormData (Paquete mixto: JSON + Archivo)
+    const formData = new FormData();
+    formData.append("datos", JSON.stringify(dataObj));
+
+    // Solo si el usuario seleccionó un archivo nuevo, lo adjuntamos
+    if (inpFoto.files[0]) {
+        formData.append("archivo", inpFoto.files[0]);
+    }
+
+    const url = isEditMode ? `${API_URL}/${dataObj.cedula}` : API_URL;
     const method = isEditMode ? 'PUT' : 'POST';
 
     try {
+        // ALERTA: No ponemos headers 'Content-Type', fetch lo pone solo para FormData
         const res = await fetch(url, {
             method: method,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
+            body: formData 
         });
         
         const respuesta = await res.json();
 
         if (res.ok) {
             if (!isEditMode && respuesta.necesita_verificacion) {
-                
+                // Lógica de verificación de correo
                 const { value: codigo } = await Swal.fire({
                     title: 'Verificación Requerida',
                     html: `Se ha enviado un código a <b>${correo}</b>.<br>Ingrésalo para activar este usuario ahora.`,
@@ -184,7 +190,6 @@ async function guardarUsuario() {
                 } else {
                     Swal.fire("Usuario Creado", "El usuario se creó como INACTIVO. Deberá verificar su correo.", "info");
                 }
-
             } else {
                 alert(isEditMode ? "Usuario actualizado correctamente" : "Usuario creado correctamente");
             }
@@ -226,10 +231,16 @@ function cargarEdicion(cedula) {
     inpPuntos.value = user.puntos_actuales; switchEstado.checked = user.estado;
     inpPassword.value = ""; 
 
-    
-    imgPreview.src = (user.foto && user.foto.length > 20) 
-        ? (user.foto.startsWith('data:') ? user.foto : `data:image/png;base64,${user.foto}`) 
-        : 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+    // Visualizar foto (Soporta URL Supabase y Base64 antigua)
+    let imgUrl = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+    if (user.foto && user.foto.length > 5) {
+        if (user.foto.startsWith('http') || user.foto.startsWith('data:')) {
+            imgUrl = user.foto;
+        } else {
+            imgUrl = `data:image/png;base64,${user.foto}`; // Fallback para fotos viejas
+        }
+    }
+    imgPreview.src = imgUrl;
 
     selParroquia.value = user.parroquia ? (user.parroquia.id_parroquia || user.parroquia.id) : "";
     selRango.value = user.rango ? (user.rango.id_rango || user.rango.id) : "";
@@ -261,9 +272,15 @@ function renderizarGrid(lista) {
     if (!lista.length) { gridUsuarios.innerHTML = '<p style="text-align:center;width:100%">No hay usuarios registrados.</p>'; return; }
 
     lista.forEach(u => {
-        let img = (u.foto && u.foto.length > 20) 
-            ? (u.foto.startsWith('data:') ? u.foto : `data:image/png;base64,${u.foto}`)
-            : 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+        // Lógica de visualización de imagen (URL o Base64)
+        let img = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+        if (u.foto && u.foto.length > 5) {
+             if (u.foto.startsWith('http') || u.foto.startsWith('data:')) {
+                 img = u.foto;
+             } else {
+                 img = `data:image/png;base64,${u.foto}`;
+             }
+        }
         
         const rolesTxt = (u.roles && u.roles.length) 
             ? u.roles.map(r => r.rol ? r.rol.nombre : '').join(', ') 
@@ -276,7 +293,9 @@ function renderizarGrid(lista) {
         const div = document.createElement('div');
         div.className = 'card-usuario';
         div.innerHTML = `
-            <img src="${img}" class="img-user-card" style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin:0 auto 10px;">
+            <img src="${img}" class="img-user-card" 
+                 style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin:0 auto 10px;"
+                 onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'">
             <h3 style="text-align:center;">${u.primer_nombre} ${u.apellido_paterno}</h3>
             <p style="text-align:center;font-size:0.9rem;color:#666;">${u.correo}</p>
             <div class="usuario-info" style="margin-top:10px;">
@@ -321,6 +340,7 @@ function formReset() {
     inpCorreo.value = ""; inpPassword.value = ""; selParroquia.value = ""; selRango.value = "";
     inpPuntos.value = ""; switchEstado.checked = true; 
     imgPreview.src = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+    inpFoto.value = ""; // Limpiar input de archivo
     document.querySelectorAll('.rol-checkbox').forEach(c => c.checked = false);
 }
 

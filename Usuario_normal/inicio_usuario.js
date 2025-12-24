@@ -14,6 +14,9 @@ let ubicacionActual = null;
 
 let notificacionesCargadas = false;
 
+// Variable global para la foto nueva
+let fotoNuevaFile = null;
+
 document.addEventListener("DOMContentLoaded", async () => {
   const btnLogout = document.getElementById("btnLogout");
   if (btnLogout) {
@@ -53,6 +56,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   await cargarFiltrosMateriales();
   await cargarPuntosReciclaje();
   await cargarPuntosRecompensa();
+  
+  // NUEVO: Cargar Parroquias para el perfil
+  await cargarParroquiasEnPerfil();
 
   const inputPerfilFoto = document.getElementById("inputPerfilFoto");
   if (inputPerfilFoto)
@@ -228,7 +234,7 @@ function renderizarMarcadoresReciclaje(listaPuntos) {
                 border-radius:6px;
                 cursor:pointer;
                 font-size:11px;">
-              🧭 Ver ruta
+             🧭 Ver ruta
             </button>
 
             <div style="margin-top:6px;">
@@ -359,25 +365,37 @@ async function recargarUsuarioDesdeBackend() {
     const res = await fetch(`${API_BASE}/usuarios/${cedula}`);
     if (!res.ok) throw new Error("No se pudo obtener usuario");
     const usuarioActualizado = await res.json();
+
     usuarioLogueado = usuarioActualizado;
-    localStorage.setItem("usuario", JSON.stringify(usuarioActualizado));
+
+    // Guardamos en LocalStorage (sin la foto pesada, solo URL o null)
+    const usuarioLigero = { ...usuarioActualizado };
+    // usuarioLigero.foto = null; // YA NO BORRAMOS LA FOTO PORQUE ES URL CORTA
+    
+    try {
+        localStorage.setItem("usuario", JSON.stringify(usuarioLigero));
+    } catch (storageError) {
+        console.warn("Storage lleno, pero no importa.");
+    }
+
   } catch (e) {
     console.error("Error actualizando usuario:", e);
   }
 }
 
 function cargarInfoUsuario() {
-  document.getElementById("nombreUsuarioNav").innerText =
-    usuarioLogueado.primer_nombre;
-  document.getElementById("puntosActuales").innerText =
-    usuarioLogueado.puntos_actuales || 0;
+  document.getElementById("nombreUsuarioNav").innerText = usuarioLogueado.primer_nombre;
+  document.getElementById("puntosActuales").innerText = usuarioLogueado.puntos_actuales || 0;
 
-  if (usuarioLogueado.foto && usuarioLogueado.foto.length > 20) {
-    let fotoLimpia = usuarioLogueado.foto.replace(/(\r\n|\n|\r)/gm, "");
-    if (!fotoLimpia.startsWith("data:image"))
-      fotoLimpia = `data:image/png;base64,${fotoLimpia}`;
-    document.getElementById("imgPerfilNav").src = fotoLimpia;
+  // --- CORRECCIÓN: SOPORTE PARA URL O BASE64 ---
+  if (usuarioLogueado.foto && usuarioLogueado.foto.length > 5) {
+      let fotoSrc = usuarioLogueado.foto;
+      if (!fotoSrc.startsWith("http") && !fotoSrc.startsWith("data:")) {
+          fotoSrc = `data:image/png;base64,${usuarioLogueado.foto}`;
+      }
+      document.getElementById("imgPerfilNav").src = fotoSrc;
   }
+  // ---------------------------------------------
 
   const lblRango = document.getElementById("rangoUsuario");
   const imgRango = document.getElementById("imgRango");
@@ -427,7 +445,6 @@ function toggleMenu() {
   document.getElementById("userMenu").classList.toggle("active");
 }
 
-/* ================= LÓGICA DE FAVORITOS ================= */
 
 async function cargarMisFavoritos() {
   try {
@@ -505,24 +522,36 @@ function abrirModalPerfil() {
   const modal = document.getElementById("modalPerfil");
   const prev = document.getElementById("perfilPreview");
 
-  document.getElementById("perfilPrimerNombre").value =
-    usuarioLogueado.primer_nombre || "";
-  document.getElementById("perfilSegundoNombre").value =
-    usuarioLogueado.segundo_nombre || "";
-  document.getElementById("perfilApellidoPaterno").value =
-    usuarioLogueado.apellido_paterno || "";
-  document.getElementById("perfilApellidoMaterno").value =
-    usuarioLogueado.apellido_materno || "";
+  // Limpiamos foto nueva al abrir
+  fotoNuevaFile = null;
+  if(document.getElementById("inputPerfilFoto")) document.getElementById("inputPerfilFoto").value = "";
+
+  document.getElementById("perfilPrimerNombre").value = usuarioLogueado.primer_nombre || "";
+  document.getElementById("perfilSegundoNombre").value = usuarioLogueado.segundo_nombre || "";
+  document.getElementById("perfilApellidoPaterno").value = usuarioLogueado.apellido_paterno || "";
+  document.getElementById("perfilApellidoMaterno").value = usuarioLogueado.apellido_materno || "";
   document.getElementById("perfilCorreo").value = usuarioLogueado.correo || "";
   document.getElementById("perfilPassword").value = "";
 
-  if (usuarioLogueado.foto && usuarioLogueado.foto.length > 20) {
-    let foto = usuarioLogueado.foto.replace(/(\r\n|\n|\r)/gm, "");
-    if (!foto.startsWith("data:image")) foto = `data:image/png;base64,${foto}`;
-    prev.src = foto;
+  const selectParroquia = document.getElementById("perfilParroquia");
+  if (usuarioLogueado.parroquia) {
+      const idParroquia = usuarioLogueado.parroquia.id_parroquia || usuarioLogueado.parroquia.id;
+      selectParroquia.value = idParroquia;
   } else {
-    prev.src = "https://via.placeholder.com/100";
+      selectParroquia.value = "";
   }
+
+  // Visualizar foto
+  let fotoSrc = "https://via.placeholder.com/100";
+  if (usuarioLogueado.foto && usuarioLogueado.foto.length > 5) {
+      if (usuarioLogueado.foto.startsWith("http") || usuarioLogueado.foto.startsWith("data:")) {
+          fotoSrc = usuarioLogueado.foto;
+      } else {
+          fotoSrc = `data:image/png;base64,${usuarioLogueado.foto}`;
+      }
+  }
+  prev.src = fotoSrc;
+
   modal.style.display = "flex";
 }
 
@@ -535,6 +564,11 @@ function cargarImagenPerfil() {
   const prev = document.getElementById("perfilPreview");
   const file = input.files[0];
   if (!file) return;
+
+  // 1. Guardar para enviar después
+  fotoNuevaFile = file;
+
+  // 2. Previsualizar
   const reader = new FileReader();
   reader.onload = (e) => {
     prev.src = e.target.result;
@@ -542,49 +576,68 @@ function cargarImagenPerfil() {
   reader.readAsDataURL(file);
 }
 
+// --- GUARDAR PERFIL CON FORMDATA ---
 async function guardarPerfil() {
   try {
     const passInput = document.getElementById("perfilPassword").value.trim();
-    
-    const payload = {
+    const idParroquia = document.getElementById("perfilParroquia").value;
+
+    if(!idParroquia) {
+        return Swal.fire("Atención", "Selecciona una parroquia", "warning");
+    }
+
+    // 1. Objeto JSON
+    const datosUsuario = {
       cedula: usuarioLogueado.cedula,
       primer_nombre: document.getElementById("perfilPrimerNombre").value.trim(),
       segundo_nombre: document.getElementById("perfilSegundoNombre").value.trim(),
       apellido_paterno: document.getElementById("perfilApellidoPaterno").value.trim(),
       apellido_materno: document.getElementById("perfilApellidoMaterno").value.trim(),
       correo: document.getElementById("perfilCorreo").value.trim(),
-      foto: document.getElementById("perfilPreview").src,
+      
+      // La foto la maneja el backend por separado si hay archivo nuevo
+      // Si no, mantenemos la actual
+      foto: usuarioLogueado.foto, 
+
       estado: true,
+      parroquia: { id_parroquia: parseInt(idParroquia) },
       password: passInput !== "" ? passInput : null 
     };
 
+    // 2. FormData
+    const formData = new FormData();
+    formData.append("datos", JSON.stringify(datosUsuario));
+
+    if (fotoNuevaFile) {
+        formData.append("archivo", fotoNuevaFile);
+    }
+ 
+    Swal.fire({ title: 'Guardando...', didOpen: () => Swal.showLoading() });
+
+    // 3. Enviar (sin Content-Type manual)
     const res = await fetch(`${API_BASE}/usuarios/${usuarioLogueado.cedula}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: formData, 
     });
 
     if (res.ok) {
       const actualizado = await res.json();
 
-      const usuarioLigero = { ...actualizado };
-      usuarioLigero.foto = null; 
+      usuarioLogueado = actualizado;
       
       try {
-          localStorage.setItem("usuario", JSON.stringify(usuarioLigero));
+          localStorage.setItem("usuario", JSON.stringify(actualizado));
       } catch(e) {
-          console.warn("Storage lleno, pero no importa.");
+          console.warn("Storage lleno, ignorando...");
       }
 
-      usuarioLogueado = actualizado;
-      cargarInfoUsuario();
+      cargarInfoUsuario(); 
 
       Swal.fire({
           icon: 'success',
           title: '¡Perfil Actualizado!',
-          text: 'Tus datos se han guardado correctamente.',
+          text: 'Tu parroquia y foto se han guardado.',
           confirmButtonColor: '#2ecc71',
-          confirmButtonText: 'Genial'
       }).then(() => {
           cerrarModalPerfil();
       });
@@ -600,6 +653,30 @@ async function guardarPerfil() {
   }
 }
 
+// --- NUEVA FUNCIÓN PARA CARGAR PARROQUIAS ---
+async function cargarParroquiasEnPerfil() {
+    const select = document.getElementById('perfilParroquia');
+    if(!select) return;
+    
+    try {
+        const res = await fetch(`${API_BASE}/parroquias`);
+        if (res.ok) {
+            const parroquias = await res.json();
+            select.innerHTML = '<option value="">Seleccione su parroquia</option>';
+            parroquias.forEach(p => {
+                const option = document.createElement('option');
+                option.value = p.id_parroquia || p.id; 
+                option.text = p.nombre_parroquia || p.nombre;
+                select.appendChild(option);
+            });
+        }
+    } catch (e) {
+        console.error("Error cargando parroquias", e);
+        select.innerHTML = '<option value="">Error al cargar</option>';
+    }
+}
+
+// ... (Resto de funciones de notificaciones y rangos siguen igual) ...
 
 async function cargarNotificaciones() {
 

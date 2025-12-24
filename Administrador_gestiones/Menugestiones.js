@@ -1,5 +1,8 @@
 const API_BASE = 'https://api-loopi.onrender.com/api';
 
+// Variable global para guardar la foto nueva si el usuario la cambia
+let fotoNuevaFile = null; 
+
 document.addEventListener("DOMContentLoaded", () => {
   const usuarioStr = localStorage.getItem("usuario");
   if (!usuarioStr) {
@@ -60,10 +63,13 @@ document.addEventListener("DOMContentLoaded", () => {
     inputFoto.addEventListener("change", function () {
       const file = this.files[0];
       if (file) {
+        // 1. GUARDAMOS EL ARCHIVO REAL PARA ENVIARLO LUEGO
+        fotoNuevaFile = file;
+
+        // 2. Mostramos previsualización local
         const reader = new FileReader();
         reader.onload = function (e) {
           document.getElementById("perfilPreview").src = e.target.result;
-          document.getElementById("perfilFotoBase64").value = e.target.result;
         };
         reader.readAsDataURL(file);
       }
@@ -80,19 +86,26 @@ function cargarDatosEnModal(usuario) {
   document.getElementById("perfilApellidoPaterno").value = usuario.apellido_paterno || "";
   document.getElementById("perfilApellidoMaterno").value = usuario.apellido_materno || "";
   document.getElementById("perfilCorreo").value = usuario.correo || "";
-  document.getElementById("perfilPassword").value = ""; // Siempre vacío al abrir
+  document.getElementById("perfilPassword").value = ""; 
 
   const imgPreview = document.getElementById("perfilPreview");
-  const hiddenBase64 = document.getElementById("perfilFotoBase64");
+  
+  // LIMPIAMOS LA VARIABLE DE FOTO NUEVA AL ABRIR
+  fotoNuevaFile = null; 
+  if (document.getElementById("inputPerfilFoto")) document.getElementById("inputPerfilFoto").value = "";
 
-  if (usuario.foto && usuario.foto.length > 20) {
-    let fotoSrc = usuario.foto.startsWith("data:") ? usuario.foto : `data:image/png;base64,${usuario.foto}`;
-    imgPreview.src = fotoSrc;
-    hiddenBase64.value = fotoSrc;
-  } else {
-    imgPreview.src = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-    hiddenBase64.value = "";
+  // --- CORRECCIÓN AQUÍ: SOPORTAR URL Y BASE64 ---
+  let fotoSrc = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+  
+  if (usuario.foto && usuario.foto.length > 5) {
+      if (usuario.foto.startsWith("http") || usuario.foto.startsWith("data:")) {
+          fotoSrc = usuario.foto; // Es URL de Supabase o Base64 completo
+      } else {
+          fotoSrc = `data:image/png;base64,${usuario.foto}`; // Es Base64 antiguo sin cabecera
+      }
   }
+  imgPreview.src = fotoSrc;
+  // ----------------------------------------------
 }
 
 function cerrarModalPerfil() {
@@ -108,7 +121,6 @@ async function guardarPerfil() {
   const apellidoMaterno = document.getElementById("perfilApellidoMaterno").value;
   const correo = document.getElementById("perfilCorreo").value;
   const password = document.getElementById("perfilPassword").value;
-  const foto = document.getElementById("perfilFotoBase64").value;
 
   if (!primerNombre || !apellidoPaterno || !correo) {
     return Swal.fire("Error", "Nombre, Apellido y Correo son obligatorios", "error");
@@ -120,7 +132,8 @@ async function guardarPerfil() {
       usuarioActualDB = await r.json();
   } catch(e) { console.error(e); }
 
-  const payload = {
+  // 1. CREAMOS EL OBJETO DE DATOS (SIN FOTO AQUÍ)
+  const datosUsuario = {
     cedula: usuarioActualDB.cedula,
     fecha_nacimiento: usuarioActualDB.fecha_nacimiento,
     genero: usuarioActualDB.genero,
@@ -132,32 +145,44 @@ async function guardarPerfil() {
     apellido_paterno: apellidoPaterno,
     apellido_materno: apellidoMaterno,
     correo: correo,
-    foto: foto,
-
+    
+    // Mantenemos la foto vieja por defecto (el backend la ignora si mandamos archivo nuevo)
+    foto: usuarioActualDB.foto, 
 
     password: password ? password : null,
-
-
-    roles: null, 
-    parroquia: usuarioActualDB.parroquia ? { id_parroquia: usuarioActualDB.parroquia.id_parroquia } : null,
-    rango: usuarioActualDB.rango ? { id_rango: usuarioActualDB.rango.id_rango } : null
+    
+    // Enviamos roles y parroquia tal cual estaban
+    roles: usuarioActualDB.roles,
+    parroquia: usuarioActualDB.parroquia,
+    rango: usuarioActualDB.rango
   };
 
+  // 2. CREAMOS EL FORMDATA PARA ENVIAR A JAVA
+  const formData = new FormData();
+  formData.append("datos", JSON.stringify(datosUsuario)); // JSON como texto
+
+  // Si subió foto nueva, la adjuntamos
+  if (fotoNuevaFile) {
+      formData.append("archivo", fotoNuevaFile);
+  }
+
   try {
+    // CAMBIO: No ponemos Content-Type, fetch lo pone solo para FormData
     const res = await fetch(`${API_BASE}/usuarios/${usuarioLocal.cedula}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: formData, 
     });
 
     if (res.ok) {
       const usuarioActualizado = await res.json();
 
+      // Actualizamos el LocalStorage para que se vea el cambio arriba a la derecha
       const nuevoStorage = {
           ...usuarioLocal,
           nombre: usuarioActualizado.primer_nombre, 
           apellido: usuarioActualizado.apellido_paterno,
           correo: usuarioActualizado.correo,
+          foto: usuarioActualizado.foto // Guardamos la nueva URL
       };
       
       localStorage.setItem("usuario", JSON.stringify(nuevoStorage));
@@ -171,9 +196,8 @@ async function guardarPerfil() {
         window.location.reload();
       });
     } else {
-      const errorText = await res.text(); // Ver qué dice el backend
-      console.error("Error Backend:", errorText);
-      Swal.fire("Error", "No se pudo actualizar. Revisa la consola.", "error");
+      const errorData = await res.json();
+      Swal.fire("Error", errorData.mensaje || "No se pudo actualizar.", "error");
     }
   } catch (e) {
     console.error(e);

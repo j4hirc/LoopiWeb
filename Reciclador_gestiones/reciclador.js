@@ -1,6 +1,5 @@
 const API_BASE = 'https://api-loopi.onrender.com/api';
 
-
 let usuario;
 let map;
 let recyclingLayer;
@@ -8,12 +7,12 @@ let todasLasUbicaciones = [];
 let marcadorMiUbicacion = null;
 let ubicacionActual = null;
 
+let fotoNuevaFile = null;
 
 const CUENCA_BOUNDS = L.latLngBounds(
-  [-2.99, -79.15], // Suroeste
-  [-2.8, -78.85] // Noreste
+  [-2.99, -79.15], 
+  [-2.8, -78.85] 
 );
-
 
 const iconReciclador = L.divIcon({
   className: "custom-div-icon",
@@ -82,6 +81,7 @@ async function refrescarDatosUsuario() {
             datosFrescos.rol_seleccionado = usuario.rol_seleccionado;
             
             usuario = datosFrescos;
+            
             localStorage.setItem("usuario", JSON.stringify(usuario));
             
             actualizarSaludoUI();
@@ -92,11 +92,17 @@ async function refrescarDatosUsuario() {
 }
 
 function actualizarSaludoUI() {
-    const fotoUrl = usuario.foto || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
-    const src = fotoUrl.startsWith("data:") || fotoUrl.startsWith("http") ? fotoUrl : `data:image/png;base64,${fotoUrl}`;
+    let fotoUrl = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+    if (usuario.foto && usuario.foto.length > 5) {
+        if (usuario.foto.startsWith("http") || usuario.foto.startsWith("data:")) {
+            fotoUrl = usuario.foto;
+        } else {
+            fotoUrl = `data:image/png;base64,${usuario.foto}`;
+        }
+    }
 
     document.getElementById("saludoUsuario").innerHTML = `
-    <img src="${src}" 
+    <img src="${fotoUrl}" 
          style="width:35px; height:35px; border-radius:50%; object-fit:cover; margin-right:8px; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
     <div style="display:flex; flex-direction:column; align-items:flex-start; line-height:1.2;">
         <span style="font-weight:600; font-size:0.9rem;">${usuario.primer_nombre || "Usuario"}</span>
@@ -221,6 +227,9 @@ async function abrirPerfil() {
 }
 
 function cargarDatosEnModal() {
+  fotoNuevaFile = null;
+  if(document.getElementById("inputPerfilFoto")) document.getElementById("inputPerfilFoto").value = "";
+
   document.getElementById("perfilPrimerNombre").value = usuario.primer_nombre || "";
   document.getElementById("perfilSegundoNombre").value = usuario.segundo_nombre || "";
   document.getElementById("perfilApellidoPaterno").value = usuario.apellido_paterno || "";
@@ -228,26 +237,28 @@ function cargarDatosEnModal() {
   document.getElementById("perfilCorreo").value = usuario.correo || "";
   document.getElementById("perfilPassword").value = ""; 
   
-  let fotoSrc = usuario.foto || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-  if (fotoSrc.length > 100 && !fotoSrc.startsWith("data:")) {
-      fotoSrc = `data:image/png;base64,${fotoSrc}`;
+  let fotoSrc = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+  if (usuario.foto && usuario.foto.length > 5) {
+      if (usuario.foto.startsWith("http") || usuario.foto.startsWith("data:")) {
+          fotoSrc = usuario.foto;
+      } else {
+          fotoSrc = `data:image/png;base64,${usuario.foto}`;
+      }
   }
   
   document.getElementById("perfilPreview").src = fotoSrc;
-  document.getElementById("perfilFotoBase64").value = usuario.foto || "";
 }
 
 function previsualizarFoto(e) {
   const file = e.target.files[0];
   if (!file) return;
 
+  fotoNuevaFile = file;
+
+  
   const reader = new FileReader();
   reader.onload = (ev) => {
     document.getElementById("perfilPreview").src = ev.target.result;
-    let base64Clean = ev.target.result;
-    if(base64Clean.includes(",")) base64Clean = base64Clean.split(",")[1];
-    
-    document.getElementById("perfilFotoBase64").value = base64Clean;
   };
   reader.readAsDataURL(file);
 }
@@ -259,25 +270,31 @@ async function guardarPerfil() {
     const sApellido = document.getElementById("perfilApellidoMaterno").value.trim();
     const correo = document.getElementById("perfilCorreo").value.trim();
     const pass = document.getElementById("perfilPassword").value.trim();
-    const foto = document.getElementById("perfilFotoBase64").value;
 
     if (!pNombre || !pApellido || !correo) {
         return Swal.fire("Campos vacíos", "Nombre, Apellido y Correo son obligatorios", "warning");
     }
 
-    const payload = {
+    const datosUsuario = {
         cedula: usuario.cedula,
         primer_nombre: pNombre,
         segundo_nombre: sNombre,
         apellido_paterno: pApellido,
         apellido_materno: sApellido,
         correo: correo,
-        foto: foto,
+        foto: usuario.foto, // Mantener vieja si no se cambia
         estado: true 
     };
 
     if (pass) {
-        payload.password = pass; 
+        datosUsuario.password = pass; 
+    }
+
+    const formData = new FormData();
+    formData.append("datos", JSON.stringify(datosUsuario));
+
+    if (fotoNuevaFile) {
+        formData.append("archivo", fotoNuevaFile);
     }
 
     try {
@@ -285,8 +302,7 @@ async function guardarPerfil() {
 
         const res = await fetch(`${API_BASE}/usuarios/${usuario.cedula}`, {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
+            body: formData
         });
 
         if (res.ok) {
