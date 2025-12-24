@@ -6,13 +6,13 @@ let markersLayer;
 let allPuntos = []; 
 
 let selectedLocationId = null;
-let fotoEvidenciaFile = null; // CAMBIO: Guardamos el archivo, no el string Base64
+let fotoEvidenciaFile = null; // Archivo real
 let detallesList = [];
 let materialesGlobales = [];
 
 document.addEventListener("DOMContentLoaded", async () => {
   const now = new Date();
-  now.setMinutes(now.getMinutes() - now.getTimezoneOffset()); // Ajuste zona horaria
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset()); 
   document.getElementById("inputFecha").value = now.toISOString().slice(0, 16);
 
   initMap();
@@ -357,8 +357,10 @@ function setupImageUpload() {
         }
 
         try {
+            // 1. Comprimir
             const archivoComprimido = await comprimirImagen(file);
             
+            // 2. Guardar en variable global
             fotoEvidenciaFile = archivoComprimido;
 
             // 3. Previsualizar
@@ -379,6 +381,7 @@ function setupImageUpload() {
   });
 }
 
+// --- FUNCIÓN DE COMPRESIÓN ---
 async function comprimirImagen(archivo) {
     return new Promise((resolve, reject) => {
         const maxWidth = 800; // Redimensionar si pasa de 800px
@@ -431,7 +434,7 @@ function validarFormulario() {
 
   const condiciones = 
       selectedLocationId && 
-      fotoEvidenciaFile && // Validamos que exista el archivo
+      fotoEvidenciaFile && 
       fecha && 
       detallesList.length > 0;
 
@@ -448,6 +451,7 @@ function validarFormulario() {
   }
 }
 
+// --- ENVÍO CON FORMDATA ---
 async function enviarSolicitud() {
   const usuarioLocal = localStorage.getItem("usuario");
   if (!usuarioLocal) {
@@ -455,12 +459,17 @@ async function enviarSolicitud() {
   }
   const usuarioObj = JSON.parse(usuarioLocal);
 
+  // Fecha segura: Agregamos segundos para evitar error de LocalDateTime
+  const fechaInput = document.getElementById("inputFecha").value;
+  const fechaSegura = fechaInput.length === 16 ? fechaInput + ":00" : fechaInput;
+
+  // 1. Objeto JSON
   const datosObj = {
     solicitante: { cedula: usuarioObj.cedula },
     ubicacion: { id_ubicacion_reciclaje: selectedLocationId },
     fotoEvidencia: null, // Backend lo maneja por separado
-    estado: "VERIFICACION_ADMIN", // Estado inicial corregido
-    fecha_recoleccion_estimada: document.getElementById("inputFecha").value,
+    estado: "VERIFICACION_ADMIN", 
+    fecha_recoleccion_estimada: fechaSegura, // FORMATO CORREGIDO
     detalles: detallesList.map(d => ({
         material: { id_material: d.material.id_material },
         cantidad_kg: d.cantidad_kg
@@ -484,6 +493,7 @@ async function enviarSolicitud() {
         didOpen: () => Swal.showLoading() 
     });
 
+    // 3. Enviar
     const response = await fetch(`${API_BASE}/solicitud_recolecciones`, {
       method: "POST",
       body: formData,
@@ -501,7 +511,7 @@ async function enviarSolicitud() {
     } else {
       const txt = await response.text();
       console.error(txt);
-      Swal.fire("Error", "No se pudo guardar la solicitud. Revisa la consola.", "error");
+      Swal.fire("Error", "No se pudo guardar la solicitud.", "error");
     }
   } catch (e) {
     console.error(e);
