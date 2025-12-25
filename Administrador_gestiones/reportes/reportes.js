@@ -12,6 +12,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById('filtroInicio').addEventListener('change', aplicarFiltros);
     document.getElementById('filtroFin').addEventListener('change', aplicarFiltros);
     document.getElementById('filtroEstado').addEventListener('change', aplicarFiltros);
+    // NUEVO LISTENER
+    document.getElementById('filtroTipoRecolector').addEventListener('change', aplicarFiltros);
     document.getElementById('filtroReciclador').addEventListener('keyup', aplicarFiltros);
 });
 
@@ -39,6 +41,7 @@ function aplicarFiltros() {
     const fInicio = document.getElementById('filtroInicio').value;
     const fFin = document.getElementById('filtroFin').value;
     const estado = document.getElementById('filtroEstado').value;
+    const tipoRec = document.getElementById('filtroTipoRecolector').value; // NUEVO
     const busqueda = document.getElementById('filtroReciclador').value.toLowerCase();
 
     const filtrados = datosCrudos.filter(item => {
@@ -66,7 +69,24 @@ function aplicarFiltros() {
             }
         }
 
-        // Filtro Reciclador / Punto Fijo
+        // --- FILTRO TIPO RECOLECTOR (NUEVO) ---
+        if(tipoRec !== "TODOS") {
+            // RECICLADOR MÓVIL: Tiene 'reciclador' asignado y usualmente NO tiene 'ubicacion'
+            // O podemos simplificar: Si elijo RECICLADOR, debe existir el objeto reciclador.
+            if (tipoRec === "RECICLADOR") {
+                // Si no tiene reciclador asignado, lo sacamos.
+                // Y si quieres ser estricto, que NO tenga ubicación (para diferenciar de puntos fijos con encargado)
+                if (!item.reciclador || item.ubicacion) return false; 
+            }
+            
+            // PUNTO FIJO: Tiene 'ubicacion' asignada
+            if (tipoRec === "PUNTO") {
+                if (!item.ubicacion) return false;
+            }
+        }
+        // -------------------------------------
+
+        // Filtro Reciclador / Punto Fijo (Búsqueda por texto)
         if(busqueda) {
             let coincide = false;
             if(item.reciclador) {
@@ -222,6 +242,7 @@ function generarTablaRecicladores(lista) {
         let nombreDisplay = "";
         let cedulaDisplay = "";
         
+        // Logica para agrupar en tabla
         if(s.reciclador) {
             key = "R_" + s.reciclador.cedula;
             nombreDisplay = `${s.reciclador.primer_nombre} ${s.reciclador.apellido_paterno}`;
@@ -354,6 +375,7 @@ function resetearFiltros() {
     document.getElementById('filtroInicio').value = '';
     document.getElementById('filtroFin').value = '';
     document.getElementById('filtroEstado').value = 'TODOS';
+    document.getElementById('filtroTipoRecolector').value = 'TODOS'; // RESETEAR NUEVO FILTRO
     document.getElementById('filtroReciclador').value = '';
     aplicarFiltros();
 }
