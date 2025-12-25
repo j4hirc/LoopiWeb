@@ -1,6 +1,11 @@
 /* IMPORTANTE: Si quieres la fuente Poppins, asegúrate de importarla en el HTML o aquí */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
 
+
+.swal2-container {
+    z-index: 99999 !important;
+}
+
 body {
     margin: 0;
     background: #fcfbe8;
