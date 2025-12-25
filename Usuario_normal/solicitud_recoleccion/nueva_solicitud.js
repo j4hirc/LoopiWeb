@@ -201,12 +201,8 @@ function renderizarMarcadores(listaPuntos) {
     });
 }
 
-// =========================================================================
-// FUNCIÓN PRINCIPAL DE SELECCIÓN (CON RUTAS E INFORMACIÓN)
-// =========================================================================
 window.seleccionarPuntoDesdePopup = function (id, nombre, esReciclador) {
     selectedLocationId = id;
-
     const infoDiv = document.getElementById("infoPunto");
     const nombreDiv = document.getElementById("nombrePunto");
 
@@ -217,23 +213,71 @@ window.seleccionarPuntoDesdePopup = function (id, nombre, esReciclador) {
 
     if (puntoSeleccionado) {
         
-        // 1. Guardar Horarios
+        // 1. Guardar Horarios para validación
         horariosPuntoSeleccionado = puntoSeleccionado.horarios || [];
 
-        // 2. Actualizar UI con Nombre + Div para Ruta (Inicialmente Cargando)
+        // 2. Extraer datos adicionales
+        const direccion = puntoSeleccionado.direccion || "Sin dirección registrada";
+        const parroquia = puntoSeleccionado.parroquia ? puntoSeleccionado.parroquia.nombre_parroquia : "";
+        const fotoUrl = puntoSeleccionado.foto ? puntoSeleccionado.foto : null;
+
+        // 3. Generar HTML de Horarios
+        let horariosHTML = '';
+        if (horariosPuntoSeleccionado.length > 0) {
+            horariosHTML = '<div style="margin-top:8px; background:#f9f9f9; padding:5px; border-radius:4px;">';
+            horariosHTML += '<div style="font-size:0.8em; color:#7f8c8d; font-weight:bold; margin-bottom:3px;">Horarios de Atención:</div>';
+            
+            // Ordenar días si es necesario, o mostrarlos tal cual
+            horariosPuntoSeleccionado.forEach(h => {
+                const inicio = h.hora_inicio.substring(0,5);
+                const fin = h.hora_fin.substring(0,5);
+                horariosHTML += `
+                    <div style="font-size:0.8em; color:#34495e; display:flex; justify-content:space-between;">
+                        <span>${h.dia_semana}:</span>
+                        <span>${inicio} - ${fin}</span>
+                    </div>`;
+            });
+            horariosHTML += '</div>';
+        } else {
+            horariosHTML = '<div style="font-size:0.8em; color:#e74c3c; margin-top:5px;">⚠️ Sin horarios registrados</div>';
+        }
+
+        // 4. Generar HTML de la Foto (si existe)
+        let fotoHTML = '';
+        if (fotoUrl) {
+            fotoHTML = `
+                <div style="margin-top:10px; width:100%; height:120px; overflow:hidden; border-radius:6px;">
+                    <img src="${fotoUrl}" style="width:100%; height:100%; object-fit:cover;" alt="Foto del punto">
+                </div>
+            `;
+        }
+
+        // 5. CONSTRUIR EL PANEL COMPLETO
         nombreDiv.innerHTML = `
-            <div style="margin-bottom:5px;">
-                <span style="color:${colorHTML}; font-weight:bold; font-size:1.1em;">${iconoHTML} ${nombre}</span>
-            </div>
-            <div id="rutaInfo" style="font-size:0.9em; color:#555; background:#f8f9fa; padding:8px; border-radius:5px; margin-top:5px; display:none; border-left:3px solid #f39c12;">
-                <i class="fa-solid fa-spinner fa-spin"></i> Calculando ruta óptima...
+            <div style="display:flex; flex-direction:column; gap:5px;">
+                <div style="font-size:1.1em; font-weight:bold; color:${colorHTML}; display:flex; align-items:center; gap:8px;">
+                    ${iconoHTML} ${nombre}
+                </div>
+
+                <div style="font-size:0.9em; color:#555;">
+                    <i class="fa-solid fa-map-pin" style="color:${colorHTML}; margin-right:5px;"></i> ${direccion}
+                    ${parroquia ? `<br><small style="color:#999; margin-left:18px;">(${parroquia})</small>` : ''}
+                </div>
+
+                ${fotoHTML}
+
+                ${horariosHTML}
+
+                <div id="rutaInfo" style="font-size:0.9em; color:#555; background:#ecf0f1; padding:10px; border-radius:5px; margin-top:10px; border-left:4px solid #f39c12; display:none;">
+                    <i class="fa-solid fa-spinner fa-spin"></i> Calculando ruta óptima...
+                </div>
             </div>
         `;
         
         infoDiv.style.display = "block";
         infoDiv.style.borderLeft = `5px solid ${colorHTML}`;
 
-        // 3. Cargar Materiales
+        // 6. Lógica de Materiales
         const matsWrappers = obtenerMaterialesDelPunto(puntoSeleccionado);
         const matsLimpios = matsWrappers.map(m => m.material ? m.material : m).filter(m => m != null);
         llenarSelectMateriales(matsLimpios);
@@ -242,50 +286,39 @@ window.seleccionarPuntoDesdePopup = function (id, nombre, esReciclador) {
             Swal.fire("Aviso", "Este punto no tiene materiales configurados.", "warning");
         }
 
-        // 4. CALCULAR RUTA (Leaflet Routing Machine)
+        // 7. CÁLCULO DE RUTA
         if (markerUsuario) {
             const userLatLng = markerUsuario.getLatLng();
             const destLatLng = L.latLng(puntoSeleccionado.latitud, puntoSeleccionado.longitud);
 
-            // Borrar ruta anterior si existe (Para no llenar el mapa de líneas)
-            if (routingControl) {
-                map.removeControl(routingControl);
-            }
+            if (routingControl) map.removeControl(routingControl);
 
-            // Crear nueva ruta
             routingControl = L.Routing.control({
                 waypoints: [userLatLng, destLatLng],
                 routeWhileDragging: false,
                 draggableWaypoints: false,
                 addWaypoints: false,
-                show: false, // No mostrar el panel de instrucciones texto feo
-                lineOptions: {
-                    styles: [{color: colorHTML, opacity: 0.7, weight: 6}]
-                },
-                createMarker: function() { return null; } // No crear marcadores extra, usamos los nuestros
+                show: false,
+                lineOptions: { styles: [{color: colorHTML, opacity: 0.7, weight: 6}] },
+                createMarker: function() { return null; }
             }).addTo(map);
 
-            // Cuando encuentre la ruta, actualizar el div #rutaInfo
             routingControl.on('routesfound', function(e) {
                 const routes = e.routes;
                 const summary = routes[0].summary;
-                
-                // Convertir a km y minutos
                 const distKm = (summary.totalDistance / 1000).toFixed(2);
                 const tiempoMin = Math.round(summary.totalTime / 60);
 
                 const divRuta = document.getElementById("rutaInfo");
                 divRuta.style.display = "block";
-                // Pintamos la info bonita
                 divRuta.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <span><i class="fa-solid fa-route" style="color:#e67e22"></i> <b>${distKm} km</b></span>
-                        <span><i class="fa-regular fa-clock" style="color:#e67e22"></i> <b>~${tiempoMin} min</b></span>
+                        <span><i class="fa-solid fa-person-walking" style="color:#e67e22"></i> <b>~${tiempoMin} min</b></span>
                     </div>
                 `;
             });
             
-            // Si hay error en la ruta (ej: no hay internet o ruta imposible)
             routingControl.on('routingerror', function() {
                 const divRuta = document.getElementById("rutaInfo");
                 divRuta.style.display = "block";
@@ -293,7 +326,6 @@ window.seleccionarPuntoDesdePopup = function (id, nombre, esReciclador) {
             });
 
         } else {
-            // Usuario sin GPS activado
             const divRuta = document.getElementById("rutaInfo");
             if(divRuta) {
                 divRuta.style.display = "block";
@@ -304,10 +336,7 @@ window.seleccionarPuntoDesdePopup = function (id, nombre, esReciclador) {
 
     detallesList = [];
     actualizarListaUI();
-    
-    // Validar Horario Inmediatamente
     validarHorarioAtencion();
-    
     validarFormulario();
     map.closePopup();
 };
