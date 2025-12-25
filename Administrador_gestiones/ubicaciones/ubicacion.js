@@ -12,7 +12,7 @@ const inputImagen = document.getElementById("inputImg");
 const previewImagen = document.getElementById("previewImg");
 const selectParroquia = document.getElementById("parroquia");
 const selectReciclador = document.getElementById("selectReciclador");
-const containerHorarios = document.getElementById("containerHorarios"); // CONTENEDOR NUEVO
+const containerHorarios = document.getElementById("containerHorarios"); 
 
 let ubicacionesCache = [];
 let map = null;
@@ -42,12 +42,28 @@ document.addEventListener("DOMContentLoaded", () => {
 function abrirModal() {
     resetearFormulario();
     document.getElementById("tituloModal").innerText = "Nueva Ubicación";
-    agregarFilaHorario(); // Agregar una fila vacía por defecto
+    
+    // MEJORA 1: Agregar horario por defecto al abrir
+    agregarFilaHorario(null, "08:00", "18:00"); 
+    
     modalOverlay.style.display = "flex";
 }
 
-// --- FUNCIÓN NUEVA: AGREGAR FILA DE HORARIO ---
-function agregarFilaHorario(data = null) {
+// --- FUNCIÓN MEJORADA: AGREGAR FILA DE HORARIO ---
+// Ahora acepta valores opcionales para autocompletar
+function agregarFilaHorario(data = null, horaIniDefecto = "", horaFinDefecto = "") {
+    
+    // Si no es edición (data es null) y no se pasan valores por defecto,
+    // intentamos copiar de la fila anterior (MEJORA 2)
+    if (!data && (!horaIniDefecto || !horaFinDefecto)) {
+        const filas = containerHorarios.querySelectorAll(".horario-row");
+        if (filas.length > 0) {
+            const ultima = filas[filas.length - 1];
+            horaIniDefecto = ultima.querySelector(".hora-inicio").value;
+            horaFinDefecto = ultima.querySelector(".hora-fin").value;
+        }
+    }
+
     const div = document.createElement("div");
     div.className = "horario-row";
     div.style.display = "flex";
@@ -55,10 +71,10 @@ function agregarFilaHorario(data = null) {
     div.style.marginBottom = "10px";
     div.style.alignItems = "center";
 
-    // Valores por defecto o cargados de la BD
+    // Prioridad de valores: 1. Datos de BD -> 2. Valores copiados/defecto -> 3. Vacío
     const diaVal = data ? data.dia_semana : "Lunes";
-    const iniVal = data ? data.hora_inicio : "";
-    const finVal = data ? data.hora_fin : "";
+    const iniVal = data ? data.hora_inicio : horaIniDefecto;
+    const finVal = data ? data.hora_fin : horaFinDefecto;
 
     div.innerHTML = `
         <select class="input-field dia-select" style="flex: 1;">
@@ -145,14 +161,13 @@ window.cargarDatosEdicion = async function (id) {
         });
     }
 
-    // --- CARGAR HORARIOS (NUEVO) ---
-    containerHorarios.innerHTML = ""; // Limpiar contenedor
+    // --- CARGAR HORARIOS ---
+    containerHorarios.innerHTML = ""; // Limpiar
     if (ubi.horarios && ubi.horarios.length > 0) {
-        // Ordenar por día (opcional, pero se ve mejor)
-        // Aquí asumimos que vienen como array
         ubi.horarios.forEach(h => agregarFilaHorario(h));
     } else {
-        agregarFilaHorario(); // Si no tiene, mostrar fila vacía
+        // Si editamos y no tiene horarios, poner uno por defecto vacío o estándar
+        agregarFilaHorario(null, "08:00", "18:00");
     }
 
     if (ubi.latitud && ubi.longitud) {
@@ -189,7 +204,6 @@ function resetearFormulario() {
     const checkboxes = document.querySelectorAll('input[name="materiales"]');
     checkboxes.forEach(cb => cb.checked = false);
     
-    // Limpiar horarios
     containerHorarios.innerHTML = "";
 
     coordenadasSeleccionadas = null;
@@ -275,7 +289,7 @@ async function listarUbicaciones() {
 }
 
 // =================================================================
-// GUARDAR UBICACIÓN (AHORA CON HORARIOS)
+// GUARDAR UBICACIÓN (VALIDADO)
 // =================================================================
 window.guardarUbicacion = async function () {
     const id = document.getElementById("idUbicacion").value;
@@ -289,7 +303,6 @@ window.guardarUbicacion = async function () {
         return;
     }
 
-    // --- RECOLECTAR HORARIOS (CORREGIDO) ---
     const listaHorarios = [];
     document.querySelectorAll(".horario-row").forEach(row => {
         const dia = row.querySelector(".dia-select").value;
@@ -297,9 +310,6 @@ window.guardarUbicacion = async function () {
         let fin = row.querySelector(".hora-fin").value;
         
         if (dia && ini && fin) {
-            // CORRECCIÓN AQUÍ:
-            // Solo agregamos ":00" si la hora viene simple (HH:mm = 5 caracteres).
-            // Si ya viene con segundos (HH:mm:ss = 8 caracteres), no hacemos nada.
             if(ini.length === 5) ini += ":00";
             if(fin.length === 5) fin += ":00";
 
@@ -316,12 +326,9 @@ window.guardarUbicacion = async function () {
         return;
     }
 
-    // Recolectar materiales
     const checkboxes = document.querySelectorAll('input[name="materiales"]:checked');
     const listaMateriales = Array.from(checkboxes).map(cb => {
-        return {
-            material: { id_material: parseInt(cb.value) }
-        };
+        return { material: { id_material: parseInt(cb.value) } };
     });
 
     let objReciclador = null;
@@ -372,8 +379,6 @@ window.guardarUbicacion = async function () {
         } else {
             const errorText = await res.text();
             console.error("Error backend:", errorText);
-            
-            // Intentamos mostrar el mensaje limpio si viene en JSON
             try {
                 const errorJson = JSON.parse(errorText);
                 Swal.fire("Error", errorJson.mensaje || "Error al guardar", "error");
