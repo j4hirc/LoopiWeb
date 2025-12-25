@@ -38,7 +38,7 @@
                 <label>Imagen del Punto</label>
                 <div class="img-row">
                     <div class="img-preview" id="previewImg"></div>
-                    <input type="file" id="inputImg" accept="image/*" onchange="convertirImagenBase64()">
+                    <input type="file" id="inputImg" accept="image/*">
                     <input type="hidden" id="fotoBase64">
                 </div>
 
@@ -87,7 +87,7 @@
 
             <div class="modal-header" style="display: flex; align-items: center; justify-content: space-between;">
                 <span>Selecciona el punto</span>
-                
+
                 <button class="btn-gps" onclick="obtenerUbicacionActual()">
                     📍 Usar mi ubicación
                 </button>
@@ -107,6 +107,7 @@
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="ubicacion.js"></script>
 
 </body>

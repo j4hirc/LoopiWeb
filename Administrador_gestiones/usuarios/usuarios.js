@@ -35,14 +35,18 @@ const ROLES_ID_MAP = {
     'USUARIO_NORMAL': 3
 };
 
+const filtroRol = document.getElementById('filtroRol');     // NUEVO
+const filtroEstado = document.getElementById('filtroEstado'); // NUEVO
+
 document.addEventListener('DOMContentLoaded', () => {
     cargarParroquiasEnSelect();
     cargarRangosEnSelect();
     listarUsuarios();
-    
+
     searchInput.addEventListener('input', filtrarUsuarios);
+    filtroRol.addEventListener('change', filtrarUsuarios);    // NUEVO
+    filtroEstado.addEventListener('change', filtrarUsuarios); // NUEVO
     
-    // --- IMPORTANTE: Activa la previsualización al elegir archivo ---
     inpFoto.addEventListener('change', cargarImagen);
 });
 
@@ -314,13 +318,38 @@ function renderizarGrid(lista) {
 }
 
 function filtrarUsuarios() {
-    const t = searchInput.value.toLowerCase();
-    renderizarGrid(usuariosCache.filter(u => 
-        u.primer_nombre.toLowerCase().includes(t) || 
-        u.apellido_paterno.toLowerCase().includes(t) ||
-        u.cedula.toString().includes(t) ||
-        u.correo.toLowerCase().includes(t)
-    ));
+    const texto = searchInput.value.toLowerCase();
+    const rolSeleccionado = filtroRol.value;
+    const estadoSeleccionado = filtroEstado.value;
+
+    const filtrados = usuariosCache.filter(u => {
+        const coincideTexto = 
+            u.primer_nombre.toLowerCase().includes(texto) || 
+            u.apellido_paterno.toLowerCase().includes(texto) ||
+            u.cedula.toString().includes(texto) ||
+            u.correo.toLowerCase().includes(texto);
+
+        let coincideRol = true;
+        if (rolSeleccionado !== "todos") {
+            // Verificamos si alguno de sus roles coincide con el seleccionado
+            coincideRol = u.roles.some(ur => {
+                const nombreRol = ur.rol ? ur.rol.nombre.toUpperCase() : "";
+                // Mapeo por si en BD se llaman distinto (ej: "Usuario_normal" vs "USUARIO_NORMAL")
+                return nombreRol === rolSeleccionado || nombreRol.includes(rolSeleccionado);
+            });
+        }
+
+        let coincideEstado = true;
+        if (estadoSeleccionado !== "todos") {
+            const esActivo = u.estado === true;
+            if (estadoSeleccionado === "activo" && !esActivo) coincideEstado = false;
+            if (estadoSeleccionado === "inactivo" && esActivo) coincideEstado = false;
+        }
+
+        return coincideTexto && coincideRol && coincideEstado;
+    });
+
+    renderizarGrid(filtrados);
 }
 
 function abrirModalNuevo() { 

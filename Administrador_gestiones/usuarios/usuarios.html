@@ -14,8 +14,22 @@
     <button class="btn-agregar" onclick="abrirModalNuevo()">+ Nuevo Usuario</button>
 </header>
 
-<section class="search-container">
-    <input type="text" id="buscarUsuario" placeholder="Buscar por nombre o correo..." oninput="filtrarUsuarios()">
+<section class="search-container" style="display: flex; gap: 10px; flex-wrap: wrap; padding: 10px;">
+    <input type="text" id="buscarUsuario" placeholder="Buscar por nombre, cédula o correo..." 
+           style="flex: 2; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+
+    <select id="filtroRol" style="flex: 1; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+        <option value="todos">Todos los Roles</option>
+        <option value="ADMINISTRADOR">Administrador</option>
+        <option value="RECICLADOR">Reciclador</option>
+        <option value="USUARIO_NORMAL">Usuario Normal</option>
+    </select>
+
+    <select id="filtroEstado" style="flex: 1; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+        <option value="todos">Todos los Estados</option>
+        <option value="activo">Activos</option>
+        <option value="inactivo">Inactivos</option>
+    </select>
 </section>
 
 <section id="gridUsuarios" class="grid-container">
