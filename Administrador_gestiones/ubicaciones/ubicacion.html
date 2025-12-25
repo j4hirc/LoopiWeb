@@ -7,6 +7,7 @@
     <title>Gestión de Ubicación - Loopi</title>
     <link rel="stylesheet" href="ubicacion.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
 <body>
@@ -23,7 +24,6 @@
     <div class="grid-container" id="gridUbicaciones">
     </div>
 
-
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal-container">
 
@@ -39,7 +39,6 @@
                 <div class="img-row">
                     <div class="img-preview" id="previewImg"></div>
                     <input type="file" id="inputImg" accept="image/*">
-                    <input type="hidden" id="fotoBase64">
                 </div>
 
                 <label>Nombre del Punto</label>
@@ -60,7 +59,13 @@
                     <p>Cargando materiales...</p>
                 </div>
 
-                <label>Dirección</label>
+                <label style="margin-top: 15px; display: block;">Horarios de Atención</label>
+                <div id="containerHorarios" style="margin-bottom: 10px;">
+                    </div>
+                <button class="btn-mapa" style="background-color: #3498db; width: auto; font-size: 0.8rem; padding: 5px 10px;" onclick="agregarFilaHorario()">
+                    + Agregar Horario
+                </button>
+                <label style="margin-top: 15px;">Dirección</label>
                 <input type="text" class="input-field" id="direccion">
 
                 <label>Ubicación Geográfica</label>
@@ -81,28 +86,22 @@
         </div>
     </div>
 
-
     <div class="modal-overlay" id="modalMapa" style="z-index: 99999;">
         <div class="modal-container" style="height: 80vh; max-width: 800px; width: 95%;">
-
             <div class="modal-header" style="display: flex; align-items: center; justify-content: space-between;">
                 <span>Selecciona el punto</span>
-
                 <button class="btn-gps" onclick="obtenerUbicacionActual()">
                     📍 Usar mi ubicación
                 </button>
                 <button class="modal-close" onclick="cerrarModalMapa()">✕</button>
             </div>
-
             <div class="modal-body" style="padding: 0; display: flex; flex-direction: column; flex: 1;">
                 <div id="mapaLeaflet" style="width: 100%; height: 100%; min-height: 400px;"></div>
             </div>
-
             <div class="modal-footer">
                 <button class="btn-cancelar" onclick="cerrarModalMapa()">Cancelar</button>
                 <button class="btn-guardar" onclick="confirmarCoordenadas()">Confirmar Ubicación</button>
             </div>
-
         </div>
     </div>
 
@@ -111,5 +110,4 @@
     <script src="ubicacion.js"></script>
 
 </body>
-
 </html>

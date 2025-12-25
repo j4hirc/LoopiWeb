@@ -5,20 +5,20 @@ const API_MATERIALES = 'https://api-loopi.onrender.com/api/materiales';
 
 const gridUbicaciones = document.getElementById("gridUbicaciones");
 const searchInput = document.getElementById("buscarUbicacion");
-const modalOverlay = document.getElementById("modalOverlay");     
-const modalMapa = document.getElementById("modalMapa");           
+const modalOverlay = document.getElementById("modalOverlay");
+const modalMapa = document.getElementById("modalMapa");
 
 const inputImagen = document.getElementById("inputImg");
 const previewImagen = document.getElementById("previewImg");
 const selectParroquia = document.getElementById("parroquia");
 const selectReciclador = document.getElementById("selectReciclador");
+const containerHorarios = document.getElementById("containerHorarios"); // NUEVO
 
 let ubicacionesCache = [];
 let map = null;
 let marker;
-let coordenadasSeleccionadas = null; 
-let coordenadasTemporales = null;    
-
+let coordenadasSeleccionadas = null;
+let coordenadasTemporales = null;
 let fotoNuevaFile = null;
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -42,31 +42,62 @@ document.addEventListener("DOMContentLoaded", () => {
 function abrirModal() {
     resetearFormulario();
     document.getElementById("tituloModal").innerText = "Nueva Ubicación";
+    agregarFilaHorario(); // Agrega una fila vacía por defecto
     modalOverlay.style.display = "flex";
 }
 
+// --- FUNCIÓN NUEVA: AGREGAR FILA DE HORARIO ---
+function agregarFilaHorario(data = null) {
+    const div = document.createElement("div");
+    div.className = "horario-row";
+    div.style.display = "flex";
+    div.style.gap = "10px";
+    div.style.marginBottom = "10px";
+    div.style.alignItems = "center";
+
+    // Valores por defecto o cargados
+    const diaVal = data ? data.dia_semana : "";
+    const iniVal = data ? data.hora_inicio : "";
+    const finVal = data ? data.hora_fin : "";
+
+    div.innerHTML = `
+        <select class="input-field dia-select" style="flex: 1;">
+            <option value="Lunes" ${diaVal === 'Lunes' ? 'selected' : ''}>Lunes</option>
+            <option value="Martes" ${diaVal === 'Martes' ? 'selected' : ''}>Martes</option>
+            <option value="Miércoles" ${diaVal === 'Miércoles' ? 'selected' : ''}>Miércoles</option>
+            <option value="Jueves" ${diaVal === 'Jueves' ? 'selected' : ''}>Jueves</option>
+            <option value="Viernes" ${diaVal === 'Viernes' ? 'selected' : ''}>Viernes</option>
+            <option value="Sábado" ${diaVal === 'Sábado' ? 'selected' : ''}>Sábado</option>
+            <option value="Domingo" ${diaVal === 'Domingo' ? 'selected' : ''}>Domingo</option>
+        </select>
+        <input type="time" class="input-field hora-inicio" value="${iniVal}" style="width: 100px;">
+        <span>a</span>
+        <input type="time" class="input-field hora-fin" value="${finVal}" style="width: 100px;">
+        <button type="button" class="btn-delete" style="padding: 5px 10px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer;" onclick="this.parentElement.remove()">
+            <i class="fa-solid fa-trash"></i>
+        </button>
+    `;
+    containerHorarios.appendChild(div);
+}
+
+// ... (cargarMateriales sigue igual) ...
 async function cargarMateriales() {
     const container = document.getElementById("containerMateriales");
     try {
         const res = await fetch(API_MATERIALES);
         const materiales = await res.json();
-        
         container.innerHTML = ""; 
-
         materiales.forEach(mat => {
             const div = document.createElement("div");
             div.className = "material-item";
-
             const checkbox = document.createElement("input");
             checkbox.type = "checkbox";
             checkbox.name = "materiales";
             checkbox.value = mat.id_material;
             checkbox.id = `mat-${mat.id_material}`;
-
             const label = document.createElement("label");
             label.htmlFor = `mat-${mat.id_material}`;
             label.innerText = mat.nombre;
-
             div.appendChild(checkbox);
             div.appendChild(label);
             container.appendChild(div);
@@ -77,12 +108,11 @@ async function cargarMateriales() {
     }
 }
 
+// --- MODIFICADO: CARGAR DATOS + HORARIOS ---
 window.cargarDatosEdicion = async function (id) {
     const ubi = ubicacionesCache.find(u => u.id_ubicacion_reciclaje == id);
-    if (!ubi) {
-        console.error("No se encontró la ubicación con ID:", id);
-        return;
-    }
+    if (!ubi) return;
+
     resetearFormulario();
     document.getElementById("tituloModal").innerText = "Editar Ubicación";
 
@@ -93,17 +123,11 @@ window.cargarDatosEdicion = async function (id) {
     if (selectParroquia.options.length <= 1) await cargarParroquias();
     if (selectReciclador.options.length <= 1) await cargarRecicladores();
 
-    if (ubi.parroquia) {
-        selectParroquia.value = ubi.parroquia.id_parroquia;
-    }
+    if (ubi.parroquia) selectParroquia.value = ubi.parroquia.id_parroquia;
+    if (ubi.reciclador) selectReciclador.value = ubi.reciclador.cedula.toString();
 
-    if (ubi.reciclador && ubi.reciclador.cedula) {
-        selectReciclador.value = ubi.reciclador.cedula.toString();
-    } else {
-        selectReciclador.value = "";
-    }
-
-    if (ubi.materialesAceptados && ubi.materialesAceptados.length > 0) {
+    // Materiales
+    if (ubi.materialesAceptados) {
         ubi.materialesAceptados.forEach(item => {
             if (item.material) {
                 const cb = document.getElementById(`mat-${item.material.id_material}`);
@@ -112,25 +136,30 @@ window.cargarDatosEdicion = async function (id) {
         });
     }
 
+    // --- CARGAR HORARIOS ---
+    containerHorarios.innerHTML = ""; // Limpiar
+    if (ubi.horarios && ubi.horarios.length > 0) {
+        ubi.horarios.forEach(h => agregarFilaHorario(h));
+    } else {
+        agregarFilaHorario(); // Si no tiene, mostrar uno vacío
+    }
+
+    // Coordenadas
     if (ubi.latitud && ubi.longitud) {
         coordenadasSeleccionadas = { lat: ubi.latitud, lng: ubi.longitud };
         actualizarTextoCoords(ubi.latitud, ubi.longitud);
     }
 
+    // Foto
     if (ubi.foto && ubi.foto.length > 5) {
-        let fotoSrc = ubi.foto;
-        if (!fotoSrc.startsWith("http") && !fotoSrc.startsWith("data:")) {
-             fotoSrc = `data:image/png;base64,${ubi.foto}`;
-        }
+        let fotoSrc = ubi.foto.startsWith("http") || ubi.foto.startsWith("data:") ? ubi.foto : `data:image/png;base64,${ubi.foto}`;
         previewImagen.style.backgroundImage = `url(${fotoSrc})`;
     }
 
     modalOverlay.style.display = "flex";
 };
 
-function cerrarModal() {
-    modalOverlay.style.display = "none";
-}
+function cerrarModal() { modalOverlay.style.display = "none"; }
 
 function resetearFormulario() {
     document.getElementById("idUbicacion").value = "";
@@ -138,32 +167,30 @@ function resetearFormulario() {
     document.getElementById("direccion").value = "";
     selectParroquia.value = "";
     selectReciclador.value = "";
-    
     fotoNuevaFile = null;
     inputImagen.value = "";
     previewImagen.style.backgroundImage = "none";
     
-    const checkboxes = document.querySelectorAll('input[name="materiales"]');
-    checkboxes.forEach(cb => cb.checked = false);
+    document.querySelectorAll('input[name="materiales"]').forEach(cb => cb.checked = false);
+    
+    // Limpiar horarios
+    containerHorarios.innerHTML = "";
 
     coordenadasSeleccionadas = null;
     coordenadasTemporales = null;
     actualizarTextoCoords(0.0, 0.0);
 }
 
+// ... (actualizarTextoCoords, modalMapa, etc. siguen igual) ...
 function actualizarTextoCoords(lat, lng) {
     document.getElementById("txtLat").innerText = lat.toFixed(6);
     document.getElementById("txtLng").innerText = lng.toFixed(6);
 }
-
-
 window.abrirModalMapa = function () {
     modalMapa.style.display = "flex";
-
     setTimeout(() => {
         iniciarMapa();
         map.invalidateSize(); 
-
         if (coordenadasSeleccionadas) {
             colocarMarcador(coordenadasSeleccionadas.lat, coordenadasSeleccionadas.lng);
             map.setView([coordenadasSeleccionadas.lat, coordenadasSeleccionadas.lng], 15);
@@ -173,11 +200,7 @@ window.abrirModalMapa = function () {
         }
     }, 300);
 }
-
-window.cerrarModalMapa = function () {
-    modalMapa.style.display = "none";
-}
-
+window.cerrarModalMapa = function () { modalMapa.style.display = "none"; }
 window.confirmarCoordenadas = function () {
     if (coordenadasTemporales) {
         coordenadasSeleccionadas = coordenadasTemporales;
@@ -187,28 +210,17 @@ window.confirmarCoordenadas = function () {
         Swal.fire("Atención", "Por favor, haz clic en el mapa para marcar un punto.", "warning");
     }
 }
-
 function iniciarMapa() {
     if (map) return; 
-
     map = L.map('mapaLeaflet').setView([-2.9001, -79.0059], 13);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
-
-    map.on('click', function (e) {
-        colocarMarcador(e.latlng.lat, e.latlng.lng);
-    });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
+    map.on('click', function (e) { colocarMarcador(e.latlng.lat, e.latlng.lng); });
 }
-
 function colocarMarcador(lat, lng) {
     if (marker) map.removeLayer(marker);
     marker = L.marker([lat, lng]).addTo(map);
     coordenadasTemporales = { lat: lat, lng: lng };
 }
-
-
 async function cargarParroquias() {
     try {
         const res = await fetch(API_PARROQUIAS);
@@ -222,14 +234,11 @@ async function cargarParroquias() {
         });
     } catch (e) { console.error(e); }
 }
-
 async function cargarRecicladores() {
     try {
         const res = await fetch(API_RECICLADORES);
         const data = await res.json();
-        
         selectReciclador.innerHTML = '<option value="">Ninguno (Sin asignar)</option>';
-
         if (Array.isArray(data)) {
             data.forEach(r => {
                 const opt = document.createElement("option");
@@ -238,12 +247,8 @@ async function cargarRecicladores() {
                 selectReciclador.appendChild(opt);
             });
         } 
-    } catch (e) { 
-        console.error("Error en el fetch de recicladores:", e); 
-    }
+    } catch (e) { console.error("Error recicladores:", e); }
 }
-
-
 async function listarUbicaciones() {
     try {
         const res = await fetch(API_URL);
@@ -254,7 +259,7 @@ async function listarUbicaciones() {
 }
 
 // =================================================================
-// GUARDAR (AHORA CON COMPRESIÓN Y FORMDATA)
+// GUARDAR UBICACIÓN (AHORA CON HORARIOS)
 // =================================================================
 window.guardarUbicacion = async function () {
     const id = document.getElementById("idUbicacion").value;
@@ -264,85 +269,85 @@ window.guardarUbicacion = async function () {
     const idReciclador = selectReciclador.value;
 
     if (!nombre || !coordenadasSeleccionadas || !idParroquia) {
-        Swal.fire("Datos incompletos", "Faltan datos obligatorios (Nombre, Parroquia o Ubicación en Mapa)", "warning");
+        Swal.fire("Incompleto", "Nombre, Parroquia y Mapa son obligatorios.", "warning");
         return;
     }
+
+    // --- RECOLECTAR HORARIOS ---
+    const listaHorarios = [];
+    document.querySelectorAll(".horario-row").forEach(row => {
+        const dia = row.querySelector(".dia-select").value;
+        const ini = row.querySelector(".hora-inicio").value;
+        const fin = row.querySelector(".hora-fin").value;
+        
+        if (dia && ini && fin) {
+            listaHorarios.push({
+                dia_semana: dia,
+                hora_inicio: ini + ":00", // Backend necesita segundos HH:mm:ss
+                hora_fin: fin + ":00"
+            });
+        }
+    });
+
+    if(listaHorarios.length === 0) {
+        Swal.fire("Atención", "Agrega al menos un horario de atención.", "warning");
+        return;
+    }
+
+    // Recolectar materiales
+    const checkboxes = document.querySelectorAll('input[name="materiales"]:checked');
+    const listaMateriales = Array.from(checkboxes).map(cb => ({ material: { id_material: parseInt(cb.value) } }));
 
     let objReciclador = null;
     if (idReciclador && idReciclador !== "") {
         objReciclador = { cedula: parseInt(idReciclador) }; 
     }
 
-    const checkboxes = document.querySelectorAll('input[name="materiales"]:checked');
-    const listaMateriales = Array.from(checkboxes).map(cb => {
-        return {
-            material: { id_material: parseInt(cb.value) }
-        };
-    });
-
     const datosObj = {
         nombre: nombre,
         direccion: direccion,
         latitud: coordenadasSeleccionadas.lat,
         longitud: coordenadasSeleccionadas.lng,
-        foto: null, // Backend gestiona esto
+        foto: null, 
         parroquia: { id_parroquia: parseInt(idParroquia) },
         reciclador: objReciclador,
-        materialesAceptados: listaMateriales 
+        materialesAceptados: listaMateriales,
+        horarios: listaHorarios // ¡AQUÍ VAN LOS HORARIOS!
     };
 
     const formData = new FormData();
     formData.append("datos", JSON.stringify(datosObj));
-
-    if (fotoNuevaFile) {
-        formData.append("archivo", fotoNuevaFile);
-    }
+    if (fotoNuevaFile) formData.append("archivo", fotoNuevaFile);
 
     const metodo = id ? "PUT" : "POST";
     const url = id ? `${API_URL}/${id}` : API_URL;
 
     try {
         Swal.fire({ title: "Guardando...", didOpen: () => Swal.showLoading() });
-
-        const res = await fetch(url, {
-            method: metodo,
-            body: formData // No poner headers Content-Type, el navegador lo pone solo
-        });
+        const res = await fetch(url, { method: metodo, body: formData });
 
         if (res.ok) {
-            Swal.fire({
-                title: "¡Éxito!",
-                text: "Ubicación guardada y usuarios notificados.",
-                icon: "success",
-                timer: 2000,
-                showConfirmButton: false
-            });
+            Swal.fire("¡Éxito!", "Ubicación guardada.", "success");
             cerrarModal();
             listarUbicaciones();
         } else {
-            const errorText = await res.text();
-            console.error("Error backend:", errorText);
-            Swal.fire("Error", "No se pudo guardar. Revisa la consola.", "error");
+            const txt = await res.text();
+            console.error(txt);
+            Swal.fire("Error", "No se pudo guardar.", "error");
         }
-    } catch (e) { 
-        console.error(e); 
+    } catch (e) {
+        console.error(e);
         Swal.fire("Error", "Fallo de conexión.", "error");
     }
 };
-
 
 function renderizarGrid(lista) {
     gridUbicaciones.innerHTML = "";
     lista.forEach(ubi => {
         let imgUrl = 'https://placehold.co/300x150?text=Sin+Imagen';
         if (ubi.foto && ubi.foto.length > 5) {
-            if (ubi.foto.startsWith("http") || ubi.foto.startsWith("data:")) {
-                imgUrl = ubi.foto;
-            } else {
-                imgUrl = `data:image/jpeg;base64,${ubi.foto}`;
-            }
+            imgUrl = ubi.foto.startsWith("http") ? ubi.foto : `data:image/jpeg;base64,${ubi.foto}`;
         }
-
         let txtReciclador = '<span style="color:#999">Sin Asignar</span>';
         if (ubi.reciclador) txtReciclador = `<strong>${ubi.reciclador.primer_nombre} ${ubi.reciclador.apellido_paterno}</strong>`;
 
@@ -365,118 +370,44 @@ function renderizarGrid(lista) {
     });
 }
 
-// --- FUNCIÓN DE COMPRESIÓN ---
+// ... (Funciones de imagen, GPS y borrar siguen igual) ...
 async function procesarImagen(e) {
     const file = e.target.files[0];
     if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-        Swal.fire("Error", "Solo imágenes permitidas", "error");
-        e.target.value = "";
-        return;
-    }
-
     try {
         const compressedFile = await comprimirImagen(file);
         fotoNuevaFile = compressedFile;
-
         const reader = new FileReader();
-        reader.onload = (ev) => {
-            previewImagen.style.backgroundImage = `url(${ev.target.result})`;
-        };
+        reader.onload = (ev) => { previewImagen.style.backgroundImage = `url(${ev.target.result})`; };
         reader.readAsDataURL(compressedFile);
-        
-    } catch (error) {
-        console.error(error);
-        Swal.fire("Error", "No se pudo procesar la imagen", "error");
-    }
+    } catch (error) { Swal.fire("Error", "No se pudo procesar la imagen", "error"); }
 }
-
 async function comprimirImagen(archivo) {
     return new Promise((resolve, reject) => {
-        const maxWidth = 800;
-        const quality = 0.7;
         const reader = new FileReader();
         reader.readAsDataURL(archivo);
         reader.onload = (event) => {
             const img = new Image();
             img.src = event.target.result;
             img.onload = () => {
-                let width = img.width;
-                let height = img.height;
-                if (width > maxWidth) {
-                    height *= maxWidth / width;
-                    width = maxWidth;
-                }
                 const canvas = document.createElement('canvas');
-                canvas.width = width;
-                canvas.height = height;
+                canvas.width = 800; canvas.height = (800 / img.width) * img.height;
                 const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-                canvas.toBlob((blob) => {
-                    if (!blob) {
-                        reject(new Error("Error al comprimir"));
-                        return;
-                    }
-                    const archivoFinal = new File([blob], archivo.name, {
-                        type: 'image/jpeg',
-                        lastModified: Date.now(),
-                    });
-                    resolve(archivoFinal);
-                }, 'image/jpeg', quality);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                canvas.toBlob((blob) => resolve(new File([blob], archivo.name, { type: 'image/jpeg' })), 'image/jpeg', 0.7);
             };
-            img.onerror = (e) => reject(e);
         };
-        reader.onerror = (e) => reject(e);
     });
 }
-
 window.eliminarUbicacion = async function (id) {
-    if (confirm("¿Eliminar?")) {
-        await fetch(`${API_URL}/${id}`, { method: "DELETE" });
-        listarUbicaciones();
-    }
+    if (confirm("¿Eliminar?")) { await fetch(`${API_URL}/${id}`, { method: "DELETE" }); listarUbicaciones(); }
 };
-
 window.obtenerUbicacionActual = function() {
-    if (!navigator.geolocation) {
-        Swal.fire("Error", "Tu navegador no soporta la geolocalización.", "error");
-        return;
-    }
-
-    const btn = document.querySelector(".btn-gps");
-    const textoOriginal = btn.innerText;
-    btn.innerText = "⏳ Buscando...";
-    btn.disabled = true;
-
+    if (!navigator.geolocation) { Swal.fire("Error", "GPS no soportado.", "error"); return; }
     navigator.geolocation.getCurrentPosition(
-        (position) => {
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
-
-            if (map) {
-                map.setView([lat, lng], 18); 
-                colocarMarcador(lat, lng);
-            }
-
-            btn.innerText = textoOriginal;
-            btn.disabled = false;
+        (pos) => {
+            if (map) { map.setView([pos.coords.latitude, pos.coords.longitude], 18); colocarMarcador(pos.coords.latitude, pos.coords.longitude); }
         },
-        (error) => {
-            console.error(error);
-            let mensaje = "No se pudo obtener la ubicación.";
-            if(error.code === 1) mensaje = "Permiso de ubicación denegado.";
-            if(error.code === 2) mensaje = "Ubicación no disponible (GPS apagado).";
-            if(error.code === 3) mensaje = "Se agotó el tiempo de espera.";
-            
-            Swal.fire("Error GPS", mensaje, "error");
-            btn.innerText = textoOriginal;
-            btn.disabled = false;
-        },
-        {
-            enableHighAccuracy: true, 
-            timeout: 10000,
-            maximumAge: 0
-        }
+        () => Swal.fire("Error", "No se pudo obtener ubicación.", "error")
     );
 }

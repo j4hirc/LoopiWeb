@@ -1,7 +1,6 @@
 const API_BASE = 'https://api-loopi.onrender.com/api';
 
 let map, marker, coordenadas;
-// Variables para guardar los archivos (File)
 let fotoPerfilFile = null;
 let evidenciaFile = null;
 let materialesSeleccionados = new Set();
@@ -14,32 +13,26 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     const usuario = JSON.parse(usuarioStr);
 
-    // --- 1. VALIDACIÓN DE ROL: Si ya es reciclador, lo sacamos ---
     const yaEsReciclador = usuario.roles.some(r => (r.id_rol || r.rol?.id_rol) === 2);
-
     if (yaEsReciclador) {
         Swal.fire({
             title: "¡Ya eres Reciclador!",
-            text: "Tu perfil ya tiene los permisos necesarios. No necesitas registrarte de nuevo.",
+            text: "Tu perfil ya tiene los permisos necesarios.",
             icon: "info",
             confirmButtonColor: "#3A6958",
             confirmButtonText: "Ir al Inicio",
             allowOutsideClick: false
-        }).then(() => {
-            window.location.href = "../inicio_usuario_normal.html";
-        });
-        return; // Detenemos la ejecución del resto del script
+        }).then(() => window.location.href = "../inicio_usuario_normal.html");
+        return;
     }
-    // -------------------------------------------------------------
 
-    // Si no es reciclador, verificamos si ya tiene una solicitud pendiente
     verificarEstadoReciclador(usuario.cedula);
 
     initMap();
     cargarMateriales();
-    agregarFilaHorario(); // Una fila por defecto
+    
+    agregarFilaHorario("08:00", "18:00"); 
 
-    // Configuración de inputs de imagen con compresión
     setupImageUpload('fotoProfesional', 'previewFoto', 'placeholderFoto', (file) => fotoPerfilFile = file);
     setupImageUpload('evidenciaExperiencia', 'previewEvidencia', 'placeholderEvidencia', (file) => evidenciaFile = file);
 
@@ -47,14 +40,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("formReciclador").addEventListener("submit", enviarFormulario);
 });
 
-// --- FUNCIÓN DE CARGA Y COMPRESIÓN DE IMÁGENES ---
 function setupImageUpload(inputId, imgId, placeholderId, callback) {
     const input = document.getElementById(inputId);
     input.addEventListener('change', async function() {
         const file = this.files[0];
         if(!file) return;
 
-        // Validar Tipo
         if(!file.type.startsWith('image/')) {
             Swal.fire("Archivo inválido", "Solo se permiten imágenes (JPG, PNG).", "error");
             this.value = "";
@@ -238,7 +229,16 @@ async function cargarMateriales() {
     } catch(e) { console.error(e); }
 }
 
-function agregarFilaHorario() {
+function agregarFilaHorario(horaInicioDefecto = "", horaFinDefecto = "") {
+    if (!horaInicioDefecto || !horaFinDefecto) {
+        const filas = document.querySelectorAll(".horario-row");
+        if (filas.length > 0) {
+            const ultimaFila = filas[filas.length - 1];
+            horaInicioDefecto = ultimaFila.querySelector(".hora-inicio").value;
+            horaFinDefecto = ultimaFila.querySelector(".hora-fin").value;
+        }
+    }
+
     const div = document.createElement("div");
     div.className = "horario-row";
     div.innerHTML = `
@@ -246,14 +246,13 @@ function agregarFilaHorario() {
             <option value="Lunes">Lunes</option><option value="Martes">Martes</option><option value="Miércoles">Miércoles</option>
             <option value="Jueves">Jueves</option><option value="Viernes">Viernes</option><option value="Sábado">Sábado</option><option value="Domingo">Domingo</option>
         </select>
-        <input type="time" class="input-field hora-inicio">
-        <input type="time" class="input-field hora-fin">
+        <input type="time" class="input-field hora-inicio" value="${horaInicioDefecto}">
+        <input type="time" class="input-field hora-fin" value="${horaFinDefecto}">
         <i class="fa-solid fa-circle-xmark btn-remove" onclick="this.parentElement.remove()"></i>
     `;
     document.getElementById("containerHorarios").appendChild(div);
 }
 
-// --- ENVÍO CON FORMDATA ---
 async function enviarFormulario(e) {
     e.preventDefault();
     const usuario = JSON.parse(localStorage.getItem("usuario"));
@@ -271,7 +270,14 @@ async function enviarFormulario(e) {
         if(d && i && f) horarios.push({ dia_semana: d, hora_inicio: i+":00", hora_fin: f+":00" });
     });
 
-    if(horarios.length === 0) return Swal.fire("Horario", "Define tu horario de trabajo.", "warning");
+    if(horarios.length < 3) {
+        return Swal.fire({
+            title: "Horario Incompleto",
+            text: "Para asegurar un buen servicio, por favor registra al menos 3 horarios de atención.",
+            icon: "warning",
+            confirmButtonColor: "#e67e22"
+        });
+    }
 
     const datosObj = {
         usuario: { cedula: usuario.cedula },
@@ -314,3 +320,4 @@ async function enviarFormulario(e) {
         Swal.fire("Error", "No se pudo enviar la solicitud. Intenta luego.", "error");
     }
 }
+
