@@ -16,9 +16,6 @@ let detallesList = [];
 let materialesGlobales = [];
 
 document.addEventListener("DOMContentLoaded", async () => {
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset()); 
-    document.getElementById("inputFecha").value = now.toISOString().slice(0, 16);
 
     initMap();
     await cargarMaterialesGlobales(); 
