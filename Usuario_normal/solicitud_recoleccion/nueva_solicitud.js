@@ -447,28 +447,39 @@ async function comprimirImagen(archivo) {
     });
 }
 
-// --- NUEVA FUNCIÓN DE VALIDACIÓN DE HORARIO ---
 function validarHorarioAtencion() {
     const inputFecha = document.getElementById("inputFecha");
     const fechaValor = inputFecha.value;
 
-    // Si falta datos, asumimos válido por ahora para no bloquear
+
     if (!selectedLocationId || !fechaValor || !horariosPuntoSeleccionado || horariosPuntoSeleccionado.length === 0) {
         return true; 
     }
 
     const fechaObj = new Date(fechaValor);
-    
-    // 1. Obtener día en texto (Tal cual lo escribiste)
+    const ahora = new Date();
+
+
+    if (fechaObj < ahora) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Fecha Inválida',
+            text: 'No puedes programar una recolección en el pasado. Por favor selecciona una fecha y hora futura.',
+            confirmButtonColor: '#e74c3c'
+        });
+        inputFecha.value = ""; // Borrar fecha inválida
+        return false;
+    }
+
+
     const diasSemana = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
     const diaInput = diasSemana[fechaObj.getDay()];
 
-    // 2. FUNCIÓN DE AYUDA: Quitar tildes y pasar a minúsculas para comparar
     const normalizar = (texto) => {
         return texto ? texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim() : "";
     };
 
-    // 3. Buscar el día ignorando si dice "Miercoles" o "Miércoles"
+ 
     const horarioDelDia = horariosPuntoSeleccionado.find(h => 
         normalizar(h.dia_semana) === normalizar(diaInput)
     );
@@ -478,37 +489,32 @@ function validarHorarioAtencion() {
             icon: 'warning',
             title: 'Punto Cerrado',
             text: `Este punto no atiende los ${diaInput}s. Intenta otro día.`,
-            confirmButtonColor: '#e67e22'
+            confirmButtonColor: '#f39c12'
         });
         inputFecha.value = ""; 
         return false;
     }
 
-    // 4. Validar Hora (Comparando solo HH:mm para evitar error de segundos)
-    // fechaValor viene como "2023-10-10T14:30" -> sacamos "14:30"
-    const horaInput = fechaValor.split("T")[1].substring(0, 5); 
-    
-    // Backend suele mandar "08:00:00" o "08:00" -> aseguramos tomar los primeros 5 chars
+ 
+    const horaInput = fechaValor.split("T")[1].substring(0, 5); // "14:30"
     const horaAbre = horarioDelDia.hora_inicio.substring(0, 5);
     const horaCierra = horarioDelDia.hora_fin.substring(0, 5);
 
-    // Debug en consola para que veas qué está comparando (F12 en el navegador)
-    console.log(`Validando: ${diaInput} (${horaInput}) vs Horario: ${horaAbre} - ${horaCierra}`);
+    console.log(`Validando: ${diaInput} ${horaInput} | Abierto: ${horaAbre} - ${horaCierra}`);
 
     if (horaInput >= horaAbre && horaInput <= horaCierra) {
-        return true; // ESTÁ ABIERTO
+        return true; // ¡TODO CORRECTO!
     } else {
         Swal.fire({
             icon: 'warning',
             title: 'Fuera de Horario',
             text: `El horario de atención es de ${horaAbre} a ${horaCierra}.`,
-            confirmButtonColor: '#e67e22'
+            confirmButtonColor: '#f39c12'
         });
         inputFecha.value = ""; 
         return false;
     }
 }
-// ------------------------------------------------
 
 function validarFormulario() {
     const btn = document.getElementById("btnEnviar");
