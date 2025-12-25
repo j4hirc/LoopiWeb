@@ -332,7 +332,7 @@ window.guardarUbicacion = async function () {
         return;
     }
 
-    const checkboxes = document.querySelectorAll('input[name="materiales"]:checked');
+   const checkboxes = document.querySelectorAll('input[name="materiales"]:checked');
     
     if (checkboxes.length === 0) {
         Swal.fire("Atención", "Debes seleccionar al menos un material aceptado.", "warning");
@@ -340,12 +340,9 @@ window.guardarUbicacion = async function () {
     }
 
     const listaMateriales = Array.from(checkboxes).map(cb => {
-        const idMat = parseInt(cb.value);
         return { 
             material: { 
-                id_material: idMat,  
-                id: idMat,           
-                idMaterial: idMat    
+                id_material: parseInt(cb.value) 
             } 
         };
     });
