@@ -292,17 +292,22 @@ async function listarUbicaciones() {
 // GUARDAR UBICACIÓN (VALIDADO)
 // =================================================================
 window.guardarUbicacion = async function () {
-    const id = document.getElementById("idUbicacion").value;
+    // 1. Obtener valores
+    const idInput = document.getElementById("idUbicacion").value;
+    const id = idInput ? parseInt(idInput) : null; // Asegurar que sea número o null
+    
     const nombre = document.getElementById("nombrePunto").value;
     const direccion = document.getElementById("direccion").value;
     const idParroquia = selectParroquia.value;
     const idReciclador = selectReciclador.value;
 
+    // 2. Validaciones Básicas
     if (!nombre || !coordenadasSeleccionadas || !idParroquia) {
         Swal.fire("Incompleto", "Nombre, Parroquia y Mapa son obligatorios.", "warning");
         return;
     }
 
+    // 3. Procesar Horarios
     const listaHorarios = [];
     document.querySelectorAll(".horario-row").forEach(row => {
         const dia = row.querySelector(".dia-select").value;
@@ -310,6 +315,7 @@ window.guardarUbicacion = async function () {
         let fin = row.querySelector(".hora-fin").value;
         
         if (dia && ini && fin) {
+            // Asegurar formato HH:mm:ss para LocalTime en Java
             if(ini.length === 5) ini += ":00";
             if(fin.length === 5) fin += ":00";
 
@@ -326,27 +332,48 @@ window.guardarUbicacion = async function () {
         return;
     }
 
+    // 4. Procesar Materiales (¡AQUÍ ESTÁ LA CLAVE!)
     const checkboxes = document.querySelectorAll('input[name="materiales"]:checked');
+    
+    // VALIDACIÓN EXTRA: Verificar que haya al menos un material
+    if (checkboxes.length === 0) {
+        Swal.fire("Atención", "Debes seleccionar al menos un material aceptado.", "warning");
+        return;
+    }
+
     const listaMateriales = Array.from(checkboxes).map(cb => {
-        return { material: { id_material: parseInt(cb.value) } };
+        // Estructura exacta para que Java cree los objetos UbicacionMaterial
+        return { 
+            material: { 
+                id_material: parseInt(cb.value) 
+            } 
+        };
     });
 
+    // 5. Procesar Reciclador (Opcional)
     let objReciclador = null;
     if (idReciclador && idReciclador !== "") {
         objReciclador = { cedula: parseInt(idReciclador) }; 
     }
 
+    // 6. Construir el objeto principal
     const datosObj = {
         nombre: nombre,
         direccion: direccion,
         latitud: coordenadasSeleccionadas.lat,
         longitud: coordenadasSeleccionadas.lng,
+        // Enviamos null en la foto dentro del JSON, el backend ignora esto al editar
+        // y solo usa el archivo Multipart si existe.
         foto: null, 
         parroquia: { id_parroquia: parseInt(idParroquia) },
         reciclador: objReciclador,
-        materialesAceptados: listaMateriales,
+        materialesAceptados: listaMateriales, // Enviamos el array procesado
         horarios: listaHorarios 
     };
+
+    // --- DEPURACIÓN: MIRA ESTO EN LA CONSOLA DEL NAVEGADOR (F12) ---
+    console.log("JSON a enviar:", JSON.stringify(datosObj));
+    // ---------------------------------------------------------------
 
     const formData = new FormData();
     formData.append("datos", JSON.stringify(datosObj));
@@ -355,6 +382,7 @@ window.guardarUbicacion = async function () {
         formData.append("archivo", fotoNuevaFile);
     }
 
+    // Definir URL y Método
     const metodo = id ? "PUT" : "POST";
     const url = id ? `${API_URL}/${id}` : API_URL;
 
