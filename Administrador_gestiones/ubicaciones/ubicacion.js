@@ -184,7 +184,7 @@ window.confirmarCoordenadas = function () {
         actualizarTextoCoords(coordenadasSeleccionadas.lat, coordenadasSeleccionadas.lng);
         cerrarModalMapa();
     } else {
-        alert("Por favor, haz clic en el mapa para marcar un punto.");
+        Swal.fire("Atención", "Por favor, haz clic en el mapa para marcar un punto.", "warning");
     }
 }
 
@@ -253,6 +253,9 @@ async function listarUbicaciones() {
     } catch (e) { console.error(e); }
 }
 
+// =================================================================
+// GUARDAR (AHORA CON COMPRESIÓN Y FORMDATA)
+// =================================================================
 window.guardarUbicacion = async function () {
     const id = document.getElementById("idUbicacion").value;
     const nombre = document.getElementById("nombrePunto").value;
@@ -261,7 +264,7 @@ window.guardarUbicacion = async function () {
     const idReciclador = selectReciclador.value;
 
     if (!nombre || !coordenadasSeleccionadas || !idParroquia) {
-        alert("Faltan datos (Nombre, Parroquia o Mapa)");
+        Swal.fire("Datos incompletos", "Faltan datos obligatorios (Nombre, Parroquia o Ubicación en Mapa)", "warning");
         return;
     }
 
@@ -282,7 +285,7 @@ window.guardarUbicacion = async function () {
         direccion: direccion,
         latitud: coordenadasSeleccionadas.lat,
         longitud: coordenadasSeleccionadas.lng,
-        foto: null, 
+        foto: null, // Backend gestiona esto
         parroquia: { id_parroquia: parseInt(idParroquia) },
         reciclador: objReciclador,
         materialesAceptados: listaMateriales 
@@ -299,22 +302,32 @@ window.guardarUbicacion = async function () {
     const url = id ? `${API_URL}/${id}` : API_URL;
 
     try {
-        // Enviar sin Content-Type manual
+        Swal.fire({ title: "Guardando...", didOpen: () => Swal.showLoading() });
+
         const res = await fetch(url, {
             method: metodo,
-            body: formData 
+            body: formData // No poner headers Content-Type, el navegador lo pone solo
         });
 
         if (res.ok) {
+            Swal.fire({
+                title: "¡Éxito!",
+                text: "Ubicación guardada y usuarios notificados.",
+                icon: "success",
+                timer: 2000,
+                showConfirmButton: false
+            });
             cerrarModal();
             listarUbicaciones();
-            alert(`Ubicación guardada correctamente.`);
         } else {
             const errorText = await res.text();
             console.error("Error backend:", errorText);
-            alert("Error al guardar. Revisa la consola.");
+            Swal.fire("Error", "No se pudo guardar. Revisa la consola.", "error");
         }
-    } catch (e) { console.error(e); }
+    } catch (e) { 
+        console.error(e); 
+        Swal.fire("Error", "Fallo de conexión.", "error");
+    }
 };
 
 
@@ -352,16 +365,70 @@ function renderizarGrid(lista) {
     });
 }
 
-function procesarImagen(e) {
+// --- FUNCIÓN DE COMPRESIÓN ---
+async function procesarImagen(e) {
     const file = e.target.files[0];
-    if (file) {
-        fotoNuevaFile = file;
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+        Swal.fire("Error", "Solo imágenes permitidas", "error");
+        e.target.value = "";
+        return;
+    }
+
+    try {
+        const compressedFile = await comprimirImagen(file);
+        fotoNuevaFile = compressedFile;
+
         const reader = new FileReader();
         reader.onload = (ev) => {
             previewImagen.style.backgroundImage = `url(${ev.target.result})`;
         };
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(compressedFile);
+        
+    } catch (error) {
+        console.error(error);
+        Swal.fire("Error", "No se pudo procesar la imagen", "error");
     }
+}
+
+async function comprimirImagen(archivo) {
+    return new Promise((resolve, reject) => {
+        const maxWidth = 800;
+        const quality = 0.7;
+        const reader = new FileReader();
+        reader.readAsDataURL(archivo);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                let width = img.width;
+                let height = img.height;
+                if (width > maxWidth) {
+                    height *= maxWidth / width;
+                    width = maxWidth;
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                canvas.toBlob((blob) => {
+                    if (!blob) {
+                        reject(new Error("Error al comprimir"));
+                        return;
+                    }
+                    const archivoFinal = new File([blob], archivo.name, {
+                        type: 'image/jpeg',
+                        lastModified: Date.now(),
+                    });
+                    resolve(archivoFinal);
+                }, 'image/jpeg', quality);
+            };
+            img.onerror = (e) => reject(e);
+        };
+        reader.onerror = (e) => reject(e);
+    });
 }
 
 window.eliminarUbicacion = async function (id) {
@@ -373,7 +440,7 @@ window.eliminarUbicacion = async function (id) {
 
 window.obtenerUbicacionActual = function() {
     if (!navigator.geolocation) {
-        alert("Tu navegador no soporta la geolocalización.");
+        Swal.fire("Error", "Tu navegador no soporta la geolocalización.", "error");
         return;
     }
 
@@ -402,7 +469,7 @@ window.obtenerUbicacionActual = function() {
             if(error.code === 2) mensaje = "Ubicación no disponible (GPS apagado).";
             if(error.code === 3) mensaje = "Se agotó el tiempo de espera.";
             
-            alert(mensaje);
+            Swal.fire("Error GPS", mensaje, "error");
             btn.innerText = textoOriginal;
             btn.disabled = false;
         },
