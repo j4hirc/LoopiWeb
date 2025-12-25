@@ -452,45 +452,59 @@ function validarHorarioAtencion() {
     const inputFecha = document.getElementById("inputFecha");
     const fechaValor = inputFecha.value;
 
-    // Si no hay punto seleccionado o no hay fecha, o el punto no tiene horarios configurados
+    // Si falta datos, asumimos válido por ahora para no bloquear
     if (!selectedLocationId || !fechaValor || !horariosPuntoSeleccionado || horariosPuntoSeleccionado.length === 0) {
         return true; 
     }
 
     const fechaObj = new Date(fechaValor);
     
-    // 1. Obtener el día (El array coincide con fechaObj.getDay())
+    // 1. Obtener día en texto (Tal cual lo escribiste)
     const diasSemana = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
-    const diaActual = diasSemana[fechaObj.getDay()];
+    const diaInput = diasSemana[fechaObj.getDay()];
 
-    // 2. Obtener hora "HH:mm:ss" del input
-    const horaSeleccionada = fechaValor.split("T")[1] + ":00"; 
+    // 2. FUNCIÓN DE AYUDA: Quitar tildes y pasar a minúsculas para comparar
+    const normalizar = (texto) => {
+        return texto ? texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim() : "";
+    };
 
-    // 3. Buscar si el punto trabaja este día
-    const horarioDelDia = horariosPuntoSeleccionado.find(h => h.dia_semana === diaActual);
+    // 3. Buscar el día ignorando si dice "Miercoles" o "Miércoles"
+    const horarioDelDia = horariosPuntoSeleccionado.find(h => 
+        normalizar(h.dia_semana) === normalizar(diaInput)
+    );
 
     if (!horarioDelDia) {
         Swal.fire({
             icon: 'warning',
-            title: '¡Punto Cerrado!',
-            text: `Este punto no atiende los ${diaActual}s. Por favor selecciona otro día.`,
+            title: 'Punto Cerrado',
+            text: `Este punto no atiende los ${diaInput}s. Intenta otro día.`,
             confirmButtonColor: '#e67e22'
         });
-        inputFecha.value = ""; // Borramos la fecha incorrecta
+        inputFecha.value = ""; 
         return false;
     }
 
-    // 4. Validar si está dentro de las horas
-    if (horaSeleccionada >= horarioDelDia.hora_inicio && horaSeleccionada <= horarioDelDia.hora_fin) {
-        return true; // Todo bien
+    // 4. Validar Hora (Comparando solo HH:mm para evitar error de segundos)
+    // fechaValor viene como "2023-10-10T14:30" -> sacamos "14:30"
+    const horaInput = fechaValor.split("T")[1].substring(0, 5); 
+    
+    // Backend suele mandar "08:00:00" o "08:00" -> aseguramos tomar los primeros 5 chars
+    const horaAbre = horarioDelDia.hora_inicio.substring(0, 5);
+    const horaCierra = horarioDelDia.hora_fin.substring(0, 5);
+
+    // Debug en consola para que veas qué está comparando (F12 en el navegador)
+    console.log(`Validando: ${diaInput} (${horaInput}) vs Horario: ${horaAbre} - ${horaCierra}`);
+
+    if (horaInput >= horaAbre && horaInput <= horaCierra) {
+        return true; // ESTÁ ABIERTO
     } else {
         Swal.fire({
             icon: 'warning',
             title: 'Fuera de Horario',
-            text: `El horario de atención los ${diaActual}s es de ${horarioDelDia.hora_inicio.slice(0,5)} a ${horarioDelDia.hora_fin.slice(0,5)}.`,
+            text: `El horario de atención es de ${horaAbre} a ${horaCierra}.`,
             confirmButtonColor: '#e67e22'
         });
-        inputFecha.value = ""; // Borramos la fecha incorrecta
+        inputFecha.value = ""; 
         return false;
     }
 }
