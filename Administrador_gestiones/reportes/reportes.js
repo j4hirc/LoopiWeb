@@ -48,7 +48,7 @@ function aplicarFiltros() {
         const fechaItem = new Date(item.fecha_recoleccion_real || item.fecha_creacion);
         fechaItem.setHours(0,0,0,0);
 
-        // Filtro Fecha
+        // 1. Filtro Fecha
         if(fInicio) {
             const dInicio = new Date(fInicio);
             dInicio.setHours(0,0,0,0);
@@ -60,7 +60,7 @@ function aplicarFiltros() {
             if(fechaItem > dFin) return false;
         }
 
-        // Filtro Estado
+        // 2. Filtro Estado
         if(estado !== "TODOS") {
             if (estado === "CANCELADO") {
                 if (item.estado !== "CANCELADO" && item.estado !== "RECHAZADO") return false;
@@ -69,31 +69,30 @@ function aplicarFiltros() {
             }
         }
 
-        // --- FILTRO TIPO RECOLECTOR (NUEVO) ---
+        // 3. --- FILTRO TIPO RECOLECTOR (LÓGICA MEJORADA) ---
         if(tipoRec !== "TODOS") {
-            // RECICLADOR MÓVIL: Tiene 'reciclador' asignado y usualmente NO tiene 'ubicacion'
-            // O podemos simplificar: Si elijo RECICLADOR, debe existir el objeto reciclador.
             if (tipoRec === "RECICLADOR") {
-                // Si no tiene reciclador asignado, lo sacamos.
-                // Y si quieres ser estricto, que NO tenga ubicación (para diferenciar de puntos fijos con encargado)
+                // Móvil: Debe tener reciclador Y NO tener ubicación
+                // (Si tiene ubicación, es un punto fijo, aunque tenga encargado)
                 if (!item.reciclador || item.ubicacion) return false; 
             }
-            
-            // PUNTO FIJO: Tiene 'ubicacion' asignada
             if (tipoRec === "PUNTO") {
+                // Punto Fijo: Debe tener ubicación
                 if (!item.ubicacion) return false;
             }
         }
-        // -------------------------------------
+        // ----------------------------------------------------
 
-        // Filtro Reciclador / Punto Fijo (Búsqueda por texto)
+        // 4. Filtro Búsqueda Texto (Cédula o Nombre)
         if(busqueda) {
             let coincide = false;
+            // Buscar en datos del Reciclador
             if(item.reciclador) {
                 const cedula = item.reciclador.cedula.toString();
                 const nombre = (item.reciclador.primer_nombre + " " + item.reciclador.apellido_paterno).toLowerCase();
                 if(cedula.includes(busqueda) || nombre.includes(busqueda)) coincide = true;
             }
+            // Buscar en nombre del Punto Fijo
             if(item.ubicacion && !coincide) {
                 const nombreUbi = item.ubicacion.nombre.toLowerCase();
                 if(nombreUbi.includes(busqueda)) coincide = true;
@@ -106,7 +105,6 @@ function aplicarFiltros() {
 
     actualizarDashboard(filtrados);
 }
-
 function actualizarDashboard(datos) {
     const finalizados = datos.filter(s => s.estado === 'FINALIZADO');
     let totalKg = 0;
@@ -242,19 +240,28 @@ function generarTablaRecicladores(lista) {
         let nombreDisplay = "";
         let cedulaDisplay = "";
         
-        // Logica para agrupar en tabla
-        if(s.reciclador) {
-            key = "R_" + s.reciclador.cedula;
-            nombreDisplay = `${s.reciclador.primer_nombre} ${s.reciclador.apellido_paterno}`;
-            cedulaDisplay = s.reciclador.cedula;
-        } else if (s.ubicacion) {
+        // --- CORRECCIÓN DE LÓGICA DE AGRUPACIÓN ---
+        
+        // 1. PRIORIDAD: Si tiene ubicación, es un PUNTO FIJO
+        // (Aunque tenga un reciclador encargado, cuenta como punto)
+        if (s.ubicacion) {
             key = "U_" + s.ubicacion.id_ubicacion_reciclaje;
             nombreDisplay = s.ubicacion.nombre;
             cedulaDisplay = "Punto Fijo";
-        } else {
+        } 
+        // 2. Si NO tiene ubicación, pero tiene reciclador, es un RECICLADOR MÓVIL
+        else if(s.reciclador) {
+            key = "R_" + s.reciclador.cedula;
+            nombreDisplay = `${s.reciclador.primer_nombre} ${s.reciclador.apellido_paterno}`;
+            cedulaDisplay = s.reciclador.cedula;
+        } 
+        // 3. Si no tiene ninguno, saltamos (dato corrupto)
+        else {
             return; 
         }
         
+        // --- FIN CORRECCIÓN ---
+
         if(!mapa[key]) {
             mapa[key] = { 
                 nombre: nombreDisplay,
@@ -289,6 +296,7 @@ function generarTablaRecicladores(lista) {
         return;
     }
 
+    // Ordenar de mayor a menor peso recolectado
     entidadesArray.sort((a,b) => b.totalKg - a.totalKg);
 
     entidadesArray.forEach(r => {
@@ -299,13 +307,16 @@ function generarTablaRecicladores(lista) {
         });
 
         const resumenEntregas = `${r.entregas} <small style="color:#e74c3c">(${r.canceladas} canc.)</small>`;
-        const icono = r.cedula === "Punto Fijo" ? '<i class="fa-solid fa-map-pin" style="color:#e67e22"></i>' : '<i class="fa-solid fa-user" style="color:#3498db"></i>';
+        
+        const icono = r.cedula === "Punto Fijo" 
+            ? '<i class="fa-solid fa-map-pin" style="color:#e67e22; margin-right:5px;"></i>' 
+            : '<i class="fa-solid fa-user" style="color:#3498db; margin-right:5px;"></i>';
 
         const row = `<tr>
             <td>${icono} <strong>${r.nombre}</strong></td>
             <td>${r.cedula}</td>
             <td>${resumenEntregas}</td>
-            <td>${r.totalKg.toFixed(1)} Kg</td>
+            <td><strong>${r.totalKg.toFixed(1)} Kg</strong></td>
             <td><span style="background:#e8f5e9; color:#2e7d32; padding:3px 8px; border-radius:4px; font-size:0.85rem;">${topMat}</span></td>
         </tr>`;
         tbody.innerHTML += row;
