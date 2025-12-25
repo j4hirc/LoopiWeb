@@ -332,20 +332,20 @@ window.guardarUbicacion = async function () {
         return;
     }
 
-    // 4. Procesar Materiales (¡AQUÍ ESTÁ LA CLAVE!)
     const checkboxes = document.querySelectorAll('input[name="materiales"]:checked');
     
-    // VALIDACIÓN EXTRA: Verificar que haya al menos un material
     if (checkboxes.length === 0) {
         Swal.fire("Atención", "Debes seleccionar al menos un material aceptado.", "warning");
         return;
     }
 
     const listaMateriales = Array.from(checkboxes).map(cb => {
-        // Estructura exacta para que Java cree los objetos UbicacionMaterial
+        const idMat = parseInt(cb.value);
         return { 
             material: { 
-                id_material: parseInt(cb.value) 
+                id_material: idMat,  
+                id: idMat,           
+                idMaterial: idMat    
             } 
         };
     });
