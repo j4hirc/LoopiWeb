@@ -285,36 +285,38 @@ window.guardarUbicacion = async function () {
     const idReciclador = selectReciclador.value;
 
     if (!nombre || !coordenadasSeleccionadas || !idParroquia) {
-        Swal.fire("Datos incompletos", "Faltan datos obligatorios (Nombre, Parroquia o Ubicación en Mapa)", "warning");
+        Swal.fire("Incompleto", "Nombre, Parroquia y Mapa son obligatorios.", "warning");
         return;
     }
 
-    // --- RECOLECTAR HORARIOS ---
+    // --- RECOLECTAR HORARIOS (CORREGIDO) ---
     const listaHorarios = [];
     document.querySelectorAll(".horario-row").forEach(row => {
         const dia = row.querySelector(".dia-select").value;
-        const ini = row.querySelector(".hora-inicio").value;
-        const fin = row.querySelector(".hora-fin").value;
+        let ini = row.querySelector(".hora-inicio").value;
+        let fin = row.querySelector(".hora-fin").value;
         
         if (dia && ini && fin) {
+            // CORRECCIÓN AQUÍ:
+            // Solo agregamos ":00" si la hora viene simple (HH:mm = 5 caracteres).
+            // Si ya viene con segundos (HH:mm:ss = 8 caracteres), no hacemos nada.
+            if(ini.length === 5) ini += ":00";
+            if(fin.length === 5) fin += ":00";
+
             listaHorarios.push({
                 dia_semana: dia,
-                hora_inicio: ini + ":00", // Backend necesita segundos (HH:mm:ss)
-                hora_fin: fin + ":00"
+                hora_inicio: ini,
+                hora_fin: fin
             });
         }
     });
 
     if(listaHorarios.length === 0) {
-        // Opcional: Advertir si no ponen horarios
-        // Swal.fire("Aviso", "No has definido horarios de atención.", "info");
+        Swal.fire("Atención", "Agrega al menos un horario de atención.", "warning");
+        return;
     }
 
-    let objReciclador = null;
-    if (idReciclador && idReciclador !== "") {
-        objReciclador = { cedula: parseInt(idReciclador) }; 
-    }
-
+    // Recolectar materiales
     const checkboxes = document.querySelectorAll('input[name="materiales"]:checked');
     const listaMateriales = Array.from(checkboxes).map(cb => {
         return {
@@ -322,16 +324,21 @@ window.guardarUbicacion = async function () {
         };
     });
 
+    let objReciclador = null;
+    if (idReciclador && idReciclador !== "") {
+        objReciclador = { cedula: parseInt(idReciclador) }; 
+    }
+
     const datosObj = {
         nombre: nombre,
         direccion: direccion,
         latitud: coordenadasSeleccionadas.lat,
         longitud: coordenadasSeleccionadas.lng,
-        foto: null, // Backend gestiona esto
+        foto: null, 
         parroquia: { id_parroquia: parseInt(idParroquia) },
         reciclador: objReciclador,
         materialesAceptados: listaMateriales,
-        horarios: listaHorarios // ¡AQUÍ VAN LOS HORARIOS!
+        horarios: listaHorarios 
     };
 
     const formData = new FormData();
@@ -355,7 +362,7 @@ window.guardarUbicacion = async function () {
         if (res.ok) {
             Swal.fire({
                 title: "¡Éxito!",
-                text: "Ubicación guardada y usuarios notificados.",
+                text: "Ubicación guardada correctamente.",
                 icon: "success",
                 timer: 2000,
                 showConfirmButton: false
@@ -365,7 +372,14 @@ window.guardarUbicacion = async function () {
         } else {
             const errorText = await res.text();
             console.error("Error backend:", errorText);
-            Swal.fire("Error", "No se pudo guardar. Revisa la consola.", "error");
+            
+            // Intentamos mostrar el mensaje limpio si viene en JSON
+            try {
+                const errorJson = JSON.parse(errorText);
+                Swal.fire("Error", errorJson.mensaje || "Error al guardar", "error");
+            } catch {
+                Swal.fire("Error", "No se pudo guardar. Revisa la consola.", "error");
+            }
         }
     } catch (e) { 
         console.error(e); 
