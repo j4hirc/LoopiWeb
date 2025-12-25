@@ -5,9 +5,10 @@ let markerUsuario;
 let markersLayer;
 let allPuntos = []; 
 
-// --- NUEVA VARIABLE PARA VALIDACIÓN ---
+// --- VARIABLES PARA VALIDACIÓN Y RUTAS ---
 let horariosPuntoSeleccionado = []; 
-// -------------------------------------
+let routingControl = null; // Variable para controlar el dibujo de la ruta
+// -----------------------------------------
 
 let selectedLocationId = null;
 let fotoEvidenciaFile = null; // Archivo real
@@ -29,7 +30,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("btnAddMaterial").addEventListener("click", agregarMaterialALista);
     document.getElementById("btnEnviar").addEventListener("click", enviarSolicitud);
   
-    // --- MODIFICADO: VALIDAR HORARIO AL CAMBIAR FECHA ---
+    // Listener para validar horario al cambiar la fecha
     document.getElementById("inputFecha").addEventListener("change", function() {
         validarHorarioAtencion(); // 1. Checa si está abierto
         validarFormulario();      // 2. Checa si habilita el botón
@@ -55,8 +56,20 @@ function initMap() {
         navigator.geolocation.getCurrentPosition(pos => {
             const lat = pos.coords.latitude;
             const lng = pos.coords.longitude;
+            
+            // Centrar mapa y guardar marcador del usuario para la ruta
             map.setView([lat, lng], 15);
-            markerUsuario = L.marker([lat, lng]).addTo(map).bindPopup("Estás aquí").openPopup();
+            
+            // Icono distintivo para el usuario
+            const userIcon = L.divIcon({
+                className: 'user-pin',
+                html: '<div style="background-color:#e74c3c;width:20px;height:20px;border-radius:50%;border:3px solid white;box-shadow:0 0 10px rgba(0,0,0,0.5);"></div>',
+                iconSize: [20, 20]
+            });
+
+            markerUsuario = L.marker([lat, lng], {icon: userIcon}).addTo(map).bindPopup("<b>Tu ubicación</b>").openPopup();
+        }, () => {
+            console.log("Geolocalización denegada");
         });
     }
 }
@@ -132,7 +145,6 @@ function renderizarMarcadores(listaPuntos) {
         if (punto.latitud && punto.longitud) {
       
             let esReciclador = punto.reciclador !== null && punto.reciclador !== undefined;
-
             if (esReciclador && punto.reciclador.estado === false) return;
 
             const color = esReciclador ? "#3498db" : "#2ecc71";
@@ -189,6 +201,9 @@ function renderizarMarcadores(listaPuntos) {
     });
 }
 
+// =========================================================================
+// FUNCIÓN PRINCIPAL DE SELECCIÓN (CON RUTAS E INFORMACIÓN)
+// =========================================================================
 window.seleccionarPuntoDesdePopup = function (id, nombre, esReciclador) {
     selectedLocationId = id;
 
@@ -198,39 +213,99 @@ window.seleccionarPuntoDesdePopup = function (id, nombre, esReciclador) {
     let colorHTML = esReciclador ? "#2980b9" : "#27ae60";
     let iconoHTML = esReciclador ? '<i class="fa-solid fa-user"></i>' : '<i class="fa-solid fa-recycle"></i>';
 
-    nombreDiv.innerHTML = `<span style="color:${colorHTML}; font-weight:bold; font-size:1.1em;">${iconoHTML} ${nombre}</span>`;
-    infoDiv.style.display = "block";
-    infoDiv.style.borderLeft = `5px solid ${colorHTML}`;
-
     const puntoSeleccionado = allPuntos.find(p => (p.id_ubicacion_reciclaje || p.id) == id);
 
     if (puntoSeleccionado) {
         
-        // --- NUEVO: GUARDAR HORARIOS DEL PUNTO ---
+        // 1. Guardar Horarios
         horariosPuntoSeleccionado = puntoSeleccionado.horarios || [];
-        // -----------------------------------------
 
+        // 2. Actualizar UI con Nombre + Div para Ruta
+        nombreDiv.innerHTML = `
+            <div style="margin-bottom:5px;">
+                <span style="color:${colorHTML}; font-weight:bold; font-size:1.1em;">${iconoHTML} ${nombre}</span>
+            </div>
+            <div id="rutaInfo" style="font-size:0.9em; color:#555; background:#f8f9fa; padding:8px; border-radius:5px; margin-top:5px; display:none; border-left:3px solid #f39c12;">
+                <i class="fa-solid fa-spinner fa-spin"></i> Calculando ruta óptima...
+            </div>
+        `;
+        
+        infoDiv.style.display = "block";
+        infoDiv.style.borderLeft = `5px solid ${colorHTML}`;
+
+        // 3. Cargar Materiales
         const matsWrappers = obtenerMaterialesDelPunto(puntoSeleccionado);
         const matsLimpios = matsWrappers.map(m => m.material ? m.material : m).filter(m => m != null);
-      
         llenarSelectMateriales(matsLimpios);
-      
-        if(matsLimpios.length > 0){
-            Swal.fire({
-                toast: true, position: "top-end", icon: "success",
-                title: "Materiales actualizados", showConfirmButton: false, timer: 1500
-            });
-        } else {
+
+        if(matsLimpios.length === 0){
             Swal.fire("Aviso", "Este punto no tiene materiales configurados.", "warning");
+        }
+
+        // 4. CALCULAR RUTA (Leaflet Routing Machine)
+        if (markerUsuario) {
+            const userLatLng = markerUsuario.getLatLng();
+            const destLatLng = L.latLng(puntoSeleccionado.latitud, puntoSeleccionado.longitud);
+
+            // Borrar ruta anterior si existe
+            if (routingControl) {
+                map.removeControl(routingControl);
+            }
+
+            // Crear nueva ruta
+            routingControl = L.Routing.control({
+                waypoints: [userLatLng, destLatLng],
+                routeWhileDragging: false,
+                draggableWaypoints: false,
+                addWaypoints: false,
+                show: false, // No mostrar el panel de instrucciones texto
+                lineOptions: {
+                    styles: [{color: colorHTML, opacity: 0.7, weight: 6}]
+                },
+                createMarker: function() { return null; } // No crear marcadores extra
+            }).addTo(map);
+
+            // Cuando encuentre la ruta, actualizar el div #rutaInfo
+            routingControl.on('routesfound', function(e) {
+                const routes = e.routes;
+                const summary = routes[0].summary;
+                
+                // Convertir a km y minutos
+                const distKm = (summary.totalDistance / 1000).toFixed(2);
+                const tiempoMin = Math.round(summary.totalTime / 60);
+
+                const divRuta = document.getElementById("rutaInfo");
+                divRuta.style.display = "block";
+                divRuta.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span><i class="fa-solid fa-route" style="color:#e67e22"></i> <b>${distKm} km</b></span>
+                        <span><i class="fa-regular fa-clock" style="color:#e67e22"></i> <b>~${tiempoMin} min</b></span>
+                    </div>
+                `;
+            });
+            
+            // Si hay error en la ruta
+            routingControl.on('routingerror', function() {
+                const divRuta = document.getElementById("rutaInfo");
+                divRuta.style.display = "block";
+                divRuta.innerHTML = "<small style='color:red;'>No se pudo calcular la ruta.</small>";
+            });
+
+        } else {
+            // Usuario sin GPS activado
+            const divRuta = document.getElementById("rutaInfo");
+            if(divRuta) {
+                divRuta.style.display = "block";
+                divRuta.innerHTML = "<small>Activa tu GPS para ver la distancia.</small>";
+            }
         }
     }
 
     detallesList = [];
     actualizarListaUI();
     
-    // --- NUEVO: VALIDAR HORARIO APENAS SELECCIONA EL PUNTO ---
+    // Validar Horario Inmediatamente
     validarHorarioAtencion();
-    // ---------------------------------------------------------
     
     validarFormulario();
     map.closePopup();
@@ -447,11 +522,14 @@ async function comprimirImagen(archivo) {
     });
 }
 
+// =========================================================================
+// VALIDACIÓN DE HORARIO DEFINITIVA (FECHA PASADA + TILDES + HORAS)
+// =========================================================================
 function validarHorarioAtencion() {
     const inputFecha = document.getElementById("inputFecha");
     const fechaValor = inputFecha.value;
 
-
+    // Si falta datos, no bloqueamos todavía
     if (!selectedLocationId || !fechaValor || !horariosPuntoSeleccionado || horariosPuntoSeleccionado.length === 0) {
         return true; 
     }
@@ -459,19 +537,19 @@ function validarHorarioAtencion() {
     const fechaObj = new Date(fechaValor);
     const ahora = new Date();
 
-
+    // 1. VALIDACIÓN DE TIEMPO: ¿Es una fecha pasada?
     if (fechaObj < ahora) {
         Swal.fire({
             icon: 'error',
             title: 'Fecha Inválida',
-            text: 'No puedes programar una recolección en el pasado. Por favor selecciona una fecha y hora futura.',
+            text: 'No puedes programar una recolección en el pasado.',
             confirmButtonColor: '#e74c3c'
         });
         inputFecha.value = ""; // Borrar fecha inválida
         return false;
     }
 
-
+    // 2. OBTENER DÍA Y NORMALIZAR TEXTO
     const diasSemana = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
     const diaInput = diasSemana[fechaObj.getDay()];
 
@@ -479,7 +557,7 @@ function validarHorarioAtencion() {
         return texto ? texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim() : "";
     };
 
- 
+    // 3. VALIDAR DÍA DE APERTURA
     const horarioDelDia = horariosPuntoSeleccionado.find(h => 
         normalizar(h.dia_semana) === normalizar(diaInput)
     );
@@ -495,12 +573,10 @@ function validarHorarioAtencion() {
         return false;
     }
 
- 
+    // 4. VALIDAR RANGO DE HORAS (HH:mm)
     const horaInput = fechaValor.split("T")[1].substring(0, 5); // "14:30"
     const horaAbre = horarioDelDia.hora_inicio.substring(0, 5);
     const horaCierra = horarioDelDia.hora_fin.substring(0, 5);
-
-    console.log(`Validando: ${diaInput} ${horaInput} | Abierto: ${horaAbre} - ${horaCierra}`);
 
     if (horaInput >= horaAbre && horaInput <= horaCierra) {
         return true; // ¡TODO CORRECTO!
