@@ -60,7 +60,7 @@ function initMap() {
             // Centrar mapa y guardar marcador del usuario para la ruta
             map.setView([lat, lng], 15);
             
-            // Icono distintivo para el usuario
+            // Icono distintivo para el usuario (Punto Rojo)
             const userIcon = L.divIcon({
                 className: 'user-pin',
                 html: '<div style="background-color:#e74c3c;width:20px;height:20px;border-radius:50%;border:3px solid white;box-shadow:0 0 10px rgba(0,0,0,0.5);"></div>',
@@ -220,7 +220,7 @@ window.seleccionarPuntoDesdePopup = function (id, nombre, esReciclador) {
         // 1. Guardar Horarios
         horariosPuntoSeleccionado = puntoSeleccionado.horarios || [];
 
-        // 2. Actualizar UI con Nombre + Div para Ruta
+        // 2. Actualizar UI con Nombre + Div para Ruta (Inicialmente Cargando)
         nombreDiv.innerHTML = `
             <div style="margin-bottom:5px;">
                 <span style="color:${colorHTML}; font-weight:bold; font-size:1.1em;">${iconoHTML} ${nombre}</span>
@@ -247,7 +247,7 @@ window.seleccionarPuntoDesdePopup = function (id, nombre, esReciclador) {
             const userLatLng = markerUsuario.getLatLng();
             const destLatLng = L.latLng(puntoSeleccionado.latitud, puntoSeleccionado.longitud);
 
-            // Borrar ruta anterior si existe
+            // Borrar ruta anterior si existe (Para no llenar el mapa de líneas)
             if (routingControl) {
                 map.removeControl(routingControl);
             }
@@ -258,11 +258,11 @@ window.seleccionarPuntoDesdePopup = function (id, nombre, esReciclador) {
                 routeWhileDragging: false,
                 draggableWaypoints: false,
                 addWaypoints: false,
-                show: false, // No mostrar el panel de instrucciones texto
+                show: false, // No mostrar el panel de instrucciones texto feo
                 lineOptions: {
                     styles: [{color: colorHTML, opacity: 0.7, weight: 6}]
                 },
-                createMarker: function() { return null; } // No crear marcadores extra
+                createMarker: function() { return null; } // No crear marcadores extra, usamos los nuestros
             }).addTo(map);
 
             // Cuando encuentre la ruta, actualizar el div #rutaInfo
@@ -276,6 +276,7 @@ window.seleccionarPuntoDesdePopup = function (id, nombre, esReciclador) {
 
                 const divRuta = document.getElementById("rutaInfo");
                 divRuta.style.display = "block";
+                // Pintamos la info bonita
                 divRuta.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <span><i class="fa-solid fa-route" style="color:#e67e22"></i> <b>${distKm} km</b></span>
@@ -284,7 +285,7 @@ window.seleccionarPuntoDesdePopup = function (id, nombre, esReciclador) {
                 `;
             });
             
-            // Si hay error en la ruta
+            // Si hay error en la ruta (ej: no hay internet o ruta imposible)
             routingControl.on('routingerror', function() {
                 const divRuta = document.getElementById("rutaInfo");
                 divRuta.style.display = "block";
