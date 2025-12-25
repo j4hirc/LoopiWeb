@@ -12,7 +12,7 @@ const inputImagen = document.getElementById("inputImg");
 const previewImagen = document.getElementById("previewImg");
 const selectParroquia = document.getElementById("parroquia");
 const selectReciclador = document.getElementById("selectReciclador");
-const containerHorarios = document.getElementById("containerHorarios"); // NUEVO
+const containerHorarios = document.getElementById("containerHorarios"); // CONTENEDOR NUEVO
 
 let ubicacionesCache = [];
 let map = null;
@@ -42,7 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
 function abrirModal() {
     resetearFormulario();
     document.getElementById("tituloModal").innerText = "Nueva Ubicación";
-    agregarFilaHorario(); // Agrega una fila vacía por defecto
+    agregarFilaHorario(); // Agregar una fila vacía por defecto
     modalOverlay.style.display = "flex";
 }
 
@@ -55,8 +55,8 @@ function agregarFilaHorario(data = null) {
     div.style.marginBottom = "10px";
     div.style.alignItems = "center";
 
-    // Valores por defecto o cargados
-    const diaVal = data ? data.dia_semana : "";
+    // Valores por defecto o cargados de la BD
+    const diaVal = data ? data.dia_semana : "Lunes";
     const iniVal = data ? data.hora_inicio : "";
     const finVal = data ? data.hora_fin : "";
 
@@ -111,8 +111,10 @@ async function cargarMateriales() {
 // --- MODIFICADO: CARGAR DATOS + HORARIOS ---
 window.cargarDatosEdicion = async function (id) {
     const ubi = ubicacionesCache.find(u => u.id_ubicacion_reciclaje == id);
-    if (!ubi) return;
-
+    if (!ubi) {
+        console.error("No se encontró la ubicación con ID:", id);
+        return;
+    }
     resetearFormulario();
     document.getElementById("tituloModal").innerText = "Editar Ubicación";
 
@@ -123,11 +125,18 @@ window.cargarDatosEdicion = async function (id) {
     if (selectParroquia.options.length <= 1) await cargarParroquias();
     if (selectReciclador.options.length <= 1) await cargarRecicladores();
 
-    if (ubi.parroquia) selectParroquia.value = ubi.parroquia.id_parroquia;
-    if (ubi.reciclador) selectReciclador.value = ubi.reciclador.cedula.toString();
+    if (ubi.parroquia) {
+        selectParroquia.value = ubi.parroquia.id_parroquia;
+    }
+
+    if (ubi.reciclador && ubi.reciclador.cedula) {
+        selectReciclador.value = ubi.reciclador.cedula.toString();
+    } else {
+        selectReciclador.value = "";
+    }
 
     // Materiales
-    if (ubi.materialesAceptados) {
+    if (ubi.materialesAceptados && ubi.materialesAceptados.length > 0) {
         ubi.materialesAceptados.forEach(item => {
             if (item.material) {
                 const cb = document.getElementById(`mat-${item.material.id_material}`);
@@ -136,30 +145,35 @@ window.cargarDatosEdicion = async function (id) {
         });
     }
 
-    // --- CARGAR HORARIOS ---
-    containerHorarios.innerHTML = ""; // Limpiar
+    // --- CARGAR HORARIOS (NUEVO) ---
+    containerHorarios.innerHTML = ""; // Limpiar contenedor
     if (ubi.horarios && ubi.horarios.length > 0) {
+        // Ordenar por día (opcional, pero se ve mejor)
+        // Aquí asumimos que vienen como array
         ubi.horarios.forEach(h => agregarFilaHorario(h));
     } else {
-        agregarFilaHorario(); // Si no tiene, mostrar uno vacío
+        agregarFilaHorario(); // Si no tiene, mostrar fila vacía
     }
 
-    // Coordenadas
     if (ubi.latitud && ubi.longitud) {
         coordenadasSeleccionadas = { lat: ubi.latitud, lng: ubi.longitud };
         actualizarTextoCoords(ubi.latitud, ubi.longitud);
     }
 
-    // Foto
     if (ubi.foto && ubi.foto.length > 5) {
-        let fotoSrc = ubi.foto.startsWith("http") || ubi.foto.startsWith("data:") ? ubi.foto : `data:image/png;base64,${ubi.foto}`;
+        let fotoSrc = ubi.foto;
+        if (!fotoSrc.startsWith("http") && !fotoSrc.startsWith("data:")) {
+             fotoSrc = `data:image/png;base64,${ubi.foto}`;
+        }
         previewImagen.style.backgroundImage = `url(${fotoSrc})`;
     }
 
     modalOverlay.style.display = "flex";
 };
 
-function cerrarModal() { modalOverlay.style.display = "none"; }
+function cerrarModal() {
+    modalOverlay.style.display = "none";
+}
 
 function resetearFormulario() {
     document.getElementById("idUbicacion").value = "";
@@ -167,11 +181,13 @@ function resetearFormulario() {
     document.getElementById("direccion").value = "";
     selectParroquia.value = "";
     selectReciclador.value = "";
+    
     fotoNuevaFile = null;
     inputImagen.value = "";
     previewImagen.style.backgroundImage = "none";
     
-    document.querySelectorAll('input[name="materiales"]').forEach(cb => cb.checked = false);
+    const checkboxes = document.querySelectorAll('input[name="materiales"]');
+    checkboxes.forEach(cb => cb.checked = false);
     
     // Limpiar horarios
     containerHorarios.innerHTML = "";
@@ -181,7 +197,7 @@ function resetearFormulario() {
     actualizarTextoCoords(0.0, 0.0);
 }
 
-// ... (actualizarTextoCoords, modalMapa, etc. siguen igual) ...
+// ... (actualizarTextoCoords, modalMapa, etc. siguen igual hasta el GUARDAR) ...
 function actualizarTextoCoords(lat, lng) {
     document.getElementById("txtLat").innerText = lat.toFixed(6);
     document.getElementById("txtLng").innerText = lng.toFixed(6);
@@ -247,7 +263,7 @@ async function cargarRecicladores() {
                 selectReciclador.appendChild(opt);
             });
         } 
-    } catch (e) { console.error("Error recicladores:", e); }
+    } catch (e) { console.error("Error en el fetch de recicladores:", e); }
 }
 async function listarUbicaciones() {
     try {
@@ -269,7 +285,7 @@ window.guardarUbicacion = async function () {
     const idReciclador = selectReciclador.value;
 
     if (!nombre || !coordenadasSeleccionadas || !idParroquia) {
-        Swal.fire("Incompleto", "Nombre, Parroquia y Mapa son obligatorios.", "warning");
+        Swal.fire("Datos incompletos", "Faltan datos obligatorios (Nombre, Parroquia o Ubicación en Mapa)", "warning");
         return;
     }
 
@@ -283,32 +299,35 @@ window.guardarUbicacion = async function () {
         if (dia && ini && fin) {
             listaHorarios.push({
                 dia_semana: dia,
-                hora_inicio: ini + ":00", // Backend necesita segundos HH:mm:ss
+                hora_inicio: ini + ":00", // Backend necesita segundos (HH:mm:ss)
                 hora_fin: fin + ":00"
             });
         }
     });
 
     if(listaHorarios.length === 0) {
-        Swal.fire("Atención", "Agrega al menos un horario de atención.", "warning");
-        return;
+        // Opcional: Advertir si no ponen horarios
+        // Swal.fire("Aviso", "No has definido horarios de atención.", "info");
     }
-
-    // Recolectar materiales
-    const checkboxes = document.querySelectorAll('input[name="materiales"]:checked');
-    const listaMateriales = Array.from(checkboxes).map(cb => ({ material: { id_material: parseInt(cb.value) } }));
 
     let objReciclador = null;
     if (idReciclador && idReciclador !== "") {
         objReciclador = { cedula: parseInt(idReciclador) }; 
     }
 
+    const checkboxes = document.querySelectorAll('input[name="materiales"]:checked');
+    const listaMateriales = Array.from(checkboxes).map(cb => {
+        return {
+            material: { id_material: parseInt(cb.value) }
+        };
+    });
+
     const datosObj = {
         nombre: nombre,
         direccion: direccion,
         latitud: coordenadasSeleccionadas.lat,
         longitud: coordenadasSeleccionadas.lng,
-        foto: null, 
+        foto: null, // Backend gestiona esto
         parroquia: { id_parroquia: parseInt(idParroquia) },
         reciclador: objReciclador,
         materialesAceptados: listaMateriales,
@@ -317,37 +336,56 @@ window.guardarUbicacion = async function () {
 
     const formData = new FormData();
     formData.append("datos", JSON.stringify(datosObj));
-    if (fotoNuevaFile) formData.append("archivo", fotoNuevaFile);
+
+    if (fotoNuevaFile) {
+        formData.append("archivo", fotoNuevaFile);
+    }
 
     const metodo = id ? "PUT" : "POST";
     const url = id ? `${API_URL}/${id}` : API_URL;
 
     try {
         Swal.fire({ title: "Guardando...", didOpen: () => Swal.showLoading() });
-        const res = await fetch(url, { method: metodo, body: formData });
+
+        const res = await fetch(url, {
+            method: metodo,
+            body: formData 
+        });
 
         if (res.ok) {
-            Swal.fire("¡Éxito!", "Ubicación guardada.", "success");
+            Swal.fire({
+                title: "¡Éxito!",
+                text: "Ubicación guardada y usuarios notificados.",
+                icon: "success",
+                timer: 2000,
+                showConfirmButton: false
+            });
             cerrarModal();
             listarUbicaciones();
         } else {
-            const txt = await res.text();
-            console.error(txt);
-            Swal.fire("Error", "No se pudo guardar.", "error");
+            const errorText = await res.text();
+            console.error("Error backend:", errorText);
+            Swal.fire("Error", "No se pudo guardar. Revisa la consola.", "error");
         }
-    } catch (e) {
-        console.error(e);
+    } catch (e) { 
+        console.error(e); 
         Swal.fire("Error", "Fallo de conexión.", "error");
     }
 };
+
 
 function renderizarGrid(lista) {
     gridUbicaciones.innerHTML = "";
     lista.forEach(ubi => {
         let imgUrl = 'https://placehold.co/300x150?text=Sin+Imagen';
         if (ubi.foto && ubi.foto.length > 5) {
-            imgUrl = ubi.foto.startsWith("http") ? ubi.foto : `data:image/jpeg;base64,${ubi.foto}`;
+            if (ubi.foto.startsWith("http") || ubi.foto.startsWith("data:")) {
+                imgUrl = ubi.foto;
+            } else {
+                imgUrl = `data:image/jpeg;base64,${ubi.foto}`;
+            }
         }
+
         let txtReciclador = '<span style="color:#999">Sin Asignar</span>';
         if (ubi.reciclador) txtReciclador = `<strong>${ubi.reciclador.primer_nombre} ${ubi.reciclador.apellido_paterno}</strong>`;
 
@@ -370,7 +408,7 @@ function renderizarGrid(lista) {
     });
 }
 
-// ... (Funciones de imagen, GPS y borrar siguen igual) ...
+// ... (Funciones de imagen, GPS y borrar siguen igual, las incluyo por si acaso) ...
 async function procesarImagen(e) {
     const file = e.target.files[0];
     if (!file) return;
