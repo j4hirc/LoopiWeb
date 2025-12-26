@@ -18,10 +18,9 @@ let notificacionesCargadas = false;
 let fotoNuevaFile = null;
 
 document.addEventListener("DOMContentLoaded", async () => {
+  // 1. Configuración de Botones (Listeners)
   const btnLogout = document.getElementById("btnLogout");
-  if (btnLogout) {
-    btnLogout.addEventListener("click", logout);
-  }
+  if (btnLogout) btnLogout.addEventListener("click", logout);
 
   const btnMiUbicacion = document.getElementById("btnMiUbicacion");
   if (btnMiUbicacion) {
@@ -31,12 +30,24 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   const btnAbrirPerfil = document.getElementById("btnAbrirPerfil");
-  if (btnAbrirPerfil)
+  if (btnAbrirPerfil) {
     btnAbrirPerfil.addEventListener("click", (e) => {
       e.preventDefault();
       abrirModalPerfil();
     });
+  }
 
+  const inputPerfilFoto = document.getElementById("inputPerfilFoto");
+  if (inputPerfilFoto) inputPerfilFoto.addEventListener("change", cargarImagenPerfil);
+
+  const modalPerfil = document.getElementById("modalPerfil");
+  if (modalPerfil) {
+    modalPerfil.addEventListener("click", (e) => {
+      if (e.target === modalPerfil) cerrarModalPerfil();
+    });
+  }
+
+  // 2. Verificación de Sesión
   const usuarioStr = localStorage.getItem("usuario");
   if (!usuarioStr) {
     window.location.href = "../incio_de_sesion/login-registro.html";
@@ -44,36 +55,25 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
   usuarioLogueado = JSON.parse(usuarioStr);
 
-  await recargarUsuarioDesdeBackend();
-  cargarInfoUsuario();
-
-  // 2. Iniciar Mapa y Capas
+  // 3. Carga Inicial de Usuario y Mapa
   initMap();
+  cargarInfoUsuario(); // Carga visual inmediata con lo que hay en localStorage
 
-  // 3. Cargar Datos
-  await cargarNotificaciones();
-  await cargarMisFavoritos();
-  await cargarFiltrosMateriales();
-  await cargarPuntosReciclaje();
-  await cargarPuntosRecompensa();
-  
-  // Cargar Parroquias para el perfil
-  await cargarParroquiasEnPerfil();
-
-  // Configurar subida de foto con compresión
-  const inputPerfilFoto = document.getElementById("inputPerfilFoto");
-  if (inputPerfilFoto)
-    inputPerfilFoto.addEventListener("change", cargarImagenPerfil);
-
-  const modalPerfil = document.getElementById("modalPerfil");
-  if (modalPerfil)
-    modalPerfil.addEventListener("click", (e) => {
-      if (e.target === modalPerfil) cerrarModalPerfil();
-    });
-
-  const btnUbicacion = document.getElementById("btnMiUbicacion");
-  if (btnUbicacion) btnUbicacion.onclick = obtenerUbicacionActual;
-
+  // 4. CARGA PARALELA DE DATOS (Optimización de velocidad 🚀)
+  // Lanzamos todas las peticiones a la vez para que no se bloqueen entre sí
+  try {
+    await Promise.all([
+      recargarUsuarioDesdeBackend(), // Actualiza datos frescos
+      cargarParroquiasEnPerfil(),    // Carga el select de parroquias (Prioridad)
+      cargarNotificaciones(),
+      cargarMisFavoritos(),
+      cargarFiltrosMateriales(),
+      cargarPuntosReciclaje(),
+      cargarPuntosRecompensa()
+    ]);
+  } catch (error) {
+    console.error("Error en la carga inicial de datos:", error);
+  }
 });
 
 
@@ -119,6 +119,42 @@ const iconRecompensa = L.divIcon({
   iconSize: [30, 42],
   iconAnchor: [15, 42],
 });
+
+// --- OPTIMIZADO: CARGA DE PARROQUIAS ---
+async function cargarParroquiasEnPerfil() {
+    const select = document.getElementById('perfilParroquia');
+    // Si el modal no está en el DOM aún, no fallamos, solo retornamos.
+    if(!select) return; 
+    
+    try {
+        const res = await fetch(`${API_BASE}/parroquias`);
+        if (res.ok) {
+            const parroquias = await res.json();
+            
+            // Usamos un Fragment para insertar todo de golpe (Mejor rendimiento)
+            const fragment = document.createDocumentFragment();
+            
+            // Opción por defecto
+            const defaultOpt = document.createElement('option');
+            defaultOpt.value = "";
+            defaultOpt.text = "Seleccione su parroquia";
+            fragment.appendChild(defaultOpt);
+
+            parroquias.forEach(p => {
+                const option = document.createElement('option');
+                option.value = p.id_parroquia || p.id; 
+                option.text = p.nombre_parroquia || p.nombre;
+                fragment.appendChild(option);
+            });
+            
+            select.innerHTML = ""; // Limpiar antes de llenar
+            select.appendChild(fragment);
+        }
+    } catch (e) {
+        console.error("Error cargando parroquias", e);
+        select.innerHTML = '<option value="">Error al cargar datos</option>';
+    }
+}
 
 async function cargarFiltrosMateriales() {
   const contenedor = document.getElementById("contenedorBotonesMateriales");
@@ -310,8 +346,6 @@ function obtenerUbicacionActual() {
       const lat = position.coords.latitude;
       const lng = position.coords.longitude;
 
-      coordenadas = { lat: lat, lng: lng };
-
       map.setView([lat, lng], 16);
 
       ubicacionActual = { lat, lng };
@@ -322,19 +356,19 @@ function obtenerUbicacionActual() {
 
       marcadorMiUbicacion = L.marker([lat, lng]).addTo(map);
 
-      // Si existe el elemento txtLat (a veces no existe en esta vista)
       if(document.getElementById("txtLat")) {
           document.getElementById("txtLat").innerText = lat.toFixed(5);
           document.getElementById("txtLng").innerText = lng.toFixed(5);
       }
 
-      const btn = document.getElementById("btnGeo");
+      const btn = document.getElementById("btnMiUbicacion");
       if(btn) {
-          btn.innerHTML = '<i class="fa-solid fa-check"></i> Ubicación encontrada';
+          // Feedback visual en el botón
+          const textoOriginal = btn.innerHTML;
+          btn.innerHTML = '<i class="fa-solid fa-check"></i> ¡Listo!';
           setTimeout(() => {
-            btn.innerHTML =
-              '<i class="fa-solid fa-location-crosshairs"></i> Usar mi ubicación actual';
-          }, 3000);
+            btn.innerHTML = textoOriginal;
+          }, 2000);
       }
     },
     (error) => {
@@ -352,7 +386,7 @@ function abrirRuta(latDestino, lngDestino) {
   if (!ubicacionActual) {
     Swal.fire(
       "Ubicación requerida",
-      "Primero presiona 'Usar mi ubicación actual'",
+      "Primero presiona el botón de ubicación (arriba a la derecha) para saber dónde estás.",
       "info"
     );
     return;
@@ -376,6 +410,11 @@ async function recargarUsuarioDesdeBackend() {
 
     // Guardamos en LocalStorage
     localStorage.setItem("usuario", JSON.stringify(usuarioActualizado));
+    
+    // Refrescamos la UI del perfil si está abierto
+    if(document.getElementById("modalPerfil").style.display === "flex") {
+        cargarInfoUsuario(); 
+    }
 
   } catch (e) {
     console.error("Error actualizando usuario:", e);
@@ -386,7 +425,6 @@ function cargarInfoUsuario() {
   document.getElementById("nombreUsuarioNav").innerText = usuarioLogueado.primer_nombre;
   document.getElementById("puntosActuales").innerText = usuarioLogueado.puntos_actuales || 0;
 
-  // --- CORRECCIÓN: SOPORTE PARA URL O BASE64 ---
   if (usuarioLogueado.foto && usuarioLogueado.foto.length > 5) {
       let fotoSrc = usuarioLogueado.foto;
       if (!fotoSrc.startsWith("http") && !fotoSrc.startsWith("data:")) {
@@ -394,7 +432,6 @@ function cargarInfoUsuario() {
       }
       document.getElementById("imgPerfilNav").src = fotoSrc;
   }
-  // ---------------------------------------------
 
   const lblRango = document.getElementById("rangoUsuario");
   const imgRango = document.getElementById("imgRango");
@@ -481,7 +518,7 @@ async function toggleFavoritoBD(event, iconElement, idUbicacion) {
         );
         Swal.fire({
           icon: "info",
-          title: "Eliminado",
+          title: "Eliminado de favoritos",
           toast: true,
           position: "top-end",
           showConfirmButton: false,
@@ -504,7 +541,7 @@ async function toggleFavoritoBD(event, iconElement, idUbicacion) {
         listaFavoritos.push(nuevoFav);
         Swal.fire({
           icon: "success",
-          title: "Guardado",
+          title: "Añadido a favoritos",
           toast: true,
           position: "top-end",
           showConfirmButton: false,
@@ -711,31 +748,6 @@ async function guardarPerfil() {
     Swal.fire("Error", "Fallo de conexión con el servidor", "error");
   }
 }
-
-// --- NUEVA FUNCIÓN PARA CARGAR PARROQUIAS ---
-async function cargarParroquiasEnPerfil() {
-    const select = document.getElementById('perfilParroquia');
-    if(!select) return;
-    
-    try {
-        const res = await fetch(`${API_BASE}/parroquias`);
-        if (res.ok) {
-            const parroquias = await res.json();
-            select.innerHTML = '<option value="">Seleccione su parroquia</option>';
-            parroquias.forEach(p => {
-                const option = document.createElement('option');
-                option.value = p.id_parroquia || p.id; 
-                option.text = p.nombre_parroquia || p.nombre;
-                select.appendChild(option);
-            });
-        }
-    } catch (e) {
-        console.error("Error cargando parroquias", e);
-        select.innerHTML = '<option value="">Error al cargar</option>';
-    }
-}
-
-// ... (Resto de funciones de notificaciones y rangos siguen igual) ...
 
 async function cargarNotificaciones() {
 
