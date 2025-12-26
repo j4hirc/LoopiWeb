@@ -13,15 +13,15 @@ let marcadorMiUbicacion = null;
 let ubicacionActual = null;
 
 let notificacionesCargadas = false;
+let ultimaNotificacionId = 0; // Para saber si llegó una nueva
 
 // Variable global para la foto nueva
 let fotoNuevaFile = null;
 
 document.addEventListener("DOMContentLoaded", async () => {
+  // 1. Configuración de Botones (Listeners)
   const btnLogout = document.getElementById("btnLogout");
-  if (btnLogout) {
-    btnLogout.addEventListener("click", logout);
-  }
+  if (btnLogout) btnLogout.addEventListener("click", logout);
 
   const btnMiUbicacion = document.getElementById("btnMiUbicacion");
   if (btnMiUbicacion) {
@@ -31,12 +31,24 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   const btnAbrirPerfil = document.getElementById("btnAbrirPerfil");
-  if (btnAbrirPerfil)
+  if (btnAbrirPerfil) {
     btnAbrirPerfil.addEventListener("click", (e) => {
       e.preventDefault();
       abrirModalPerfil();
     });
+  }
 
+  const inputPerfilFoto = document.getElementById("inputPerfilFoto");
+  if (inputPerfilFoto) inputPerfilFoto.addEventListener("change", cargarImagenPerfil);
+
+  const modalPerfil = document.getElementById("modalPerfil");
+  if (modalPerfil) {
+    modalPerfil.addEventListener("click", (e) => {
+      if (e.target === modalPerfil) cerrarModalPerfil();
+    });
+  }
+
+  // 2. Verificación de Sesión
   const usuarioStr = localStorage.getItem("usuario");
   if (!usuarioStr) {
     window.location.href = "../incio_de_sesion/login-registro.html";
@@ -44,36 +56,27 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
   usuarioLogueado = JSON.parse(usuarioStr);
 
-  await recargarUsuarioDesdeBackend();
-  cargarInfoUsuario();
-
-  // 2. Iniciar Mapa y Capas
+  // 3. Carga Inicial de Usuario y Mapa
   initMap();
+  cargarInfoUsuario(); 
 
-  // 3. Cargar Datos
-  await cargarNotificaciones();
-  await cargarMisFavoritos();
-  await cargarFiltrosMateriales();
-  await cargarPuntosReciclaje();
-  await cargarPuntosRecompensa();
-  
-  // Cargar Parroquias para el perfil
-  await cargarParroquiasEnPerfil();
+  // 4. CARGA PARALELA DE DATOS 
+  try {
+    await Promise.all([
+      recargarUsuarioDesdeBackend(),
+      cargarParroquiasEnPerfil(),    
+      cargarNotificaciones(), // Aquí se buscan las alertas de favoritos
+      cargarMisFavoritos(),
+      cargarFiltrosMateriales(),
+      cargarPuntosReciclaje(),
+      cargarPuntosRecompensa()
+    ]);
+  } catch (error) {
+    console.error("Error en la carga inicial de datos:", error);
+  }
 
-  // Configurar subida de foto con compresión
-  const inputPerfilFoto = document.getElementById("inputPerfilFoto");
-  if (inputPerfilFoto)
-    inputPerfilFoto.addEventListener("change", cargarImagenPerfil);
-
-  const modalPerfil = document.getElementById("modalPerfil");
-  if (modalPerfil)
-    modalPerfil.addEventListener("click", (e) => {
-      if (e.target === modalPerfil) cerrarModalPerfil();
-    });
-
-  const btnUbicacion = document.getElementById("btnMiUbicacion");
-  if (btnUbicacion) btnUbicacion.onclick = obtenerUbicacionActual;
-
+  // 5. POLLING: Revisar notificaciones nuevas cada 60 segundos
+  setInterval(cargarNotificaciones, 60000);
 });
 
 
@@ -120,6 +123,35 @@ const iconRecompensa = L.divIcon({
   iconAnchor: [15, 42],
 });
 
+async function cargarParroquiasEnPerfil() {
+    const select = document.getElementById('perfilParroquia');
+    if(!select) return; 
+    
+    try {
+        const res = await fetch(`${API_BASE}/parroquias`);
+        if (res.ok) {
+            const parroquias = await res.json();
+            const fragment = document.createDocumentFragment();
+            const defaultOpt = document.createElement('option');
+            defaultOpt.value = "";
+            defaultOpt.text = "Seleccione su parroquia";
+            fragment.appendChild(defaultOpt);
+
+            parroquias.forEach(p => {
+                const option = document.createElement('option');
+                option.value = p.id_parroquia || p.id; 
+                option.text = p.nombre_parroquia || p.nombre;
+                fragment.appendChild(option);
+            });
+            select.innerHTML = ""; 
+            select.appendChild(fragment);
+        }
+    } catch (e) {
+        console.error("Error cargando parroquias", e);
+        select.innerHTML = '<option value="">Error al cargar datos</option>';
+    }
+}
+
 async function cargarFiltrosMateriales() {
   const contenedor = document.getElementById("contenedorBotonesMateriales");
   if (!contenedor) return;
@@ -127,7 +159,7 @@ async function cargarFiltrosMateriales() {
   contenedor.innerHTML = "";
 
   const btnTodos = document.createElement("button");
-  btnTodos.className = "btn-filtro active";
+  btnTodos.className = "chip active"; // Usamos la clase nueva del CSS
   btnTodos.innerText = "Todos";
   btnTodos.onclick = () => filtrarMapa("todos", btnTodos);
   contenedor.appendChild(btnTodos);
@@ -138,7 +170,7 @@ async function cargarFiltrosMateriales() {
       const materiales = await res.json();
       materiales.forEach((mat) => {
         const btn = document.createElement("button");
-        btn.className = "btn-filtro";
+        btn.className = "chip"; // Usamos la clase nueva del CSS
         btn.innerText = mat.nombre;
         btn.onclick = () => filtrarMapa(mat.id_material, btn);
         contenedor.appendChild(btn);
@@ -163,7 +195,7 @@ async function cargarPuntosReciclaje() {
 
 window.filtrarMapa = function (idMaterial, btnElement) {
   document
-    .querySelectorAll(".btn-filtro")
+    .querySelectorAll(".chip")
     .forEach((b) => b.classList.remove("active"));
   btnElement.classList.add("active");
 
@@ -198,7 +230,7 @@ function renderizarMarcadoresReciclaje(listaPuntos) {
 
       const iconoUsar = esReciclador ? iconRecicladorMovil : iconPuntoFijo;
       const etiquetaTipo = esReciclador ? "Reciclador Móvil" : "Punto de Reciclaje";
-      const colorTitulo = esReciclador ? "#3498db" : "#2ecc71"; // Azul o Verde
+      const colorTitulo = esReciclador ? "#3498db" : "#2ecc71"; 
 
       const idUbicacion = p.id_ubicacion_reciclaje || p.id_ubicacion;
       const esFav = verificarSiEsFavoritoBD(idUbicacion);
@@ -241,7 +273,7 @@ function renderizarMarcadoresReciclaje(listaPuntos) {
             <div style="margin-top:6px;">
               <i class="fa-solid fa-heart fav-icon ${esFav ? "activo" : ""}"
                  onclick="toggleFavoritoBD(event, this, ${idUbicacion})"
-                 style="cursor:pointer;"></i>
+                 style="cursor:pointer; color: ${esFav ? '#e74c3c' : '#ccc'}; transition: 0.2s;"></i>
             </div>
         </div>
       `;
@@ -264,21 +296,15 @@ async function cargarPuntosRecompensa() {
           icon: iconRecompensa,
         });
         const popupContent = `
-                    <div style="text-align:center;">
-                        <h4 style="margin:0; color:#8E44AD;">${r.nombre}</h4>
-                        <p style="margin:5px 0; font-size:12px;">${
-                          r.direccion || "Ubicación de canje"
-                        }</p>
-                        <strong style="color:#E67E22;">${
-                          r.costoPuntos
-                        } Puntos</strong><br>
-                        <button onclick="verDetalleRecompensa(${
-                          r.id_recompensa
-                        })" 
-                            style="margin-top:5px; background:#8E44AD; color:white; border:none; border-radius:4px; cursor:pointer; padding:3px 8px; font-size:11px;">
-                            Ver más
-                        </button>
-                    </div>`;
+            <div style="text-align:center;">
+                <h4 style="margin:0; color:#8E44AD;">${r.nombre}</h4>
+                <p style="margin:5px 0; font-size:12px;">${r.direccion || "Ubicación de canje"}</p>
+                <strong style="color:#E67E22;">${r.costoPuntos} Puntos</strong><br>
+                <button onclick="verDetalleRecompensa(${r.id_recompensa})" 
+                    style="margin-top:5px; background:#8E44AD; color:white; border:none; border-radius:4px; cursor:pointer; padding:3px 8px; font-size:11px;">
+                    Ver más
+                </button>
+            </div>`;
         marker.bindPopup(popupContent);
         marker.addTo(rewardLayer);
       }
@@ -290,11 +316,7 @@ async function cargarPuntosRecompensa() {
 
 function obtenerUbicacionActual() {
   if (!navigator.geolocation) {
-    return Swal.fire(
-      "Error",
-      "Tu navegador no soporta geolocalización",
-      "error"
-    );
+    return Swal.fire("Error", "Tu navegador no soporta geolocalización", "error");
   }
 
   Swal.fire({
@@ -310,10 +332,7 @@ function obtenerUbicacionActual() {
       const lat = position.coords.latitude;
       const lng = position.coords.longitude;
 
-      coordenadas = { lat: lat, lng: lng };
-
       map.setView([lat, lng], 16);
-
       ubicacionActual = { lat, lng };
 
       if (marcadorMiUbicacion) {
@@ -322,26 +341,18 @@ function obtenerUbicacionActual() {
 
       marcadorMiUbicacion = L.marker([lat, lng]).addTo(map);
 
-      // Si existe el elemento txtLat (a veces no existe en esta vista)
-      if(document.getElementById("txtLat")) {
-          document.getElementById("txtLat").innerText = lat.toFixed(5);
-          document.getElementById("txtLng").innerText = lng.toFixed(5);
-      }
-
-      const btn = document.getElementById("btnGeo");
+      // Feedback visual en el botón flotante
+      const btn = document.getElementById("btnMiUbicacion");
       if(btn) {
-          btn.innerHTML = '<i class="fa-solid fa-check"></i> Ubicación encontrada';
-          setTimeout(() => {
-            btn.innerHTML =
-              '<i class="fa-solid fa-location-crosshairs"></i> Usar mi ubicación actual';
-          }, 3000);
+          const original = btn.innerHTML;
+          btn.innerHTML = '<i class="fa-solid fa-check" style="color:#2ecc71;"></i>';
+          setTimeout(() => btn.innerHTML = original, 2000);
       }
     },
     (error) => {
       Swal.close();
       let msg = "No se pudo obtener la ubicación.";
-      if (error.code === 1)
-        msg = "Debes permitir el acceso a la ubicación en tu navegador.";
+      if (error.code === 1) msg = "Debes permitir el acceso a la ubicación en tu navegador.";
       Swal.fire("Error", msg, "error");
     },
     { enableHighAccuracy: true, timeout: 10000 }
@@ -352,15 +363,13 @@ function abrirRuta(latDestino, lngDestino) {
   if (!ubicacionActual) {
     Swal.fire(
       "Ubicación requerida",
-      "Primero presiona 'Usar mi ubicación actual'",
+      "Primero presiona el botón de ubicación (arriba a la derecha) para saber dónde estás.",
       "info"
     );
     return;
   }
-
   const { lat, lng } = ubicacionActual;
-
-  const url = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${latDestino},${lngDestino}&travelmode=driving`;
+  const url = `https://www.google.com/maps/dir/${lat},${lng}/${latDestino},${lngDestino}`;
   window.open(url, "_blank");
 }
 
@@ -373,9 +382,11 @@ async function recargarUsuarioDesdeBackend() {
     const usuarioActualizado = await res.json();
 
     usuarioLogueado = usuarioActualizado;
-
-    // Guardamos en LocalStorage
     localStorage.setItem("usuario", JSON.stringify(usuarioActualizado));
+    
+    if(document.getElementById("modalPerfil").style.display === "flex") {
+        cargarInfoUsuario(); 
+    }
 
   } catch (e) {
     console.error("Error actualizando usuario:", e);
@@ -386,7 +397,6 @@ function cargarInfoUsuario() {
   document.getElementById("nombreUsuarioNav").innerText = usuarioLogueado.primer_nombre;
   document.getElementById("puntosActuales").innerText = usuarioLogueado.puntos_actuales || 0;
 
-  // --- CORRECCIÓN: SOPORTE PARA URL O BASE64 ---
   if (usuarioLogueado.foto && usuarioLogueado.foto.length > 5) {
       let fotoSrc = usuarioLogueado.foto;
       if (!fotoSrc.startsWith("http") && !fotoSrc.startsWith("data:")) {
@@ -394,17 +404,13 @@ function cargarInfoUsuario() {
       }
       document.getElementById("imgPerfilNav").src = fotoSrc;
   }
-  // ---------------------------------------------
 
   const lblRango = document.getElementById("rangoUsuario");
   const imgRango = document.getElementById("imgRango");
 
   if (usuarioLogueado.rango) {
     lblRango.innerText = usuarioLogueado.rango.nombre_rango;
-    if (
-      usuarioLogueado.rango.imagen &&
-      usuarioLogueado.rango.imagen.length > 10
-    ) {
+    if (usuarioLogueado.rango.imagen && usuarioLogueado.rango.imagen.length > 10) {
       let imgClean = usuarioLogueado.rango.imagen;
       if (!imgClean.startsWith("http") && !imgClean.startsWith("data:")) {
         imgClean = `data:image/png;base64,${imgClean}`;
@@ -413,7 +419,7 @@ function cargarInfoUsuario() {
       imgRango.style.display = "block";
     } else {
       imgRango.style.display = "none";
-      lblRango.innerText = `🌱 ${usuarioLogueado.rango.nombre_rango}`;
+      lblRango.innerText = `${usuarioLogueado.rango.nombre_rango}`;
     }
   } else {
     lblRango.innerText = "Sin Rango";
@@ -476,12 +482,14 @@ async function toggleFavoritoBD(event, iconElement, idUbicacion) {
       );
       if (res.ok) {
         iconElement.classList.remove("activo");
+        iconElement.style.color = '#ccc'; // Visual inmediato
+        
         listaFavoritos = listaFavoritos.filter(
           (f) => f.id_favorito !== favoritoExistente.id_favorito
         );
         Swal.fire({
           icon: "info",
-          title: "Eliminado",
+          title: "Eliminado de favoritos",
           toast: true,
           position: "top-end",
           showConfirmButton: false,
@@ -501,10 +509,12 @@ async function toggleFavoritoBD(event, iconElement, idUbicacion) {
       if (res.ok) {
         const nuevoFav = await res.json();
         iconElement.classList.add("activo");
+        iconElement.style.color = '#e74c3c'; // Visual inmediato
+        
         listaFavoritos.push(nuevoFav);
         Swal.fire({
           icon: "success",
-          title: "Guardado",
+          title: "Añadido a favoritos",
           toast: true,
           position: "top-end",
           showConfirmButton: false,
@@ -573,13 +583,8 @@ async function cargarImagenPerfil() {
   }
 
   try {
-      // 1. Comprimir
       const archivoComprimido = await comprimirImagen(file);
-      
-      // 2. Guardar para enviar después
       fotoNuevaFile = archivoComprimido;
-
-      // 3. Previsualizar
       const reader = new FileReader();
       reader.onload = (e) => {
         prev.src = e.target.result;
@@ -595,7 +600,7 @@ async function cargarImagenPerfil() {
 // --- FUNCIÓN DE COMPRESIÓN ---
 async function comprimirImagen(archivo) {
     return new Promise((resolve, reject) => {
-        const maxWidth = 500; // Avatar pequeño, 500px es suficiente
+        const maxWidth = 500; 
         const quality = 0.7;
 
         const reader = new FileReader();
@@ -647,7 +652,6 @@ async function guardarPerfil() {
         return Swal.fire("Atención", "Selecciona una parroquia", "warning");
     }
 
-    // 1. Objeto JSON
     const datosUsuario = {
       cedula: usuarioLogueado.cedula,
       primer_nombre: document.getElementById("perfilPrimerNombre").value.trim(),
@@ -655,15 +659,12 @@ async function guardarPerfil() {
       apellido_paterno: document.getElementById("perfilApellidoPaterno").value.trim(),
       apellido_materno: document.getElementById("perfilApellidoMaterno").value.trim(),
       correo: document.getElementById("perfilCorreo").value.trim(),
-      
-      foto: null, // Backend maneja esto si hay archivo nuevo
-
+      foto: null, 
       estado: true,
       parroquia: { id_parroquia: parseInt(idParroquia) },
       password: passInput !== "" ? passInput : null 
     };
 
-    // 2. FormData
     const formData = new FormData();
     formData.append("datos", JSON.stringify(datosUsuario));
 
@@ -673,7 +674,6 @@ async function guardarPerfil() {
  
     Swal.fire({ title: 'Guardando...', didOpen: () => Swal.showLoading() });
 
-    // 3. Enviar
     const res = await fetch(`${API_BASE}/usuarios/${usuarioLogueado.cedula}`, {
       method: "PUT",
       body: formData, 
@@ -681,7 +681,6 @@ async function guardarPerfil() {
 
     if (res.ok) {
       const actualizado = await res.json();
-
       usuarioLogueado = actualizado;
       
       try {
@@ -712,40 +711,40 @@ async function guardarPerfil() {
   }
 }
 
-// --- NUEVA FUNCIÓN PARA CARGAR PARROQUIAS ---
-async function cargarParroquiasEnPerfil() {
-    const select = document.getElementById('perfilParroquia');
-    if(!select) return;
-    
-    try {
-        const res = await fetch(`${API_BASE}/parroquias`);
-        if (res.ok) {
-            const parroquias = await res.json();
-            select.innerHTML = '<option value="">Seleccione su parroquia</option>';
-            parroquias.forEach(p => {
-                const option = document.createElement('option');
-                option.value = p.id_parroquia || p.id; 
-                option.text = p.nombre_parroquia || p.nombre;
-                select.appendChild(option);
-            });
-        }
-    } catch (e) {
-        console.error("Error cargando parroquias", e);
-        select.innerHTML = '<option value="">Error al cargar</option>';
-    }
-}
-
-// ... (Resto de funciones de notificaciones y rangos siguen igual) ...
-
+// -----------------------------------------------------------
+// LÓGICA DE NOTIFICACIONES (Mejorada para alertar disponibilidad)
+// -----------------------------------------------------------
 async function cargarNotificaciones() {
-
   try {
-    const res = await fetch(
-      `${API_BASE}/notificaciones/usuario/${usuarioLogueado.cedula}`
-    );
+    const res = await fetch(`${API_BASE}/notificaciones/usuario/${usuarioLogueado.cedula}`);
     if (!res.ok) return;
 
-    notificaciones = await res.json();
+    const nuevasNotificaciones = await res.json();
+    
+    // Chequeo de Novedades (Si hay una ID mayor a la última que teníamos)
+    if (notificaciones.length > 0 && nuevasNotificaciones.length > 0) {
+        const notiMasReciente = nuevasNotificaciones[nuevasNotificaciones.length - 1]; // Asumiendo orden ascendente o descendente
+        // Ajusta lógica según cómo vengan ordenadas del backend. 
+        // Si la última es nueva y es tipo DISPONIBILIDAD:
+        
+        // Simplemente verificamos si hay alguna "no leída" de tipo DISPONIBILIDAD que no teníamos
+        const notisDispo = nuevasNotificaciones.filter(n => n.tipo === "DISPONIBILIDAD" && !n.leido);
+        const yaTeniamos = notificaciones.filter(n => n.tipo === "DISPONIBILIDAD" && !n.leido).length;
+        
+        if (notisDispo.length > yaTeniamos) {
+             Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: '¡Punto Favorito Abierto!',
+                text: 'Uno de tus puntos favoritos acaba de abrir.',
+                showConfirmButton: false,
+                timer: 4000
+            });
+        }
+    }
+
+    notificaciones = nuevasNotificaciones;
     notificacionesCargadas = true; 
 
     renderNotificaciones();
@@ -767,36 +766,35 @@ function actualizarContadorVisual() {
   }
 }
 
-async function actualizarContadorNotificaciones() {
-  try {
-    const badge = document.getElementById("contadorNotificaciones");
-    const res = await fetch(
-      `${API_BASE}/notificaciones/contar/${usuarioLogueado.cedula}`
-    );
-    if (!res.ok) return;
-    const total = await res.json();
-    if (total > 0) {
-      badge.innerText = total;
-      badge.style.display = "block";
-    } else {
-      badge.style.display = "none";
-    }
-  } catch (e) {
-    console.error(e);
-  }
-}
-
 function renderNotificaciones() {
   const contenedor = document.getElementById("listaNotificaciones");
   if (!notificaciones.length) {
-    contenedor.innerHTML = `<p class="noti-vacia">No tienes notificaciones</p>`;
+    contenedor.innerHTML = `<div class="noti-vacia"><i class="fa-regular fa-bell-slash"></i><p>Sin novedades</p></div>`;
     return;
   }
   contenedor.innerHTML = "";
-  notificaciones.forEach((n) => {
+  
+  // Mostrar las más nuevas primero (invertir array si viene cronológico)
+  const notisOrdenadas = [...notificaciones].reverse();
+
+  notisOrdenadas.forEach((n) => {
     const div = document.createElement("div");
     div.className = `noti-item ${n.leido ? "" : "no-leida"}`;
-    div.innerHTML = `<div class="noti-titulo">${n.titulo}</div><div class="noti-mensaje">${n.mensaje}</div>`;
+    
+    // Icono según tipo
+    let icon = '<i class="fa-solid fa-info-circle"></i>';
+    if(n.tipo === "DISPONIBILIDAD") icon = '<i class="fa-solid fa-clock" style="color:#2ecc71"></i>';
+    if(n.entidad_referencia === "SOLICITUD") icon = '<i class="fa-solid fa-truck"></i>';
+
+    div.innerHTML = `
+        <div style="display:flex; gap:10px;">
+            <div style="font-size:1.2rem; padding-top:2px;">${icon}</div>
+            <div>
+                <div class="noti-titulo">${n.titulo}</div>
+                <div class="noti-mensaje">${n.mensaje}</div>
+            </div>
+        </div>
+    `;
     div.onclick = () => abrirNotificacion(n);
     contenedor.appendChild(div);
   });
@@ -807,6 +805,7 @@ function abrirNotificacion(n) {
   switch (n.entidad_referencia) {
     case "SOLICITUD":
     case "SOLICITUD_RECOLECCION":
+      // window.location.href = ... (tu ruta de historial)
       break;
     case "CANJEO":
       window.location.href = `cupones/mis_cupones.html`;
@@ -814,21 +813,31 @@ function abrirNotificacion(n) {
     case "LOGRO":
       abrirModalRangos();
       break;
+    case "UBICACION":
+        // Centrar mapa en la ubicación
+        const ubicacion = todasLasUbicaciones.find(u => (u.id_ubicacion_reciclaje || u.id) == n.id_referencia);
+        if(ubicacion) {
+            map.setView([ubicacion.latitud, ubicacion.longitud], 16);
+            // Simular clic para abrir popup
+            // Necesitarías guardar referencias a los marcadores si quieres abrir el popup automáticamente
+            Swal.fire("Ubicación", `Ir al punto: ${ubicacion.nombre}`, "info");
+        }
+        break;
     default:
       console.warn("Tipo no manejado:", n.entidad_referencia);
   }
 }
 
 async function marcarNotificacionesLeidas() {
+  // Optimista: Marcar visualmente ya
   notificaciones.forEach((n) => (n.leido = true));
-  renderNotificaciones(); 
+  actualizarContadorVisual();
+  renderNotificaciones();
 
   try {
     await fetch(
       `${API_BASE}/notificaciones/marcar-leidas/${usuarioLogueado.cedula}`,
-      {
-        method: "PUT",
-      }
+      { method: "PUT" }
     );
   } catch (e) {
     console.error("Error marcando leídas", e);
@@ -843,10 +852,9 @@ function toggleNotificaciones() {
     panel.classList.remove("active");
   } else {
     panel.classList.add("active");
-
+    // Al abrir, marcamos como leídas
     const badge = document.getElementById("contadorNotificaciones");
     if (badge.style.display !== "none") {
-      badge.style.display = "none"; 
       marcarNotificacionesLeidas();
     }
   }
@@ -860,8 +868,7 @@ async function abrirModalRangos() {
   const barra = document.getElementById("barraProgresoGlobal");
   const texto = document.getElementById("textoProgreso");
 
-  container.innerHTML =
-    '<p style="text-align:center; padding:20px;">Calculando datos...</p>';
+  container.innerHTML = '<p style="text-align:center; padding:20px;">Calculando datos...</p>';
 
   try {
     const resRangos = await fetch(`${API_BASE}/rangos`);
@@ -871,13 +878,11 @@ async function abrirModalRangos() {
     rangos.sort((a, b) => a.id_rango - b.id_rango);
 
     const cedula = usuarioLogueado.cedula;
-    const resCount = await fetch(
-      `${API_BASE}/solicitud_recolecciones/contar/${cedula}`
-    );
+    const resCount = await fetch(`${API_BASE}/solicitud_recolecciones/contar/${cedula}`);
     let totalRecolecciones = 0;
 
     if (resCount.ok) {
-      totalRecolecciones = await resCount.json(); // Número entero (ej: 12, 27, 30)
+      totalRecolecciones = await resCount.json(); 
     }
 
     renderizarCaminoRangos(rangos, totalRecolecciones);
@@ -889,15 +894,11 @@ async function abrirModalRangos() {
     if (barra) barra.style.width = `${porcentaje}%`;
 
     if (texto) {
-      texto.innerHTML = `
-                Total entregas: <b>${totalRecolecciones}</b> <br>
-                Faltan <b>${faltan}</b> para el siguiente rango.
-            `;
+      texto.innerHTML = `Total entregas: <b>${totalRecolecciones}</b> <br> Faltan <b>${faltan}</b> para el siguiente rango.`;
     }
   } catch (e) {
     console.error(e);
-    container.innerHTML =
-      '<p style="text-align:center; color:red;">Error al cargar datos</p>';
+    container.innerHTML = '<p style="text-align:center; color:red;">Error al cargar datos</p>';
   }
 }
 
@@ -913,13 +914,13 @@ function renderizarCaminoRangos(rangos, totalReal) {
 
   rangos.forEach((rango) => {
     let claseEstado = "";
-    let iconoEstado = '<i class="fa-solid fa-lock"></i>'; // Futuro
+    let iconoEstado = '<i class="fa-solid fa-lock"></i>'; 
 
     if (rango.id_rango < idRangoCalculado) {
-      claseEstado = "passed"; // Pasado
+      claseEstado = "passed"; 
       iconoEstado = '<i class="fa-solid fa-check-circle"></i>';
     } else if (rango.id_rango === idRangoCalculado) {
-      claseEstado = "current"; // Actual
+      claseEstado = "current"; 
       iconoEstado = '<i class="fa-solid fa-star"></i>';
     }
 
