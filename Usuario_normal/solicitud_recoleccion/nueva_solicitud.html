@@ -6,12 +6,11 @@
     <title>Registrar Entrega | Loopi</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="nueva_solicitud.css"> 
 </head>
 
@@ -40,12 +39,15 @@
             </div>
 
             <div class="form-step">
-                <div class="step-label"><span class="step-number">1</span> Selecciona el Punto</div>
+                <div class="step-label">
+                    <span class="step-number">1</span> 
+                    Selecciona el Punto
+                </div>
                 
                 <div class="filtros-container-mapa">
                     <div id="filtroMaterialesMap" class="filtros-scroll">
                         <button class="btn-filtro active" onclick="filtrarPuntosMapa('todos', this)">Todos</button>
-                    </div>
+                        </div>
                 </div>
 
                 <div class="map-wrapper">
@@ -55,7 +57,7 @@
                 <div id="infoPunto" class="selected-info">
                     <div class="info-icon"><i class="fa-solid fa-map-location-dot"></i></div>
                     <div class="info-text">
-                        <small>Punto seleccionado:</small>
+                        <small class="info-label">Punto seleccionado:</small>
                         <p id="nombrePunto">Ninguno</p>
                     </div>
                     <input type="hidden" id="idUbicacionSeleccionada">
@@ -63,7 +65,10 @@
             </div>
 
             <div class="form-step">
-                <div class="step-label"><span class="step-number">2</span> ¿Cuándo entregaste?</div>
+                <div class="step-label">
+                    <span class="step-number">2</span> 
+                    ¿Cuándo entregaste?
+                </div>
                 <div class="input-icon-wrapper">
                     <i class="fa-regular fa-calendar input-icon"></i>
                     <input type="datetime-local" id="inputFecha" class="input-moderno">
@@ -71,31 +76,38 @@
             </div>
 
             <div class="form-step">
-                <div class="step-label"><span class="step-number">3</span> ¿Qué reciclas?</div>
+                <div class="step-label">
+                    <span class="step-number">3</span> 
+                    ¿Qué reciclas?
+                </div>
                 
                 <div class="material-adder">
                     <div class="select-wrapper">
                         <select id="selectMaterial" class="input-moderno">
-                            <option value="">Selecciona Material</option>
+                            <option value="">Material...</option>
                         </select>
                         <i class="fa-solid fa-chevron-down arrow-icon"></i>
                     </div>
                     
                     <div class="input-group-joined">
-                        <input type="number" id="inputCantidad" class="input-moderno" placeholder="Peso" min="0.1" step="0.1">
+                        <input type="number" id="inputCantidad" class="input-moderno" placeholder="0.0" min="0.1" step="0.1">
                         <span class="unit">Kg</span>
                     </div>
 
-                    <button type="button" id="btnAddMaterial" class="btn-add">
+                    <button type="button" id="btnAddMaterial" class="btn-add ripple-effect">
                         <i class="fa-solid fa-plus"></i>
                     </button>
                 </div>
 
-                <ul id="listaMaterialesUI" class="lista-materiales"></ul>
+                <ul id="listaMaterialesUI" class="lista-materiales">
+                    </ul>
             </div>
 
             <div class="form-step">
-                <div class="step-label"><span class="step-number">4</span> Evidencia</div>
+                <div class="step-label">
+                    <span class="step-number">4</span> 
+                    Evidencia
+                </div>
                 
                 <div class="file-upload-wrapper" id="dropZone">
                     <input type="file" id="inputFoto" accept="image/*">
@@ -110,19 +122,36 @@
                 </div>
             </div>
 
-            <button id="btnEnviar" class="btn-submit" disabled>
-                Completa el formulario
+            <button id="btnEnviar" class="btn-submit ripple-effect" disabled>
+                Completar Registro
             </button>
 
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
     
     <script src="nueva_solicitud.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const rippleButtons = document.querySelectorAll('.ripple-effect');
+            rippleButtons.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    if(this.hasAttribute('disabled')) return;
+                    let x = e.clientX - e.target.getBoundingClientRect().left;
+                    let y = e.clientY - e.target.getBoundingClientRect().top;
+                    let ripples = document.createElement('span');
+                    ripples.style.left = x + 'px';
+                    ripples.style.top = y + 'px';
+                    ripples.classList.add('ripple');
+                    this.appendChild(ripples);
+                    setTimeout(() => ripples.remove(), 600);
+                });
+            });
+        });
+    </script>
 </body>
 </html>
