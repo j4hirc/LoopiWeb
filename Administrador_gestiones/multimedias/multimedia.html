@@ -2,111 +2,113 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Gestión de Multimedia</title>
+    <title>Gestión de Multimedia | Loopi</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="multimedia.css">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <style>
-        .btn-volver {
-            background: transparent;
-            border: 1px solid rgba(255,255,255,0.3);
-            color: white;
-            padding: 8px 15px;
-            border-radius: 8px;
-            text-decoration: none;
-            margin-right: 15px;
-            font-size: 14px;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .btn-volver:hover {
-            background: rgba(255,255,255,0.15);
-            border-color: white;
-        }
-        .header-left {
-            display: flex;
-            align-items: center;
-        }
-        /* Ajuste para el preview de la imagen */
-        .img-preview {
-            width: 100px;
-            height: 100px;
-            background-color: #f0f0f0;
-            background-size: cover;
-            background-position: center;
-            border-radius: 8px;
-            border: 2px dashed #ccc;
-            margin-right: 15px;
-        }
-        .img-row {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-    </style>
+    <link rel="stylesheet" href="multimedia.css">
 </head>
 <body>
 
-<header class="header">
-    <div class="header-left">
-        <a href="../menu-gestiones.html" class="btn-volver">
-            <i class="fa-solid fa-arrow-left"></i> Volver
-        </a>
-        <h2>Gestión de Multimedia</h2>
+    <div class="bg-decoration"></div>
+
+    <header class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <a href="../menu-gestiones.html" class="btn-volver">
+                    <i class="fa-solid fa-arrow-left"></i> <span>Volver</span>
+                </a>
+                <div class="titulo-seccion">
+                    <h1><i class="fa-solid fa-photo-film"></i> Multimedia</h1>
+                    <p>Gestiona la galería educativa y eventos</p>
+                </div>
+            </div>
+            
+            <button class="btn-agregar" id="btnNuevo">
+                <div class="icon-circle"><i class="fa-solid fa-plus"></i></div>
+                <span>Nuevo Contenido</span>
+            </button>
+        </div>
+    </header>
+
+    <div class="search-wrapper">
+        <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="searchInput" placeholder="Buscar contenido multimedia..." autocomplete="off">
+        </div>
     </div>
-    <button class="btn-agregar" id="btnNuevo">
-        <i class="fa-solid fa-plus"></i> Nuevo Contenido
-    </button>
-</header>
 
-<div class="search-container">
-    <div style="position: relative;">
-        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #888;"></i>
-        <input type="text" id="searchInput" placeholder="Buscar contenido..." style="padding-left: 40px;">
-    </div>
-</div>
-
-<div class="grid-container" id="gridMultimedia"></div>
-
-<div class="modal-overlay" id="modalOverlay">
-    <div class="modal-container">
-
-        <div class="modal-header">
-            <span id="modalTitle">Nuevo Contenido</span>
-            <button class="modal-close" id="btnCerrar"><i class="fa-solid fa-xmark"></i></button>
+    <div class="grid-container" id="gridMultimedia">
         </div>
 
-        <form id="formMultimedia" class="modal-body">
-            <input type="hidden" id="idMultimedia">
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
 
-            <label>Imagen</label>
-            <div class="img-row">
-                <div class="img-preview" id="previewImg"></div>
-                <label for="imagen" class="btn-upload" style="cursor: pointer; background: #2D5A4A; color: white; padding: 8px 12px; border-radius: 6px; font-size: 14px;">
-                    <i class="fa-solid fa-upload"></i> Seleccionar Imagen
-                </label>
-                <input type="file" id="imagen" accept="image/*" style="display: none;">
+            <div class="modal-header">
+                <h2 id="modalTitle">Nuevo Contenido</h2>
+                <button class="modal-close" id="btnCerrar">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
 
-            <label>Título</label>
-            <input type="text" id="titulo" class="input-field" required placeholder="Ej: Evento de Reciclaje">
+            <form id="formMultimedia" class="modal-body">
+                <input type="hidden" id="idMultimedia">
 
-            <label>Descripción</label>
-            <textarea id="descripcion" class="input-field" rows="3" placeholder="Detalles del contenido..."></textarea>
-        </form>
+                <div class="img-upload-section">
+                    <div class="img-preview" id="previewImg">
+                        <i class="fa-regular fa-image placeholder-icon"></i>
+                    </div>
+                    <div class="upload-controls">
+                        <span class="file-instruction">Sube una imagen representativa</span>
+                        <label for="imagen" class="btn-upload">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Seleccionar Imagen
+                        </label>
+                        <input type="file" id="imagen" accept="image/*" style="display: none;">
+                    </div>
+                </div>
 
-        <div class="modal-footer">
-            <button class="btn-cancelar" id="btnCancelar">Cancelar</button>
-            <button class="btn-guardar" id="btnGuardar">Guardar</button>
+                <div class="form-group full-width">
+                    <label>Título del Contenido</label>
+                    <input type="text" id="titulo" class="input-field" required placeholder="Ej: Taller de Reciclaje">
+                </div>
+
+                <div class="form-group full-width">
+                    <label>Descripción</label>
+                    <textarea id="descripcion" class="input-field" rows="3" placeholder="Detalles sobre el evento o recurso..."></textarea>
+                </div>
+            </form>
+
+            <div class="modal-footer">
+                <button class="btn-cancelar" id="btnCancelar">Cancelar</button>
+                <button class="btn-guardar" id="btnGuardar">Guardar</button>
+            </div>
+
         </div>
-
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="multimedia.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="multimedia.js"></script>
+
+    <script>
+        const grid = document.getElementById('gridMultimedia');
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                mutation.addedNodes.forEach((node) => {
+                    if (node.nodeType === 1 && node.classList.contains('card')) { 
+                        node.style.opacity = '0';
+                        node.style.transform = 'translateY(20px)';
+                        setTimeout(() => {
+                            node.style.transition = 'all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                            node.style.opacity = '1';
+                            node.style.transform = 'translateY(0)';
+                        }, 50);
+                    }
+                });
+            });
+        });
+        observer.observe(grid, { childList: true });
+    </script>
 </body>
 </html>
