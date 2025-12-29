@@ -115,37 +115,32 @@ function aplicarFiltros() {
 }
 
 function actualizarDashboard(datos) {
-    // ELIMINAMOS EL FILTRO FORZOSO DE 'FINALIZADO'
-    // Ahora usamos 'datos', que trae exactamente lo que elegiste en los filtros de arriba.
-    
+    // ERROR ANTERIOR: const finalizados = datos.filter(s => s.estado === 'FINALIZADO');
+    // CORRECCIÓN: Usamos 'datos' directamente, porque ya viene filtrado por lo que tú elegiste arriba.
+
     let totalKg = 0;
     let totalPuntos = 0;
 
-    // Calculamos los totales basados en lo que estás viendo actualmente
     datos.forEach(s => {
-        // Sumamos puntos si tiene
         totalPuntos += (s.puntos_ganados || 0);
-        
-        // Sumamos Kilos si tiene detalles
-        if(s.detalles) {
-            s.detalles.forEach(d => totalKg += d.cantidad_kg);
-        }
+        if(s.detalles) s.detalles.forEach(d => totalKg += d.cantidad_kg);
     });
 
-    // Actualizamos los cuadritos de arriba (KPIs)
     document.getElementById("totalKgGlobal").innerText = totalKg.toFixed(1);
     document.getElementById("totalUsuarios").innerText = usuariosTotal;
     document.getElementById("totalRecolecciones").innerText = datos.length; 
     document.getElementById("totalPuntos").innerText = totalPuntos;
 
-    // --- AQUÍ EL CAMBIO CLAVE ---
-    // Le pasamos 'datos' (que incluye los pendientes) a las gráficas
+    // --- AQUÍ ESTABA EL BLOQUEO ---
+    // Antes enviabas 'finalizados', ahora enviamos 'datos' (la lista filtrada actual)
     generarGraficoMateriales(datos);
     generarGraficoTopRecicladores(datos);
     generarGraficoTendencia(datos);
     
-    // Las tablas también reciben 'datos'
+    // Las tablas también
     generarTablaRecicladores(datos);
+    
+    // El top de usuarios sí suele ser solo de lo confirmado, pero si quieres ver todo:
     generarTopUsuarios(datos); 
 }
 
