@@ -2,94 +2,109 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8" />
-    <title>Gestión de Parroquias</title>
+    <title>Gestión de Parroquias | Loopi</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="parroquias.css" />
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <style>
-        .btn-volver {
-            background: transparent;
-            border: 1px solid rgba(255,255,255,0.3);
-            color: white;
-            padding: 8px 15px;
-            border-radius: 8px;
-            text-decoration: none;
-            margin-right: 15px;
-            font-size: 14px;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .btn-volver:hover {
-            background: rgba(255,255,255,0.15);
-            border-color: white;
-        }
-        .header-left {
-            display: flex;
-            align-items: center;
-        }
-    </style>
+    
+    <link rel="stylesheet" href="parroquias.css" />
 </head>
 
 <body>
 
-<header class="header">
-    <div class="header-left">
-        <a href="../menu-gestiones.html" class="btn-volver">
-            <i class="fa-solid fa-arrow-left"></i> Volver
-        </a>
-        <h1>Gestión de Parroquias</h1>
-    </div>
-    <button id="btnNuevaParroquia" class="btn-agregar">
-        <i class="fa-solid fa-plus"></i> Agregar Parroquia
-    </button>
-</header>
+    <div class="bg-decoration"></div>
 
-<div class="search-container">
-    <div style="position: relative;">
-        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #888;"></i>
-        <input type="text" id="buscarParroquia" placeholder="Buscar parroquias..." style="padding-left: 40px;">
-    </div>
-</div>
-
-<section id="gridParroquias" class="grid-container"></section>
-
-<div class="modal-overlay" id="modalOverlay">
-    <div class="modal-container">
-
-        <div class="modal-header">
-            <h2 id="modalTitle">Nueva Parroquia</h2>
-            <button class="modal-close" id="btnCerrarModal">
-                <i class="fa-solid fa-xmark"></i>
+    <header class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <a href="../menu-gestiones.html" class="btn-volver">
+                    <i class="fa-solid fa-arrow-left"></i> <span>Volver</span>
+                </a>
+                <div class="titulo-seccion">
+                    <h1><i class="fa-solid fa-tree-city"></i> Parroquias</h1>
+                    <p>Gestiona las zonas y divisiones locales</p>
+                </div>
+            </div>
+            
+            <button id="btnNuevaParroquia" class="btn-agregar">
+                <div class="icon-circle"><i class="fa-solid fa-plus"></i></div>
+                <span>Nueva Parroquia</span>
             </button>
         </div>
+    </header>
 
-        <form id="formParroquia">
-            <input type="hidden" id="idParroquia" name="idParroquia">
-
-            <div class="modal-body">
-                <label>Nombre de la Parroquia</label>
-                <input type="text" id="nombreParroquia" name="nombreParroquia" 
-                    class="input-field" required placeholder="Ej: Tarqui, El Vecino...">
-
-                <label>Ciudad</label>
-                <select id="ciudadParroquia" name="ciudadParroquia" class="input-field" required>
-                    <option value="">Seleccione una ciudad</option>
-                </select>
-            </div>
-
-            <div class="modal-footer">
-                <button type="button" class="btn-cancelar" id="btnCancelar">Cancelar</button>
-                <button type="submit" class="btn-guardar">Guardar</button>
-            </div>
-        </form>
-
+    <div class="search-wrapper">
+        <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="buscarParroquia" placeholder="Buscar parroquia o ciudad..." autocomplete="off">
+        </div>
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="parroquias.js"></script>
+    <section id="gridParroquias" class="grid-container">
+        </section>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+
+            <div class="modal-header">
+                <h2 id="modalTitle">Nueva Parroquia</h2>
+                <button class="modal-close" id="btnCerrarModal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="formParroquia">
+                <input type="hidden" id="idParroquia" name="idParroquia">
+
+                <div class="modal-body">
+                    <div class="form-group full-width">
+                        <label>Nombre de la Parroquia</label>
+                        <input type="text" id="nombreParroquia" name="nombreParroquia" 
+                            class="input-field" required placeholder="Ej: Tarqui, El Vecino...">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Ciudad Perteneciente</label>
+                        <div class="select-wrapper">
+                            <select id="ciudadParroquia" name="ciudadParroquia" class="input-field" required>
+                                <option value="">Seleccione una ciudad</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down arrow-icon"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancelar" id="btnCancelar">Cancelar</button>
+                    <button type="submit" class="btn-guardar">Guardar</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="parroquias.js"></script>
+
+    <script>
+        const grid = document.getElementById('gridParroquias');
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                mutation.addedNodes.forEach((node) => {
+                    if (node.nodeType === 1 && node.classList.contains('card-parroquia')) { 
+                        node.style.opacity = '0';
+                        node.style.transform = 'translateY(20px)';
+                        setTimeout(() => {
+                            node.style.transition = 'all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                            node.style.opacity = '1';
+                            node.style.transform = 'translateY(0)';
+                        }, 50);
+                    }
+                });
+            });
+        });
+        observer.observe(grid, { childList: true });
+    </script>
 </body>
 </html>
