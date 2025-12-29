@@ -8,20 +8,63 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="formularios_reciclador.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        .btn-volver {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            margin-right: 15px;
+            font-size: 14px;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-volver:hover {
+            background: rgba(255,255,255,0.15);
+            border-color: white;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+        /* Aseguramos que el header use flexbox para alinear el título y el contador */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px; /* Ajusta según tu CSS original */
+            background: #2D5A4A; /* Color base por si acaso */
+            color: white;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+    </style>
 </head>
 <body>
 
 <header>
-    <h1>Solicitudes de Reciclador</h1>
+    <div class="header-left">
+        <a href="../menu-gestiones.html" class="btn-volver">
+            <i class="fa-solid fa-arrow-left"></i> Volver
+        </a>
+        <h1>Solicitudes de Reciclador</h1>
+    </div>
     <span>Pendientes: <strong id="count-badge">0</strong></span>
 </header>
 
 <div class="container" id="cards-container">
     <p style="text-align:center; width:100%; color:#7f8c8d;">
+        Cargando solicitudes...
     </p>
 </div>
 
-<!-- Modal imagen -->
 <div class="modal" id="imageModal" onclick="this.style.display='none'">
     <img id="modalImg" src="">
 </div>
