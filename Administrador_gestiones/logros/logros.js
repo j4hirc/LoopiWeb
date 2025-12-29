@@ -13,7 +13,7 @@ const inputImagen = document.getElementById('insigniaLogro');
 const previewImagen = document.getElementById('previewLogro');
 
 let logrosCache = [];
-let fotoNuevaFile = null; // Variable global para el archivo real
+let fotoNuevaFile = null; 
 
 document.addEventListener('DOMContentLoaded', () => {
     listarLogros();
@@ -23,22 +23,24 @@ document.addEventListener('DOMContentLoaded', () => {
         modalOverlay.style.display = 'flex';
     });
 
-    btnCerrarModal.addEventListener('click', cerrarModal);
-    btnCancelar.addEventListener('click', cerrarModal);
+    if(btnCerrarModal) btnCerrarModal.addEventListener('click', cerrarModal);
+    if(btnCancelar) btnCancelar.addEventListener('click', cerrarModal);
 
     btnImagen.addEventListener('click', () => inputImagen.click());
-    inputImagen.addEventListener('change', procesarImagen); // Ahora usa la función con compresión
+    inputImagen.addEventListener('change', procesarImagen); 
 
     form.addEventListener('submit', guardarLogro);
 
-    searchInput.addEventListener('input', (e) => {
-        const termino = e.target.value.toLowerCase();
-        const filtrados = logrosCache.filter(l => 
-            l.nombre.toLowerCase().includes(termino) || 
-            l.descripcion.toLowerCase().includes(termino)
-        );
-        renderizarGrid(filtrados);
-    });
+    if(searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const termino = e.target.value.toLowerCase();
+            const filtrados = logrosCache.filter(l => 
+                l.nombre.toLowerCase().includes(termino) || 
+                l.descripcion.toLowerCase().includes(termino)
+            );
+            renderizarGrid(filtrados);
+        });
+    }
 });
 
 async function listarLogros() {
@@ -59,11 +61,13 @@ async function guardarLogro(e) {
     e.preventDefault();
 
     const id = document.getElementById('idLogro').value;
-    const nombre = document.getElementById('nombreLogro').value;
+    const nombre = document.getElementById('nombreLogro').value.trim();
     const desc = document.getElementById('descripcionLogro').value;
     const puntos = document.getElementById('puntosLogro').value;
 
-    if(!nombre || !puntos) return alert("Nombre y Puntos son obligatorios");
+    if(!nombre || !puntos) {
+        return Swal.fire('Campos requeridos', 'Nombre y Puntos son obligatorios.', 'warning');
+    }
     
     const logroData = {
         nombre: nombre,
@@ -94,44 +98,65 @@ async function guardarLogro(e) {
         if (response.ok) {
             cerrarModal();
             listarLogros();
-            alert("Logro guardado correctamente");
+            Swal.fire({
+                title: '¡Éxito!',
+                text: id ? 'Logro actualizado correctamente' : 'Logro creado correctamente',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+            });
         } else {
             const errText = await response.text();
             console.error(errText);
-            alert('Error al guardar. Revisa los datos.');
+            Swal.fire('Error', 'No se pudo guardar el logro. Revisa los datos.', 'error');
         }
     } catch (error) {
         console.error(error);
-        alert('Error de conexión');
+        Swal.fire('Error', 'Error de conexión.', 'error');
     } finally {
         const btnSubmit = form.querySelector('button[type="submit"]');
         if(btnSubmit) { btnSubmit.disabled = false; btnSubmit.innerText = "Guardar"; }
     }
 }
 
-window.eliminarLogro = async function(id) {
-    if (!confirm('¿Eliminar este logro?')) return;
+window.eliminarLogro = function(id) {
+    if (!id) return;
 
-    try {
-        const response = await fetch(`${API_URL}/${id}`, {
-            method: 'DELETE'
-        });
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "Esta acción no se puede deshacer.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const response = await fetch(`${API_URL}/${id}`, {
+                    method: 'DELETE'
+                });
 
-        if (response.ok || response.status === 204) {
-            listarLogros();
-        } else {
-            alert('No se pudo eliminar');
+                if (response.ok || response.status === 204) {
+                    listarLogros();
+                    Swal.fire('Eliminado', 'El logro ha sido eliminado.', 'success');
+                } else {
+                    Swal.fire('Error', 'No se pudo eliminar el logro.', 'error');
+                }
+            } catch (error) {
+                console.error(error);
+                Swal.fire('Error', 'Error de conexión.', 'error');
+            }
         }
-    } catch (error) {
-        console.error(error);
-    }
+    });
 };
 
 window.cargarEdicion = function(id) {
     const logro = logrosCache.find(l => l.id_logro === id);
     if (!logro) return;
 
-    limpiarFormulario(); // Limpiar previo
+    limpiarFormulario(); 
 
     document.getElementById('idLogro').value = logro.id_logro;
     document.getElementById('nombreLogro').value = logro.nombre;
@@ -181,16 +206,16 @@ function renderizarGrid(logros) {
             <h3>${l.nombre}</h3>
             <p>${l.descripcion || ''}</p>
             
-            <div class="puntos" style="background:#e3f2fd; color:#1565c0; font-size: 0.9em; padding: 5px 10px; border-radius: 5px;">
-                🔓 Se desbloquea a los <strong>${puntos} Pts</strong>
+            <div class="puntos" style="background:#e3f2fd; color:#1565c0; font-size: 0.9em; padding: 5px 10px; border-radius: 5px; margin-top: 10px;">
+                <i class="fa-solid fa-lock-open"></i> Se desbloquea a los <strong>${puntos} Pts</strong>
             </div>
             
             <div class="acciones">
                 <button class="btn-editar" onclick="cargarEdicion(${l.id_logro})" title="Editar">
-                    ✎
+                    <i class="fa-solid fa-pen"></i>
                 </button>
                 <button class="btn-eliminar" onclick="eliminarLogro(${l.id_logro})" title="Eliminar">
-                    🗑
+                    <i class="fa-solid fa-trash"></i>
                 </button>
             </div>
         `;
@@ -216,7 +241,7 @@ async function procesarImagen(event) {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-        alert("Solo se permiten imágenes");
+        Swal.fire('Formato incorrecto', 'Solo se permiten imágenes.', 'error');
         inputImagen.value = "";
         return;
     }
@@ -234,7 +259,7 @@ async function procesarImagen(event) {
 
     } catch (error) {
         console.error("Error al comprimir:", error);
-        alert("No se pudo procesar la imagen");
+        Swal.fire('Error', 'No se pudo procesar la imagen.', 'error');
     }
 }
 

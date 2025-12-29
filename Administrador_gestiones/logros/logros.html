@@ -6,37 +6,65 @@
     <title>Gestión de Logros</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="logros.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        .btn-volver {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            margin-right: 15px;
+            font-size: 14px;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-volver:hover {
+            background: rgba(255,255,255,0.15);
+            border-color: white;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+    </style>
 </head>
 
 <body>
 
-    <!-- 🟩 Barra superior -->
     <header class="header">
-        <h1>Gestión de Logros</h1>
-        <button id="btnNuevoLogro" class="btn-agregar">+ Agregar Logro</button>
+        <div class="header-left">
+            <a href="index.html" class="btn-volver">
+                <i class="fa-solid fa-arrow-left"></i> Volver
+            </a>
+            <h1>Gestión de Logros</h1>
+        </div>
+        <button id="btnNuevoLogro" class="btn-agregar">
+            <i class="fa-solid fa-plus"></i> Agregar Logro
+        </button>
     </header>
 
-    <!-- 🔍 Barra de búsqueda -->
     <div class="search-container">
-        <input type="text" id="buscarLogro" placeholder="Buscar logros...">
+        <div style="position: relative;">
+            <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #888;"></i>
+            <input type="text" id="buscarLogro" placeholder="Buscar logros..." style="padding-left: 40px;">
+        </div>
     </div>
 
-    <!-- 🟦 GRID -->
     <section id="gridLogros" class="grid-container"></section>
 
-    <!-- 🟧 MODAL -->
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal-container">
 
-            <!-- HEADER DEL MODAL -->
             <div class="modal-header">
                 <h2 id="modalTitle">Nuevo Logro</h2>
 
                 <button class="modal-close" id="btnCerrarModal">
-                    <svg width="18" height="18" viewBox="0 0 24 24">
-                        <path fill="white"
-                            d="M18.3 5.71 12 12l6.3 6.29-1.41 1.41L12 14.83l-4.89 4.87-1.41-1.41L10.59 12 4.29 5.71 5.7 4.29 12 10.59l6.3-6.3z" />
-                    </svg>
+                    <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
 
@@ -47,17 +75,19 @@
                 <div class="modal-body">
 
                     <label>Nombre del Logro</label>
-                    <input type="text" id="nombreLogro" name="nombreLogro" class="input-field" required>
+                    <input type="text" id="nombreLogro" name="nombreLogro" class="input-field" required placeholder="Ej: Reciclador Experto">
 
                     <label>Descripción / Requisito</label>
-                    <textarea id="descripcionLogro" name="descripcionLogro" class="input-field" rows="3"></textarea>
+                    <textarea id="descripcionLogro" name="descripcionLogro" class="input-field" rows="3" placeholder="Ej: Reciclar 100 botellas de plástico"></textarea>
 
                     <label>Insignia</label>
                     <div class="image-section">
-                        <img id="previewLogro" src="https://cdn-icons-png.flaticon.com/512/1828/1828884.png">
+                        <img id="previewLogro" src="https://cdn-icons-png.flaticon.com/512/1828/1828884.png" style="border-radius: 10px; border: 1px solid #ddd;">
 
                         <div class="image-actions">
-                            <button type="button" id="btnImagenLogro" class="btn-upload">Subir Insignia</button>
+                            <button type="button" id="btnImagenLogro" class="btn-upload">
+                                <i class="fa-solid fa-upload"></i> Subir Insignia
+                            </button>
                             <input type="file" id="insigniaLogro" name="insigniaLogro" hidden accept="image/*">
                         </div>
                     </div>
@@ -77,6 +107,7 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="logros.js"></script>
 </body>
 
