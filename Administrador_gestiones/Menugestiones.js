@@ -133,7 +133,7 @@ async function guardarPerfil() {
   } catch(e) { console.error(e); }
 
   // 1. CREAMOS EL OBJETO DE DATOS (SIN FOTO AQUÍ)
-  const datosUsuario = {
+ const datosUsuario = {
     cedula: usuarioActualDB.cedula,
     fecha_nacimiento: usuarioActualDB.fecha_nacimiento,
     genero: usuarioActualDB.genero,
@@ -146,15 +146,22 @@ async function guardarPerfil() {
     apellido_materno: apellidoMaterno,
     correo: correo,
     
-    // Mantenemos la foto vieja por defecto (el backend la ignora si mandamos archivo nuevo)
     foto: usuarioActualDB.foto, 
 
     password: password ? password : null,
     
-    // Enviamos roles y parroquia tal cual estaban
-    roles: usuarioActualDB.roles,
-    parroquia: usuarioActualDB.parroquia,
-    rango: usuarioActualDB.rango
+    // --- AQUÍ ESTÁ EL FIX: ENVIAR OBJETOS SIMPLIFICADOS ---
+    
+    // Parroquia: Solo mandamos el ID si existe
+    parroquia: usuarioActualDB.parroquia ? { id_parroquia: usuarioActualDB.parroquia.id_parroquia || usuarioActualDB.parroquia.id } : null,
+    
+    // Rango: Solo ID
+    rango: usuarioActualDB.rango ? { id_rango: usuarioActualDB.rango.id_rango } : null,
+
+    roles: usuarioActualDB.roles ? usuarioActualDB.roles.map(r => ({
+        id_usuario_rol: r.id_usuario_rol,
+        rol: { id_rol: r.rol.id_rol } // Solo el ID del rol
+    })) : []
   };
 
   // 2. CREAMOS EL FORMDATA PARA ENVIAR A JAVA
