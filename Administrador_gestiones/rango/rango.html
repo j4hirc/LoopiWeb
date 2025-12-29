@@ -5,29 +5,62 @@
     <title>Gestión de Rangos</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="rango.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        .btn-volver {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            margin-right: 15px;
+            font-size: 14px;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-volver:hover {
+            background: rgba(255,255,255,0.15);
+            border-color: white;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+    </style>
 </head>
 <body>
 
 <header class="header">
-    <h1>Gestión de Rangos</h1>
-    <button id="btnNuevoRango" class="btn-agregar">+ Agregar Rango</button>
+    <div class="header-left">
+        <a href="../menu-gestiones.html" class="btn-volver">
+            <i class="fa-solid fa-arrow-left"></i> Volver
+        </a>
+        <h1>Gestión de Rangos</h1>
+    </div>
+    <button id="btnNuevoRango" class="btn-agregar">
+        <i class="fa-solid fa-plus"></i> Agregar Rango
+    </button>
 </header>
 
-<!-- BUSCADOR -->
 <div class="search-container">
-    <input type="text" id="buscarRango" placeholder="Buscar rangos...">
+    <div style="position: relative;">
+        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #888;"></i>
+        <input type="text" id="buscarRango" placeholder="Buscar rangos..." style="padding-left: 40px;">
+    </div>
 </div>
 
-<!-- GRID DE RANGOS -->
 <section id="gridRangos" class="grid-container"></section>
 
-<!-- MODAL -->
 <div class="modal-overlay" id="modalOverlay">
     <div class="modal-container">
 
         <div class="modal-header">
             <h2 id="modalTitle">Agregar Rango</h2>
-            <button class="modal-close" id="btnCerrarModal">✕</button>
+            <button class="modal-close" id="btnCerrarModal"><i class="fa-solid fa-xmark"></i></button>
         </div>
 
         <form id="formRango">
@@ -37,13 +70,15 @@
             <div class="modal-body">
 
                 <label>Nombre del Rango</label>
-                <input type="text" id="nombreRango" name="nombreRango" class="input-field" required>
+                <input type="text" id="nombreRango" name="nombreRango" class="input-field" required placeholder="Ej: Novato, Experto...">
 
                 <label>Insignia / Icono</label>
                 <div class="image-section">
-                    <img id="previewRango" src="https://cdn-icons-png.flaticon.com/512/1828/1828884.png">
+                    <img id="previewRango" src="https://cdn-icons-png.flaticon.com/512/1828/1828884.png" style="border-radius: 10px; border: 1px solid #ddd;">
                     <div class="image-actions">
-                        <button type="button" id="btnImagenRango" class="btn-upload">Subir Icono</button>
+                        <button type="button" id="btnImagenRango" class="btn-upload">
+                            <i class="fa-solid fa-upload"></i> Subir Icono
+                        </button>
                         <input type="file" id="imagenRango" name="imagenRango" hidden accept="image/*">
                     </div>
                 </div>
@@ -60,6 +95,7 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="rango.js"></script>
 </body>
 </html>

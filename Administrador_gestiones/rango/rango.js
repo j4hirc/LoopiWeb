@@ -13,31 +13,33 @@ const inputImagen = document.getElementById('imagenRango');
 const previewImagen = document.getElementById('previewRango');
 
 let rangosCache = []; 
-let fotoNuevaFile = null; // Variable para guardar el archivo real
+let fotoNuevaFile = null; 
 
 document.addEventListener('DOMContentLoaded', () => {
     listarRangos();
 
-    btnNuevo.addEventListener('click', () => {
+    if(btnNuevo) btnNuevo.addEventListener('click', () => {
         limpiarFormulario();
         modalOverlay.style.display = 'flex';
     });
 
-    btnCerrarModal.addEventListener('click', cerrarModal);
-    btnCancelar.addEventListener('click', cerrarModal);
+    if(btnCerrarModal) btnCerrarModal.addEventListener('click', cerrarModal);
+    if(btnCancelar) btnCancelar.addEventListener('click', cerrarModal);
 
-    btnImagen.addEventListener('click', () => inputImagen.click());
-    inputImagen.addEventListener('change', procesarImagen);
+    if(btnImagen) btnImagen.addEventListener('click', () => inputImagen.click());
+    if(inputImagen) inputImagen.addEventListener('change', procesarImagen);
 
-    form.addEventListener('submit', guardarRango);
+    if(form) form.addEventListener('submit', guardarRango);
 
-    searchInput.addEventListener('input', (e) => {
-        const termino = e.target.value.toLowerCase();
-        const filtrados = rangosCache.filter(r => 
-            r.nombre_rango.toLowerCase().includes(termino)
-        );
-        renderizarGrid(filtrados);
-    });
+    if(searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const termino = e.target.value.toLowerCase();
+            const filtrados = rangosCache.filter(r => 
+                r.nombre_rango.toLowerCase().includes(termino)
+            );
+            renderizarGrid(filtrados);
+        });
+    }
 });
 
 async function listarRangos() {
@@ -54,7 +56,7 @@ async function listarRangos() {
     }
 }
 
-// --- GUARDAR CON FORMDATA Y COMPRESIÓN ---
+// --- GUARDAR CON SWEETALERT ---
 async function guardarRango(e) {
     e.preventDefault();
 
@@ -62,20 +64,19 @@ async function guardarRango(e) {
     const nombre = document.getElementById('nombreRango').value.trim(); 
     const imagenSrc = previewImagen.src;
 
-    if (!nombre) return alert("El nombre es obligatorio");
+    // Validaciones
+    if (!nombre) return Swal.fire('Error', 'El nombre es obligatorio', 'warning');
 
-    // Validación duplicados
     const nombreDuplicado = rangosCache.some(r => {
         const mismoNombre = r.nombre_rango.toLowerCase() === nombre.toLowerCase();
         if (id) return mismoNombre && r.id_rango != id;
         return mismoNombre;
     });
 
-    if (nombreDuplicado) return alert("Ya existe un rango con ese nombre.");
+    if (nombreDuplicado) return Swal.fire('Duplicado', 'Ya existe un rango con ese nombre.', 'error');
 
-    // Validar imagen obligatoria (solo si es nuevo o si cambiaron la default)
     if (imagenSrc.includes("flaticon") && !id) {
-         return alert("Debes elegir una imagen para el rango.");
+         return Swal.fire('Falta imagen', 'Debes elegir una insignia o ícono para el rango.', 'warning');
     }
 
     const rangoData = {
@@ -94,6 +95,12 @@ async function guardarRango(e) {
     const url = id ? `${API_URL}/${id}` : API_URL;
 
     try {
+        // Bloquear botón para evitar doble click
+        const btnGuardar = form.querySelector('.btn-guardar');
+        const textoOriginal = btnGuardar.innerText;
+        btnGuardar.disabled = true;
+        btnGuardar.innerText = "Guardando...";
+
         const response = await fetch(url, {
             method: metodo,
             body: formData 
@@ -102,46 +109,71 @@ async function guardarRango(e) {
         if (response.ok) {
             cerrarModal();
             listarRangos();
-            alert(id ? 'Rango actualizado' : 'Rango creado');
+            Swal.fire({
+                title: '¡Excelente!',
+                text: id ? 'Rango actualizado correctamente' : 'Rango creado correctamente',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+            });
         } else {
             const errText = await response.text();
             console.error(errText);
-            alert('Error al guardar el rango');
+            Swal.fire('Error', 'No se pudo guardar el rango.', 'error');
         }
+
+        btnGuardar.disabled = false;
+        btnGuardar.innerText = textoOriginal;
+
     } catch (error) {
         console.error(error);
-        alert('Error de conexión');
+        Swal.fire('Error', 'Problema de conexión.', 'error');
     }
 }
 
-window.eliminarRango = async function(id) {
-    if (!confirm('¿Eliminar este rango?')) return;
+// --- ELIMINAR CON SWEETALERT ---
+window.eliminarRango = function(id) {
+    if (!id) return;
 
-    try {
-        const response = await fetch(`${API_URL}/${id}`, {
-            method: 'DELETE'
-        });
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "No podrás revertir esta acción",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const response = await fetch(`${API_URL}/${id}`, {
+                    method: 'DELETE'
+                });
 
-        if (response.ok || response.status === 204) {
-            listarRangos();
-        } else {
-            alert('No se pudo eliminar');
+                if (response.ok || response.status === 204) {
+                    listarRangos();
+                    Swal.fire('Eliminado', 'El rango ha sido eliminado.', 'success');
+                } else {
+                    Swal.fire('Error', 'No se pudo eliminar el rango.', 'error');
+                }
+            } catch (error) {
+                console.error(error);
+                Swal.fire('Error', 'Error de conexión.', 'error');
+            }
         }
-    } catch (error) {
-        console.error(error);
-    }
+    });
 };
 
 window.cargarEdicion = function(id) {
     const rango = rangosCache.find(r => r.id_rango === id);
     if (!rango) return;
 
-    limpiarFormulario(); // Limpiar previo
+    limpiarFormulario(); 
 
     document.getElementById('idRango').value = rango.id_rango;
     document.getElementById('nombreRango').value = rango.nombre_rango;
 
-    // Cargar imagen (URL o Base64)
     if (rango.imagen && rango.imagen.length > 5) {
         let imgUrl = rango.imagen;
         if (!imgUrl.startsWith('http') && !imgUrl.startsWith('data:')) {
@@ -186,10 +218,10 @@ function renderizarGrid(rangos) {
             
             <div class="acciones">
                 <button class="btn-editar" onclick="cargarEdicion(${r.id_rango})" title="Editar">
-                    ✎
+                    <i class="fa-solid fa-pen"></i>
                 </button>
                 <button class="btn-eliminar" onclick="eliminarRango(${r.id_rango})" title="Eliminar">
-                    🗑
+                    <i class="fa-solid fa-trash"></i>
                 </button>
             </div>
         `;
@@ -207,7 +239,7 @@ function limpiarFormulario() {
     document.getElementById('idRango').value = '';
     document.getElementById('modalTitle').innerText = 'Agregar Rango';
     previewImagen.src = 'https://cdn-icons-png.flaticon.com/512/1828/1828884.png';
-    fotoNuevaFile = null; // Limpiar foto
+    fotoNuevaFile = null; 
 }
 
 async function procesarImagen(event) {
@@ -215,7 +247,7 @@ async function procesarImagen(event) {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-        alert("Solo se permiten imágenes");
+        Swal.fire('Formato incorrecto', 'Solo se permiten imágenes.', 'error');
         inputImagen.value = "";
         return;
     }
@@ -233,7 +265,7 @@ async function procesarImagen(event) {
 
     } catch (error) {
         console.error("Error al comprimir:", error);
-        alert("No se pudo procesar la imagen");
+        Swal.fire('Error', 'No se pudo procesar la imagen.', 'error');
     }
 }
 
