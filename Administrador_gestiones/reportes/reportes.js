@@ -40,11 +40,10 @@ function aplicarFiltros() {
     const fInicio = document.getElementById('filtroInicio').value;
     const fFin = document.getElementById('filtroFin').value;
     const estado = document.getElementById('filtroEstado').value;
-    const tipo = document.getElementById('filtroTipo').value; // <--- LEEMOS EL NUEVO FILTRO
+    const tipo = document.getElementById('filtroTipo').value; 
     const busqueda = document.getElementById('filtroReciclador').value.toLowerCase();
 
     const filtrados = datosCrudos.filter(item => {
-        // Validación de seguridad por si viene null
         if (!item) return false;
 
         const fechaItem = new Date(item.fecha_recoleccion_real || item.fecha_creacion);
@@ -62,45 +61,46 @@ function aplicarFiltros() {
             if(fechaItem > dFin) return false;
         }
 
-        // 2. Filtro Estado (CORREGIDO PARA PENDIENTE_RECOLECCION)
+        // 2. Filtro Estado
         if(estado !== "TODOS") {
-            const estadoItem = item.estado || ""; // Evitar error si es null
-            
+            const estadoItem = item.estado || ""; 
             if (estado === "PENDIENTE") {
-                // Aceptamos cualquier cosa que contenga "PENDIENTE" (ej: PENDIENTE_RECOLECCION)
                 if (!estadoItem.includes("PENDIENTE")) return false;
             } 
             else if (estado === "CANCELADO") {
                 if (estadoItem !== "CANCELADO" && estadoItem !== "RECHAZADO") return false;
             } 
             else {
-                // Para FINALIZADO, ACEPTADA, etc. la comparación debe ser exacta
                 if (estadoItem !== estado) return false;
             }
         }
 
-        // 3. Filtro Tipo (NUEVO)
+        // =========================================================
+        // 3. Filtro Tipo (AQUÍ ESTÁ LA CORRECCIÓN ÑAÑO)
+        // =========================================================
         if (tipo !== "TODOS") {
             if (tipo === "RECICLADOR") {
-                // Solo pasa si TIENE reciclador y NO es null
+                // Si selecciono Reciclador, debe tener el objeto reciclador
                 if (!item.reciclador) return false;
             } 
             else if (tipo === "PUNTO_FIJO") {
-                // Solo pasa si TIENE ubicación (punto fijo)
+                // Si selecciono Punto Fijo, debe tener ubicación...
                 if (!item.ubicacion) return false;
+                
+                // ...PERO ADEMÁS, no debe tener reciclador asignado.
+                // Porque si tiene reciclador, tu tabla lo dibuja como reciclador.
+                if (item.reciclador) return false; 
             }
         }
 
-        // 4. Filtro Búsqueda Texto
+        // 4. Filtro Búsqueda
         if(busqueda) {
             let coincide = false;
-            // Buscar en Reciclador
             if(item.reciclador) {
                 const cedula = (item.reciclador.cedula || "").toString();
                 const nombre = ((item.reciclador.primer_nombre || "") + " " + (item.reciclador.apellido_paterno || "")).toLowerCase();
                 if(cedula.includes(busqueda) || nombre.includes(busqueda)) coincide = true;
             }
-            // Buscar en Punto Fijo
             if(item.ubicacion && !coincide) {
                 const nombreUbi = (item.ubicacion.nombre || "").toLowerCase();
                 if(nombreUbi.includes(busqueda)) coincide = true;
