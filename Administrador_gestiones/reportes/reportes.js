@@ -9,19 +9,21 @@ let chartTendenciaInstance = null;
 document.addEventListener("DOMContentLoaded", async () => {
     await cargarTodo();
 
+    // Listeners
     document.getElementById('filtroInicio').addEventListener('change', aplicarFiltros);
     document.getElementById('filtroFin').addEventListener('change', aplicarFiltros);
     document.getElementById('filtroEstado').addEventListener('change', aplicarFiltros);
-    // NUEVO LISTENER
     document.getElementById('filtroTipoRecolector').addEventListener('change', aplicarFiltros);
     document.getElementById('filtroReciclador').addEventListener('keyup', aplicarFiltros);
 });
-
 async function cargarTodo() {
     try {
         const resSol = await fetch(`${API_BASE}/solicitud_recolecciones`);
         if(!resSol.ok) throw new Error("Error fetching solicitudes");
         datosCrudos = await resSol.json();
+
+        // Debug: Ver qué llega en consola
+        console.log("Datos cargados:", datosCrudos);
 
         const resUs = await fetch(`${API_BASE}/usuarios`);
         if(resUs.ok) {
@@ -41,23 +43,25 @@ function aplicarFiltros() {
     const fInicio = document.getElementById('filtroInicio').value;
     const fFin = document.getElementById('filtroFin').value;
     const estado = document.getElementById('filtroEstado').value;
-    const tipoRec = document.getElementById('filtroTipoRecolector').value; // NUEVO
-    const busqueda = document.getElementById('filtroReciclador').value.toLowerCase();
+    const tipoRec = document.getElementById('filtroTipoRecolector').value; 
+    const busqueda = document.getElementById('filtroReciclador').value.toLowerCase().trim();
 
     const filtrados = datosCrudos.filter(item => {
-        const fechaItem = new Date(item.fecha_recoleccion_real || item.fecha_creacion);
-        fechaItem.setHours(0,0,0,0);
+        // 1. Validar fechas (Solo si existen)
+        if (item.fecha_recoleccion_real || item.fecha_creacion) {
+            const fechaItem = new Date(item.fecha_recoleccion_real || item.fecha_creacion);
+            fechaItem.setHours(0,0,0,0);
 
-        // 1. Filtro Fecha
-        if(fInicio) {
-            const dInicio = new Date(fInicio);
-            dInicio.setHours(0,0,0,0);
-            if(fechaItem < dInicio) return false;
-        }
-        if(fFin) {
-            const dFin = new Date(fFin);
-            dFin.setHours(23,59,59,999);
-            if(fechaItem > dFin) return false;
+            if(fInicio) {
+                const dInicio = new Date(fInicio);
+                dInicio.setHours(0,0,0,0);
+                if(fechaItem < dInicio) return false;
+            }
+            if(fFin) {
+                const dFin = new Date(fFin);
+                dFin.setHours(23,59,59,999);
+                if(fechaItem > dFin) return false;
+            }
         }
 
         // 2. Filtro Estado
@@ -69,32 +73,34 @@ function aplicarFiltros() {
             }
         }
 
-        // 3. --- FILTRO TIPO RECOLECTOR (LÓGICA MEJORADA) ---
-        if(tipoRec !== "TODOS") {
-            if (tipoRec === "RECICLADOR") {
-                // Móvil: Debe tener reciclador Y NO tener ubicación
-                // (Si tiene ubicación, es un punto fijo, aunque tenga encargado)
-                if (!item.reciclador || item.ubicacion) return false; 
-            }
-            if (tipoRec === "PUNTO") {
-                // Punto Fijo: Debe tener ubicación
-                if (!item.ubicacion) return false;
-            }
+        // 3. --- LÓGICA DE TIPO DE RECOLECTOR (CORREGIDA) ---
+        // Definición:
+        // - Punto Fijo: Tiene objeto 'ubicacion' (no null)
+        // - Reciclador Móvil: NO tiene 'ubicacion' Y tiene 'reciclador'
+        
+        const esPuntoFijo = item.ubicacion != null;
+        const esMovil = !esPuntoFijo && item.reciclador != null;
+
+        if(tipoRec === "RECICLADOR") {
+            if (!esMovil) return false; 
+        }
+        if(tipoRec === "PUNTO") {
+            if (!esPuntoFijo) return false;
         }
         // ----------------------------------------------------
 
-        // 4. Filtro Búsqueda Texto (Cédula o Nombre)
+        // 4. Filtro Búsqueda Texto
         if(busqueda) {
             let coincide = false;
-            // Buscar en datos del Reciclador
+            // Buscar en móvil
             if(item.reciclador) {
-                const cedula = item.reciclador.cedula.toString();
-                const nombre = (item.reciclador.primer_nombre + " " + item.reciclador.apellido_paterno).toLowerCase();
+                const cedula = (item.reciclador.cedula || "").toString();
+                const nombre = ((item.reciclador.primer_nombre || "") + " " + (item.reciclador.apellido_paterno || "")).toLowerCase();
                 if(cedula.includes(busqueda) || nombre.includes(busqueda)) coincide = true;
             }
-            // Buscar en nombre del Punto Fijo
-            if(item.ubicacion && !coincide) {
-                const nombreUbi = item.ubicacion.nombre.toLowerCase();
+            // Buscar en punto fijo
+            if(item.ubicacion) {
+                const nombreUbi = (item.ubicacion.nombre || "").toLowerCase();
                 if(nombreUbi.includes(busqueda)) coincide = true;
             }
             if(!coincide) return false;
@@ -105,8 +111,10 @@ function aplicarFiltros() {
 
     actualizarDashboard(filtrados);
 }
+
+
 function actualizarDashboard(datos) {
-    const finalizados = datos.filter(s => s.estado === 'FINALIZADO');
+    const finalizados = datos.filter(s => s.estado === 'FINALIZADO' || s.estado === 'COMPLETADA');
     let totalKg = 0;
     let totalPuntos = 0;
 
@@ -124,7 +132,6 @@ function actualizarDashboard(datos) {
     generarGraficoTopRecicladores(finalizados);
     generarGraficoTendencia(finalizados);
     generarTablaRecicladores(datos);
-    
     generarTopUsuarios(datos); 
 }
 
