@@ -16,9 +16,13 @@
     <header class="header">
         <div class="header-content">
             <div class="header-left">
+                <a href="../menu-gestiones.html" class="btn-volver">
+                    <i class="fa-solid fa-arrow-left"></i> <span>Volver</span>
+                </a>
+                
                 <div class="titulo-seccion">
                     <h1><i class="fa-solid fa-map-location-dot"></i> Puntos de Reciclaje</h1>
-                    <p>Gestiona las ubicaciones y horarios</p>
+                    <p>Gestiona ubicaciones y horarios de recolección</p>
                 </div>
             </div>
             
@@ -37,7 +41,11 @@
     </div>
 
     <div class="grid-container" id="gridUbicaciones">
+        <div class="loader-container">
+            <div class="spinner"></div>
+            <p>Buscando puntos...</p>
         </div>
+    </div>
 
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal-container">
@@ -53,7 +61,7 @@
                 <input type="hidden" id="idUbicacion">
 
                 <div class="form-section">
-                    <label>Fotografía del Punto</label>
+                    <label>Fotografía del Lugar</label>
                     <div class="img-row">
                         <div class="img-preview" id="previewImg">
                             <i class="fa-regular fa-image"></i>
@@ -75,13 +83,13 @@
                     <div class="form-group">
                         <label>Parroquia</label>
                         <select class="input-field" id="parroquia">
-                            <option value="">Seleccione...</option>
-                            </select>
+                            <option value="">Cargando...</option>
+                        </select>
                     </div>
                 </div>
 
                 <div class="form-group full-width">
-                    <label>Reciclador Asignado</label>
+                    <label>Reciclador Encargado</label>
                     <div class="select-wrapper">
                         <select class="input-field" id="selectReciclador">
                             <option value="">Ninguno (Sin asignar)</option>
@@ -101,7 +109,7 @@
                 <div class="header-horarios">
                     <label>Horarios de Atención</label>
                     <button class="btn-small-add" onclick="agregarFilaHorario()">
-                        <i class="fa-solid fa-plus"></i> Agregar
+                        <i class="fa-solid fa-plus"></i> Agregar Día
                     </button>
                 </div>
                 <div id="containerHorarios" class="horarios-container">
@@ -112,7 +120,7 @@
                     <input type="text" class="input-field" id="direccion" placeholder="Calle principal y secundaria...">
                 </div>
 
-                <label>Geolocalización</label>
+                <label>Coordenadas GPS</label>
                 <div class="geo-row">
                     <div class="coords-display">
                         <div><i class="fa-solid fa-location-crosshairs"></i> Lat: <span id="txtLat">0.0</span></div>
@@ -127,7 +135,7 @@
             <div class="modal-footer">
                 <button class="btn-cancelar" onclick="cerrarModal()">Cancelar</button>
                 <button class="btn-guardar" onclick="guardarUbicacion()">
-                    <i class="fa-solid fa-floppy-disk"></i> Guardar
+                    <i class="fa-solid fa-floppy-disk"></i> Guardar Punto
                 </button>
             </div>
 
@@ -164,6 +172,24 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="ubicacion.js"></script>
-
+    
+    <script>
+        const grid = document.getElementById('gridUbicaciones');
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                mutation.addedNodes.forEach((node) => {
+                    if (node.nodeType === 1 && node.classList.contains('card-ubicacion')) { 
+                        node.style.opacity = '0';
+                        node.style.transform = 'translateY(20px)';
+                        setTimeout(() => {
+                            node.style.opacity = '1';
+                            node.style.transform = 'translateY(0)';
+                        }, 50);
+                    }
+                });
+            });
+        });
+        observer.observe(grid, { childList: true });
+    </script>
 </body>
 </html>
