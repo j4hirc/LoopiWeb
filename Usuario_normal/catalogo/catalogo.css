@@ -60,6 +60,7 @@ body {
 
 /* Wallet Badge */
 .points-wallet {
+    margin: 20px;
     background: linear-gradient(135deg, var(--primary), var(--primary-dark));
     padding: 6px 14px;
     border-radius: 30px;
