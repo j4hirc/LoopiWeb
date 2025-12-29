@@ -40,14 +40,17 @@ function aplicarFiltros() {
     const fInicio = document.getElementById('filtroInicio').value;
     const fFin = document.getElementById('filtroFin').value;
     const estado = document.getElementById('filtroEstado').value;
-    const tipo = document.getElementById('filtroTipo').value; // <--- NUEVA VARIABLE
+    const tipo = document.getElementById('filtroTipo').value; // <--- LEEMOS EL NUEVO FILTRO
     const busqueda = document.getElementById('filtroReciclador').value.toLowerCase();
 
     const filtrados = datosCrudos.filter(item => {
+        // Validación de seguridad por si viene null
+        if (!item) return false;
+
         const fechaItem = new Date(item.fecha_recoleccion_real || item.fecha_creacion);
         fechaItem.setHours(0,0,0,0);
 
-        // Filtro Fecha (Igual)
+        // 1. Filtro Fecha
         if(fInicio) {
             const dInicio = new Date(fInicio);
             dInicio.setHours(0,0,0,0);
@@ -59,41 +62,47 @@ function aplicarFiltros() {
             if(fechaItem > dFin) return false;
         }
 
-        // --- CORRECCIÓN DEL ESTADO ---
+        // 2. Filtro Estado (CORREGIDO PARA PENDIENTE_RECOLECCION)
         if(estado !== "TODOS") {
+            const estadoItem = item.estado || ""; // Evitar error si es null
+            
             if (estado === "PENDIENTE") {
-                // Aquí el truco: Aceptamos "PENDIENTE" y "PENDIENTE_RECOLECCION"
-                if (!item.estado.includes("PENDIENTE")) return false;
+                // Aceptamos cualquier cosa que contenga "PENDIENTE" (ej: PENDIENTE_RECOLECCION)
+                if (!estadoItem.includes("PENDIENTE")) return false;
             } 
             else if (estado === "CANCELADO") {
-                if (item.estado !== "CANCELADO" && item.estado !== "RECHAZADO") return false;
+                if (estadoItem !== "CANCELADO" && estadoItem !== "RECHAZADO") return false;
             } 
             else {
-                if (item.estado !== estado) return false;
+                // Para FINALIZADO, ACEPTADA, etc. la comparación debe ser exacta
+                if (estadoItem !== estado) return false;
             }
         }
 
-        // --- NUEVO FILTRO: TIPO (RECICLADOR VS PUNTO FIJO) ---
+        // 3. Filtro Tipo (NUEVO)
         if (tipo !== "TODOS") {
             if (tipo === "RECICLADOR") {
-                // Si no tiene objeto 'reciclador', lo sacamos
-                if (!item.reciclador) return false; 
-            } else if (tipo === "PUNTO_FIJO") {
-                // Si no tiene objeto 'ubicacion' (Punto Fijo), lo sacamos
+                // Solo pasa si TIENE reciclador y NO es null
+                if (!item.reciclador) return false;
+            } 
+            else if (tipo === "PUNTO_FIJO") {
+                // Solo pasa si TIENE ubicación (punto fijo)
                 if (!item.ubicacion) return false;
             }
         }
 
-        // Filtro Busqueda Texto (Igual)
+        // 4. Filtro Búsqueda Texto
         if(busqueda) {
             let coincide = false;
+            // Buscar en Reciclador
             if(item.reciclador) {
-                const cedula = item.reciclador.cedula.toString();
-                const nombre = (item.reciclador.primer_nombre + " " + item.reciclador.apellido_paterno).toLowerCase();
+                const cedula = (item.reciclador.cedula || "").toString();
+                const nombre = ((item.reciclador.primer_nombre || "") + " " + (item.reciclador.apellido_paterno || "")).toLowerCase();
                 if(cedula.includes(busqueda) || nombre.includes(busqueda)) coincide = true;
             }
+            // Buscar en Punto Fijo
             if(item.ubicacion && !coincide) {
-                const nombreUbi = item.ubicacion.nombre.toLowerCase();
+                const nombreUbi = (item.ubicacion.nombre || "").toLowerCase();
                 if(nombreUbi.includes(busqueda)) coincide = true;
             }
             if(!coincide) return false;
