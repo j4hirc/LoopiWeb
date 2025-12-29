@@ -4,40 +4,64 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Canjear Puntos | Loopi</title>
-    <link rel="stylesheet" href="../styles.css"> <link rel="stylesheet" href="catalogo.css">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="../styles.css"> 
+    <link rel="stylesheet" href="catalogo.css">
+
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 
     <nav class="navbar">
-        <div class="nav-left">
-            <a href="../inicio_usuario_normal.html" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Volver</a>
-            <div class="nav-logo" style="margin-left: 15px;">
-                <i class="fa-solid fa-gift"></i> Catálogo
+        <div class="nav-container">
+            <a href="../inicio_usuario_normal.html" class="btn-back">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <div class="nav-title">
+                Catálogo de Premios
             </div>
-        </div>
-        
-        <div class="user-points-badge">
-            <span id="misPuntos">0</span> Pts
+            
+            <div class="points-wallet">
+                <div class="points-label">Tus Loopis</div>
+                <div class="points-value">
+                    <i class="fa-solid fa-coins"></i>
+                    <span id="misPuntos">0</span>
+                </div>
+            </div>
         </div>
     </nav>
 
-    <div class="catalogo-container">
+    <div class="main-content">
         
-        <header class="catalogo-header">
-            <h1>Recompensas Disponibles</h1>
-            <p>Canjea tus puntos por productos y descuentos exclusivos.</p>
-            
-            <div class="search-box">
-                <i class="fa-solid fa-search"></i>
-                <input type="text" id="buscador" placeholder="Buscar premios (ej: Entradas, Cupones...)">
+        <header class="catalog-hero">
+            <div class="hero-text">
+                <h1>Recompensas</h1>
+                <p>Canjea tus esfuerzos por grandes premios.</p>
+            </div>
+
+            <div class="search-wrapper">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" id="buscador" placeholder="¿Qué se te antoja hoy? (ej: Cine, Pizza...)">
+            </div>
+
+            <div class="category-scroll">
+                <button class="chip active">Todos</button>
+                <button class="chip">Comida</button>
+                <button class="chip">Servicios</button>
+                <button class="chip">Entradas</button>
+                <button class="chip">Bonos</button>
             </div>
         </header>
 
         <div id="gridPremios" class="grid-premios">
-            <div class="loading">Cargando premios...</div>
+            <div class="loading-state">
+                <div class="spinner"></div>
+                <p>Buscando las mejores recompensas...</p>
+            </div>
         </div>
 
     </div>
