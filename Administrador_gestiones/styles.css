@@ -28,7 +28,7 @@ body {
     position: relative;
 }
 
-/* Fix para SweetAlert */
+/* SweetAlert Fix */
 .swal2-container { z-index: 20000 !important; }
 
 /* Decoración Fondo */
@@ -63,7 +63,9 @@ body {
 }
 .logo-img { height: 35px; width: auto; }
 
-.nav-actions { display: flex; align-items: center; gap: 15px; }
+/* Estilos Menu/Actions */
+.menu-icon, #menu-toggle { display: none; }
+.nav-menu { list-style: none; display: flex; align-items: center; gap: 15px; }
 
 /* Botón de perfil tipo píldora */
 .user-pill {
@@ -110,7 +112,7 @@ body {
     gap: 20px;
 }
 
-/* --- TARJETAS PREMIUM --- */
+/* --- TARJETAS PREMIUM (Estilo Clean) --- */
 .card {
     background: var(--bg-card);
     border-radius: var(--radius);
@@ -165,7 +167,7 @@ body {
 }
 .card:hover .card-arrow { opacity: 1; transform: translateX(5px); color: var(--accent); }
 
-/* Badge de Notificación */
+/* Badge de Notificación (Globo rojo) */
 .badge-notificacion {
     position: absolute; top: -8px; right: -8px;
     background: #ef4444; color: white;
@@ -207,7 +209,7 @@ body {
     display: flex; justify-content: space-between; align-items: center;
     border-bottom: 1px solid #f1f5f9;
 }
-.modal-header h2 { font-size: 1.25rem; color: var(--primary); margin: 0; }
+.modal-header h2 { font-size: 1.25rem; color: var(--primary); margin: 0; font-weight: 700; }
 .modal-close {
     background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%;
     color: #64748b; font-size: 1rem; cursor: pointer; transition: 0.2s;
@@ -257,5 +259,11 @@ label { font-size: 0.85rem; font-weight: 600; color: #475569; }
 @media (max-width: 768px) {
     .header { text-align: center; }
     .nav-container { flex-direction: column; gap: 15px; border-radius: 20px; }
+    .nav-menu { width: 100%; justify-content: center; }
     .form-grid { grid-template-columns: 1fr; }
+    
+    /* Toggle Mobile (Opcional si quieres menú hamburguesa real) */
+    .menu-icon { display: block; cursor: pointer; font-size: 1.5rem; color: var(--primary); position: absolute; right: 25px; top: 15px; }
+    #menu-toggle:checked ~ .nav-menu { display: flex; }
+    .nav-menu { display: none; width: 100%; gap: 10px; }
 }
