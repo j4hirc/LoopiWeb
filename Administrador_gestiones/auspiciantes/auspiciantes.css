@@ -242,7 +242,6 @@ body {
     line-height: 1.6;
     margin-bottom: 25px;
     display: -webkit-box;
-    -webkit-line-clamp: 2; /* Limita a 2 lineas */
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
