@@ -87,6 +87,7 @@ async function guardarRango(e) {
     const formData = new FormData();
     formData.append("datos", JSON.stringify(rangoData));
 
+    // Aquí se envía el archivo original sin comprimir
     if (fotoNuevaFile) {
         formData.append("archivo", fotoNuevaFile);
     }
@@ -242,7 +243,8 @@ function limpiarFormulario() {
     fotoNuevaFile = null; 
 }
 
-async function procesarImagen(event) {
+// --- FUNCIÓN SIMPLIFICADA (Sin compresión) ---
+function procesarImagen(event) {
     const file = event.target.files[0];
     if (!file) return;
 
@@ -252,65 +254,13 @@ async function procesarImagen(event) {
         return;
     }
 
-    try {
-        const archivoComprimido = await comprimirImagen(file);
-        
-        fotoNuevaFile = archivoComprimido; 
+    // Guardamos el archivo original directamente
+    fotoNuevaFile = file; 
 
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            previewImagen.src = e.target.result;
-        }
-        reader.readAsDataURL(archivoComprimido);
-
-    } catch (error) {
-        console.error("Error al comprimir:", error);
-        Swal.fire('Error', 'No se pudo procesar la imagen.', 'error');
+    // Solo creamos la vista previa
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        previewImagen.src = e.target.result;
     }
-}
-
-async function comprimirImagen(archivo) {
-    return new Promise((resolve, reject) => {
-        const maxWidth = 800; 
-        const quality = 0.7;  
-
-        const reader = new FileReader();
-        reader.readAsDataURL(archivo);
-        reader.onload = (event) => {
-            const img = new Image();
-            img.src = event.target.result;
-            img.onload = () => {
-                let width = img.width;
-                let height = img.height;
-
-                if (width > maxWidth) {
-                    height *= maxWidth / width;
-                    width = maxWidth;
-                }
-
-                const canvas = document.createElement('canvas');
-                canvas.width = width;
-                canvas.height = height;
-                
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-
-                canvas.toBlob((blob) => {
-                    if (!blob) {
-                        reject(new Error("Error al comprimir imagen"));
-                        return;
-                    }
-                    const archivoComprimido = new File([blob], archivo.name, {
-                        type: 'image/jpeg',
-                        lastModified: Date.now(),
-                    });
-                    
-                    console.log(`Compresión: ${(archivo.size/1024).toFixed(2)}KB -> ${(archivoComprimido.size/1024).toFixed(2)}KB`);
-                    resolve(archivoComprimido);
-                }, 'image/jpeg', quality);
-            };
-            img.onerror = (error) => reject(error);
-        };
-        reader.onerror = (error) => reject(error);
-    });
+    reader.readAsDataURL(file);
 }
