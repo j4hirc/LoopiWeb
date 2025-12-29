@@ -3,199 +3,221 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Usuarios - Loopi</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <title>Gestión de Usuarios | Loopi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="usuarios.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <style>
-        .btn-volver {
-            background: transparent;
-            border: 1px solid rgba(255,255,255,0.3);
-            color: white;
-            padding: 8px 15px;
-            border-radius: 8px;
-            text-decoration: none;
-            margin-right: 15px;
-            font-size: 14px;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .btn-volver:hover {
-            background: rgba(255,255,255,0.15);
-            border-color: white;
-        }
-        .header-left {
-            display: flex;
-            align-items: center;
-        }
-    </style>
 </head>
 <body>
 
-<header class="header">
-    <div class="header-left">
-        <a href="../menu-gestiones.html" class="btn-volver">
-            <i class="fa-solid fa-arrow-left"></i> Volver
-        </a>
-        <h2>Gestión de Usuario</h2>
-    </div>
-    <button class="btn-agregar" onclick="abrirModalNuevo()">
-        <i class="fa-solid fa-user-plus"></i> Nuevo Usuario
-    </button>
-</header>
+    <div class="bg-decoration"></div>
 
-<section class="search-container" style="display: flex; gap: 10px; flex-wrap: wrap; padding: 10px;">
-    <div style="flex: 2; position: relative;">
-        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #999;"></i>
-        <input type="text" id="buscarUsuario" placeholder="Buscar por nombre, cédula o correo..." 
-               style="width: 100%; padding: 10px 10px 10px 35px; border-radius: 8px; border: 1px solid #ccc;">
-    </div>
-
-    <select id="filtroRol" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
-        <option value="todos">Todos los Roles</option>
-        <option value="ADMINISTRADOR">Administrador</option>
-        <option value="RECICLADOR">Reciclador</option>
-        <option value="USUARIO_NORMAL">Usuario Normal</option>
-    </select>
-
-    <select id="filtroEstado" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
-        <option value="todos">Todos los Estados</option>
-        <option value="activo">Activos</option>
-        <option value="inactivo">Inactivos</option>
-    </select>
-</section>
-
-<section id="gridUsuarios" class="grid-container">
-    </section>
-
-<div id="modalOverlay" class="modal-overlay">
-    <div class="modal-container">
-        <div class="modal-header">
-            <h3 id="tituloModal">Nuevo Usuario</h3>
-            <button class="modal-close" onclick="cerrarModal()">
-                <i class="fa-solid fa-xmark"></i>
+    <header class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <a href="../menu-gestiones.html" class="btn-volver">
+                    <i class="fa-solid fa-arrow-left"></i> <span>Volver</span>
+                </a>
+                <div class="titulo-seccion">
+                    <h1><i class="fa-solid fa-users"></i> Usuarios</h1>
+                    <p>Administra perfiles, roles y accesos</p>
+                </div>
+            </div>
+            
+            <button class="btn-agregar" onclick="abrirModalNuevo()">
+                <div class="icon-circle"><i class="fa-solid fa-user-plus"></i></div>
+                <span>Nuevo Usuario</span>
             </button>
         </div>
+    </header>
 
-        <div class="modal-body">
-            <div class="img-user-upload">
-                <img id="previewFoto" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Foto usuario">
-                <label class="btn-file">
-                    <i class="fa-solid fa-camera"></i> Cambiar foto
-                    <input type="file" id="fotoInput" accept="image/*" onchange="cargarImagen()">
-                </label>
+    <div class="filters-wrapper">
+        <div class="filters-container">
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" id="buscarUsuario" placeholder="Buscar por nombre, cédula o correo...">
             </div>
 
-            <div class="form-group">
-                <label for="cedula">Cédula de Identidad</label>
-                <input type="number" id="cedula" name="cedula" class="input-field" maxlength="10">
-            </div>
+            <div class="select-group">
+                <div class="custom-select">
+                    <i class="fa-solid fa-filter icon-select"></i>
+                    <select id="filtroRol">
+                        <option value="todos">Todos los Roles</option>
+                        <option value="ADMINISTRADOR">Administrador</option>
+                        <option value="RECICLADOR">Reciclador</option>
+                        <option value="USUARIO_NORMAL">Usuario Normal</option>
+                    </select>
+                </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="primerNombre">1er Nombre</label>
-                    <input type="text" id="primerNombre" name="primerNombre" class="input-field">
-                </div>
-                <div class="form-group">
-                    <label for="segundoNombre">2do Nombre</label>
-                    <input type="text" id="segundoNombre" name="segundoNombre" class="input-field">
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="apellidoPaterno">Ap. Paterno</label>
-                    <input type="text" id="apellidoPaterno" name="apellidoPaterno" class="input-field">
-                </div>
-                <div class="form-group">
-                    <label for="apellidoMaterno">Ap. Materno</label>
-                    <input type="text" id="apellidoMaterno" name="apellidoMaterno" class="input-field">
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="fechaNacimiento">Nacimiento</label>
-                    <input type="date" id="fechaNacimiento" name="fechaNacimiento" class="input-field">
-                </div>
-                <div class="form-group">
-                    <label for="genero">Género</label>
-                    <select id="genero" name="genero" class="input-field">
-                        <option value="">Seleccione</option>
-                        <option value="M">Masculino</option>
-                        <option value="F">Femenino</option>
-                        <option value="O">Otro</option>
+                <div class="custom-select">
+                    <i class="fa-solid fa-toggle-on icon-select"></i>
+                    <select id="filtroEstado">
+                        <option value="todos">Todos los Estados</option>
+                        <option value="activo">Activos</option>
+                        <option value="inactivo">Inactivos</option>
                     </select>
                 </div>
             </div>
-
-            <div class="form-group">
-                <label for="correo">Correo electrónico</label>
-                <input type="email" id="correo" name="correo" class="input-field">
-            </div>
-
-            <div class="form-group">
-                <label for="password">Contraseña (dejar vacío si no desea cambiar)</label>
-                <input type="password" id="password" name="password" class="input-field">
-            </div>
-
-            <div class="form-group">
-                <label for="parroquia">Parroquia de residencia</label>
-                <select id="parroquia" name="parroquia" class="input-field">
-                    <option value="">Seleccione una parroquia</option>
-                </select>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="puntos">Puntos</label>
-                    <input type="number" id="puntos" name="puntos" class="input-field">
-                </div>
-                <div class="form-group">
-                    <label for="rango">Rango</label>
-                    <select id="rango" name="rango" class="input-field">
-                        <option value="">Seleccione</option>
-                    </select>
-                </div>
-            </div>
-
-            <hr class="divider">
-
-            <div class="form-group">
-                <label>ROLES ASIGNADOS</label>
-                <div class="roles-container">
-                    <label>
-                        <input type="checkbox" class="rol-checkbox" value="Administrador"> Admin
-                    </label>
-                    <label>
-                        <input type="checkbox" class="rol-checkbox" value="Reciclador"> Reciclador
-                    </label>
-                    <label>
-                        <input type="checkbox" class="rol-checkbox" value="Usuario_normal"> Cliente
-                    </label>
-                </div>
-            </div>
-
-            <div class="form-group switch-row">
-                <span>Usuario Activo</span>
-                <label class="switch">
-                    <input type="checkbox" id="estado" name="estado" checked>
-                    <span class="slider"></span>
-                </label>
-            </div>
-        </div>
-
-        <div class="modal-footer">
-            <button class="btn-cancelar" onclick="cerrarModal()">Cancelar</button>
-            <button class="btn-guardar" onclick="guardarUsuario()">Guardar Usuario</button>
         </div>
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="usuarios.js"></script>
+    <section id="gridUsuarios" class="grid-container">
+        </section>
+
+    <div id="modalOverlay" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="tituloModal">Nuevo Usuario</h3>
+                <button class="modal-close" onclick="cerrarModal()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <div class="img-user-upload">
+                    <div class="avatar-preview">
+                        <img id="previewFoto" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Foto usuario">
+                    </div>
+                    <label class="btn-file">
+                        <i class="fa-solid fa-camera"></i> Subir Foto
+                        <input type="file" id="fotoInput" accept="image/*" onchange="cargarImagen()">
+                    </label>
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="cedula">Cédula de Identidad</label>
+                    <input type="number" id="cedula" name="cedula" class="input-field" maxlength="10" placeholder="Ej: 092...123">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Primer Nombre</label>
+                        <input type="text" id="primerNombre" class="input-field">
+                    </div>
+                    <div class="form-group">
+                        <label>Segundo Nombre</label>
+                        <input type="text" id="segundoNombre" class="input-field">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Apellido Paterno</label>
+                        <input type="text" id="apellidoPaterno" class="input-field">
+                    </div>
+                    <div class="form-group">
+                        <label>Apellido Materno</label>
+                        <input type="text" id="apellidoMaterno" class="input-field">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Fecha Nacimiento</label>
+                        <input type="date" id="fechaNacimiento" class="input-field">
+                    </div>
+                    <div class="form-group">
+                        <label>Género</label>
+                        <select id="genero" class="input-field">
+                            <option value="">Seleccione</option>
+                            <option value="M">Masculino</option>
+                            <option value="F">Femenino</option>
+                            <option value="O">Otro</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group full-width">
+                    <label>Correo Electrónico</label>
+                    <input type="email" id="correo" class="input-field" placeholder="usuario@email.com">
+                </div>
+
+                <div class="form-group full-width">
+                    <label>Contraseña</label>
+                    <input type="password" id="password" class="input-field" placeholder="Dejar vacío para no cambiar">
+                </div>
+
+                <div class="form-group full-width">
+                    <label>Parroquia</label>
+                    <select id="parroquia" class="input-field">
+                        <option value="">Cargando parroquias...</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Puntos Acumulados</label>
+                        <input type="number" id="puntos" class="input-field" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Rango Actual</label>
+                        <select id="rango" class="input-field">
+                            <option value="">Seleccione</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-divider"></div>
+
+                <div class="form-group">
+                    <label>ROLES DEL SISTEMA</label>
+                    <div class="roles-container">
+                        <label class="rol-option">
+                            <input type="checkbox" class="rol-checkbox" value="Administrador"> 
+                            <span>Administrador</span>
+                        </label>
+                        <label class="rol-option">
+                            <input type="checkbox" class="rol-checkbox" value="Reciclador"> 
+                            <span>Reciclador</span>
+                        </label>
+                        <label class="rol-option">
+                            <input type="checkbox" class="rol-checkbox" value="Usuario_normal"> 
+                            <span>Cliente</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group switch-row">
+                    <div class="switch-label">
+                        <span>Estado de Cuenta</span>
+                        <small>Permitir acceso al sistema</small>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="estado" name="estado" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-cancelar" onclick="cerrarModal()">Cancelar</button>
+                <button class="btn-guardar" onclick="guardarUsuario()">
+                    <i class="fa-solid fa-floppy-disk"></i> Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="usuarios.js"></script>
+
+    <script>
+        const grid = document.getElementById('gridUsuarios');
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                mutation.addedNodes.forEach((node) => {
+                    if (node.nodeType === 1 && node.classList.contains('card-usuario')) { 
+                        node.style.opacity = '0';
+                        node.style.transform = 'translateY(20px)';
+                        setTimeout(() => {
+                            node.style.opacity = '1';
+                            node.style.transform = 'translateY(0)';
+                        }, 50);
+                    }
+                });
+            });
+        });
+        observer.observe(grid, { childList: true });
+    </script>
 </body>
 </html>
