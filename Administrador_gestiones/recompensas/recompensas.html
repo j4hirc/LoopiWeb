@@ -2,136 +2,164 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Gestión de Recompensas</title>
+    <title>Gestión de Recompensas | Loopi</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="recompensas.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <style>
-        .btn-volver {
-            background: transparent;
-            border: 1px solid rgba(255,255,255,0.3);
-            color: white;
-            padding: 8px 15px;
-            border-radius: 8px;
-            text-decoration: none;
-            margin-right: 15px;
-            font-size: 14px;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .btn-volver:hover {
-            background: rgba(255,255,255,0.15);
-            border-color: white;
-        }
-        .header-left {
-            display: flex;
-            align-items: center;
-        }
-    </style>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <link rel="stylesheet" href="recompensas.css">
 </head>
 
 <body>
 
-<header class="header">
-    <div class="header-left">
-        <a href="../menu-gestiones.html" class="btn-volver">
-            <i class="fa-solid fa-arrow-left"></i> Volver
-        </a>
-        <h1>Gestión de Recompensas</h1>
-    </div>
-    <button id="btnNuevaRecompensa" class="btn-agregar">
-        <i class="fa-solid fa-plus"></i> Agregar Recompensa
-    </button>
-</header>
+    <div class="bg-decoration"></div>
 
-<div class="search-container">
-    <div style="position: relative;">
-        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #888;"></i>
-        <input type="text" id="buscarRecompensa" placeholder="Buscar recompensa..." style="padding-left: 40px;">
-    </div>
-</div>
-
-<section id="gridRecompensas" class="grid-container">
-    </section>
-
-<div class="modal-overlay" id="modalOverlay">
-    <div class="modal-container">
-
-        <div class="modal-header">
-            <h2 id="modalTitle">Nueva Recompensa</h2>
-            <button class="modal-close" id="btnCerrarModal"><i class="fa-solid fa-xmark"></i></button>
+    <header class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <a href="../menu-gestiones.html" class="btn-volver">
+                    <i class="fa-solid fa-arrow-left"></i> <span>Volver</span>
+                </a>
+                <div class="titulo-seccion">
+                    <h1><i class="fa-solid fa-gift"></i> Recompensas</h1>
+                    <p>Catálogo de premios y canjes</p>
+                </div>
+            </div>
+            
+            <button id="btnNuevaRecompensa" class="btn-agregar">
+                <div class="icon-circle"><i class="fa-solid fa-plus"></i></div>
+                <span>Nueva Recompensa</span>
+            </button>
         </div>
+    </header>
 
-        <form id="formRecompensa">
-            <input type="hidden" id="idRecompensa" name="idRecompensa">
+    <div class="search-wrapper">
+        <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="buscarRecompensa" placeholder="Buscar recompensa (ej: Cupón, Entradas...)" autocomplete="off">
+        </div>
+    </div>
 
-            <div class="modal-body">
-                <label>Nombre de la Recompensa</label>
-                <input type="text" id="nombreRecompensa" class="input-field" required placeholder="Ej: Cupón de Descuento">
+    <section id="gridRecompensas" class="grid-container">
+        </section>
 
-                <label>Descripción</label>
-                <textarea id="descripcionRecompensa" class="input-field" rows="2" placeholder="Detalles de la recompensa..."></textarea>
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <div>
-                        <label>Costo (Puntos)</label>
-                        <input type="number" id="costoRecompensa" class="input-field" required min="1">
+            <div class="modal-header">
+                <h2 id="modalTitle">Nueva Recompensa</h2>
+                <button class="modal-close" id="btnCerrarModal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="formRecompensa">
+                <input type="hidden" id="idRecompensa" name="idRecompensa">
+
+                <div class="modal-body">
+                    
+                    <div class="form-group full-width">
+                        <label>Nombre de la Recompensa</label>
+                        <input type="text" id="nombreRecompensa" class="input-field" required placeholder="Ej: Cupón 20% Descuento">
                     </div>
-                    <div>
-                        <label>Auspiciante</label>
-                        <select id="auspicianteRecompensa" class="input-field" required>
-                            <option value="">Seleccione...</option>
-                        </select>
+
+                    <div class="form-group full-width">
+                        <label>Descripción</label>
+                        <textarea id="descripcionRecompensa" class="input-field" rows="2" placeholder="Detalles y condiciones..."></textarea>
                     </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Costo (Puntos)</label>
+                            <div class="input-with-icon">
+                                <i class="fa-solid fa-star"></i>
+                                <input type="number" id="costoRecompensa" class="input-field" required min="1" placeholder="500">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Auspiciante</label>
+                            <div class="select-wrapper">
+                                <select id="auspicianteRecompensa" class="input-field" required>
+                                    <option value="">Cargando...</option>
+                                </select>
+                                <i class="fa-solid fa-chevron-down arrow-icon"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Dirección de Retiro</label>
+                        <input type="text" id="direccionRecompensa" class="input-field" placeholder="Ej: Av. Principal 123">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Ubicación Geográfica</label>
+                        <div class="geo-box">
+                            <button type="button" onclick="abrirModalMapa()" class="btn-mapa">
+                                <i class="fa-solid fa-map-location-dot"></i> Seleccionar en Mapa
+                            </button>
+                            <div class="coords-text">
+                                <span>Lat: <b id="txtLat">0.0</b></span>
+                                <span>Lng: <b id="txtLng">0.0</b></span>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
-                <label style="margin-top: 10px;">Dirección de Retiro</label>
-                <input type="text" id="direccionRecompensa" class="input-field" placeholder="Ej: Av. Loja y Don Bosco">
-
-                <label>Ubicación en Mapa</label>
-                <div style="display: flex; gap: 10px; align-items: center; background: #f9f9f9; padding: 10px; border-radius: 10px; border: 1px solid #ddd;">
-                    <button type="button" onclick="abrirModalMapa()" style="background: #2196F3; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 5px;">
-                        <i class="fa-solid fa-map-location-dot"></i> Abrir Mapa
-                    </button>
-                    <div style="font-size: 12px; color: #555;">
-                        Lat: <span id="txtLat">0.0</span> <br>
-                        Lng: <span id="txtLng">0.0</span>
-                    </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancelar" id="btnCancelar">Cancelar</button>
+                    <button type="submit" class="btn-guardar">Guardar</button>
                 </div>
+            </form>
+        </div>
+    </div>
 
+    <div class="modal-overlay" id="modalMapa" style="z-index: 9999;">
+        <div class="modal-container map-modal-size">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-location-dot"></i> Ubicación del Retiro</h2>
+                <button type="button" class="modal-close" onclick="cerrarModalMapa()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="modal-map-body">
+                <div id="mapaLeaflet"></div>
             </div>
 
             <div class="modal-footer">
-                <button type="button" class="btn-cancelar" id="btnCancelar">Cancelar</button>
-                <button type="submit" class="btn-guardar">Guardar</button>
+                <button type="button" class="btn-cancelar" onclick="cerrarModalMapa()">Cancelar</button>
+                <button type="button" class="btn-guardar" onclick="confirmarCoordenadas()">Confirmar</button>
             </div>
-        </form>
-    </div>
-</div>
-
-<div class="modal-overlay" id="modalMapa" style="z-index: 99999;">
-    <div class="modal-container" style="height: 80vh; max-width: 800px; width: 95%;">
-        <div class="modal-header">
-            <span><i class="fa-solid fa-location-dot"></i> Selecciona el punto exacto</span>
-            <button type="button" class="modal-close" onclick="cerrarModalMapa()"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        <div class="modal-body" style="padding: 0; display: flex; flex-direction: column; flex: 1;">
-            <div id="mapaLeaflet" style="width: 100%; height: 100%; min-height: 400px; background: #ddd;"></div>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn-cancelar" onclick="cerrarModalMapa()">Cancelar</button>
-            <button type="button" class="btn-guardar" onclick="confirmarCoordenadas()">Confirmar Ubicación</button>
         </div>
     </div>
-</div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="recompensas.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="recompensas.js"></script>
+
+    <script>
+        const grid = document.getElementById('gridRecompensas');
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                mutation.addedNodes.forEach((node) => {
+                    if (node.nodeType === 1 && node.classList.contains('card-recompensa')) { 
+                        node.style.opacity = '0';
+                        node.style.transform = 'translateY(20px)';
+                        setTimeout(() => {
+                            node.style.transition = 'all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                            node.style.opacity = '1';
+                            node.style.transform = 'translateY(0)';
+                        }, 50);
+                    }
+                });
+            });
+        });
+        observer.observe(grid, { childList: true });
+    </script>
 
 </body>
 </html>
