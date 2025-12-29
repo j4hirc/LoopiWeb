@@ -1,4 +1,4 @@
-// 🌍 URLs de las APIs (Ajusta el puerto 8095 u 8080)
+// 🌍 URLs de las APIs
 const API_PARROQUIAS = 'https://api-loopi.onrender.com/api/parroquias';
 const API_CIUDADES   = 'https://api-loopi.onrender.com/api/ciudades';
 
@@ -10,14 +10,14 @@ const form = document.getElementById('formParroquia');
 const btnNueva = document.getElementById('btnNuevaParroquia');
 const btnCerrarModal = document.getElementById('btnCerrarModal');
 const btnCancelar = document.getElementById('btnCancelar');
-const selectCiudad = document.getElementById('ciudadParroquia'); // El <select>
+const selectCiudad = document.getElementById('ciudadParroquia'); 
 
 // Cache
 let parroquiasCache = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     listarParroquias();
-    cargarCiudadesEnSelect(); // ⚠️ Importante: Cargar las opciones del dropdown
+    cargarCiudadesEnSelect(); 
 
     // Abrir Modal
     btnNueva.addEventListener('click', () => {
@@ -26,21 +26,23 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Cerrar Modal
-    btnCerrarModal.addEventListener('click', cerrarModal);
-    btnCancelar.addEventListener('click', cerrarModal);
+    if(btnCerrarModal) btnCerrarModal.addEventListener('click', cerrarModal);
+    if(btnCancelar) btnCancelar.addEventListener('click', cerrarModal);
 
     // Guardar
     form.addEventListener('submit', guardarParroquia);
 
     // Buscador
-    searchInput.addEventListener('input', (e) => {
-        const termino = e.target.value.toLowerCase();
-        const filtradas = parroquiasCache.filter(p => 
-            p.nombre_parroquia.toLowerCase().includes(termino) || 
-            (p.ciudad && p.ciudad.nombre_ciudad.toLowerCase().includes(termino))
-        );
-        renderizarGrid(filtradas);
-    });
+    if(searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const termino = e.target.value.toLowerCase();
+            const filtradas = parroquiasCache.filter(p => 
+                p.nombre_parroquia.toLowerCase().includes(termino) || 
+                (p.ciudad && p.ciudad.nombre_ciudad.toLowerCase().includes(termino))
+            );
+            renderizarGrid(filtradas);
+        });
+    }
 });
 
 // --- 1. CARGAR SELECT DE CIUDADES ---
@@ -49,12 +51,10 @@ async function cargarCiudadesEnSelect() {
         const response = await fetch(API_CIUDADES);
         const ciudades = await response.json();
         
-        // Limpiamos y dejamos la opción por defecto
         selectCiudad.innerHTML = '<option value="">Seleccione una ciudad</option>';
 
         ciudades.forEach(ciudad => {
             const option = document.createElement('option');
-            // Usamos los nombres exactos de tu Entity Ciudad
             option.value = ciudad.id_ciudad; 
             option.textContent = ciudad.nombre_ciudad;
             selectCiudad.appendChild(option);
@@ -75,27 +75,25 @@ async function listarParroquias() {
         renderizarGrid(parroquias);
     } catch (error) {
         console.error(error);
-        gridParroquias.innerHTML = '<p style="text-align:center; color:red;">Error al cargar datos.</p>';
+        gridParroquias.innerHTML = '<p style="text-align:center; color:red;">No se pudo conectar con el servidor.</p>';
     }
 }
 
-// --- 3. GUARDAR (RELACIÓN MANY-TO-ONE) ---
+// --- 3. GUARDAR CON SWEETALERT ---
 async function guardarParroquia(e) {
     e.preventDefault();
 
     const id = document.getElementById('idParroquia').value;
     const nombre = document.getElementById('nombreParroquia').value;
-    const idCiudadSeleccionada = selectCiudad.value; // ID obtenido del select
+    const idCiudadSeleccionada = selectCiudad.value; 
 
+    // Validación SweetAlert
     if (!idCiudadSeleccionada) {
-        alert("Por favor selecciona una ciudad");
-        return;
+        return Swal.fire('Falta información', 'Por favor selecciona una ciudad', 'warning');
     }
 
-    // ESTRUCTURA JSON PARA RELACIÓN @ManyToOne
     const datosParroquia = {
         nombre_parroquia: nombre,
-        // Spring Boot espera un objeto Ciudad con su ID dentro
         ciudad: {
             id_ciudad: parseInt(idCiudadSeleccionada)
         }
@@ -105,6 +103,12 @@ async function guardarParroquia(e) {
     const url = id ? `${API_PARROQUIAS}/${id}` : API_PARROQUIAS;
 
     try {
+        // Bloquear botón
+        const btnGuardar = form.querySelector('.btn-guardar');
+        const txtOriginal = btnGuardar.innerText;
+        btnGuardar.disabled = true;
+        btnGuardar.innerText = "Guardando...";
+
         const response = await fetch(url, {
             method: metodo,
             headers: { 'Content-Type': 'application/json' },
@@ -114,31 +118,58 @@ async function guardarParroquia(e) {
         if (response.ok) {
             cerrarModal();
             listarParroquias();
+            Swal.fire({
+                title: '¡Éxito!',
+                text: id ? 'Parroquia actualizada correctamente' : 'Parroquia creada correctamente',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+            });
         } else {
-            alert('Error al guardar. Revisa la consola.');
+            Swal.fire('Error', 'No se pudo guardar la parroquia.', 'error');
         }
+
+        btnGuardar.disabled = false;
+        btnGuardar.innerText = txtOriginal;
+
     } catch (error) {
         console.error(error);
+        Swal.fire('Error', 'Error de conexión.', 'error');
     }
 }
 
-// --- 4. ELIMINAR ---
-window.eliminarParroquia = async function(id) {
-    if (!confirm('¿Borrar esta parroquia?')) return;
+// --- 4. ELIMINAR CON SWEETALERT ---
+window.eliminarParroquia = function(id) {
+    if (!id) return;
 
-    try {
-        const response = await fetch(`${API_PARROQUIAS}/${id}`, {
-            method: 'DELETE'
-        });
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "No podrás revertir esta acción",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const response = await fetch(`${API_PARROQUIAS}/${id}`, {
+                    method: 'DELETE'
+                });
 
-        if (response.ok || response.status === 204) {
-            listarParroquias();
-        } else {
-            alert('No se pudo eliminar');
+                if (response.ok || response.status === 204) {
+                    listarParroquias();
+                    Swal.fire('Eliminado', 'La parroquia ha sido eliminada.', 'success');
+                } else {
+                    Swal.fire('Error', 'No se pudo eliminar la parroquia.', 'error');
+                }
+            } catch (error) {
+                console.error(error);
+                Swal.fire('Error', 'Error de conexión.', 'error');
+            }
         }
-    } catch (error) {
-        console.error(error);
-    }
+    });
 };
 
 // --- 5. CARGAR EDICIÓN ---
@@ -149,7 +180,6 @@ window.cargarEdicion = function(id) {
     document.getElementById('idParroquia').value = parroquia.id_parroquia;
     document.getElementById('nombreParroquia').value = parroquia.nombre_parroquia;
     
-    // Seleccionar la ciudad en el dropdown
     if (parroquia.ciudad) {
         selectCiudad.value = parroquia.ciudad.id_ciudad;
     }
@@ -168,25 +198,30 @@ function renderizarGrid(parroquias) {
     }
 
     parroquias.forEach(p => {
-        // Validación por si una parroquia no tiene ciudad asignada (null safety)
-        const nombreCiudad = p.ciudad ? p.ciudad.nombre_ciudad : 'Sin Ciudad Asignada';
+        const nombreCiudad = p.ciudad ? p.ciudad.nombre_ciudad : 'Sin Ciudad';
 
         const card = document.createElement('div');
         card.className = 'card-parroquia';
 
         card.innerHTML = `
-            <div style="font-size: 35px; color:#2D5A4A;">🏘️</div>
+            <div style="font-size: 35px; color:#2D5A4A; text-align:center; margin-bottom:10px;">
+                <i class="fa-solid fa-tree-city"></i>
+            </div>
             <h3>${p.nombre_parroquia}</h3>
-            <p>📍 ${nombreCiudad}</p> <div class="acciones">
-                <button class="btn-editar" onclick="cargarEdicion(${p.id_parroquia})">✎</button>
-                <button class="btn-eliminar" onclick="eliminarParroquia(${p.id_parroquia})">🗑</button>
+            <p><i class="fa-solid fa-map-pin"></i> ${nombreCiudad}</p> 
+            <div class="acciones">
+                <button class="btn-editar" onclick="cargarEdicion(${p.id_parroquia})" title="Editar">
+                    <i class="fa-solid fa-pen"></i>
+                </button>
+                <button class="btn-eliminar" onclick="eliminarParroquia(${p.id_parroquia})" title="Eliminar">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
             </div>
         `;
         gridParroquias.appendChild(card);
     });
 }
 
-// --- UTILIDADES ---
 function cerrarModal() {
     modalOverlay.style.display = 'none';
     limpiarFormulario();
@@ -196,5 +231,5 @@ function limpiarFormulario() {
     form.reset();
     document.getElementById('idParroquia').value = '';
     document.getElementById('modalTitle').innerText = 'Nueva Parroquia';
-    selectCiudad.value = ""; // Resetear select
+    selectCiudad.value = ""; 
 }

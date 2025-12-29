@@ -1,4 +1,3 @@
-
 const API_URL = 'https://api-loopi.onrender.com/api/ciudades';
 
 // Elementos del DOM
@@ -19,24 +18,26 @@ document.addEventListener('DOMContentLoaded', () => {
     // Abrir Modal
     btnNueva.addEventListener('click', () => {
         limpiarFormulario();
-        modalOverlay.style.display = 'flex'; // Usamos display flex directo
+        modalOverlay.style.display = 'flex'; 
     });
 
     // Cerrar Modal
-    btnCerrarModal.addEventListener('click', cerrarModal);
-    btnCancelar.addEventListener('click', cerrarModal);
+    if(btnCerrarModal) btnCerrarModal.addEventListener('click', cerrarModal);
+    if(btnCancelar) btnCancelar.addEventListener('click', cerrarModal);
 
     // Guardar (Submit)
     form.addEventListener('submit', guardarCiudad);
 
     // Buscador en tiempo real
-    searchInput.addEventListener('input', (e) => {
-        const termino = e.target.value.toLowerCase();
-        const filtradas = ciudadesCache.filter(c => 
-            c.nombre_ciudad.toLowerCase().includes(termino)
-        );
-        renderizarGrid(filtradas);
-    });
+    if(searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const termino = e.target.value.toLowerCase();
+            const filtradas = ciudadesCache.filter(c => 
+                c.nombre_ciudad.toLowerCase().includes(termino)
+            );
+            renderizarGrid(filtradas);
+        });
+    }
 });
 
 // --- FUNCIONES CRUD ---
@@ -48,31 +49,39 @@ async function listarCiudades() {
         if (!response.ok) throw new Error('Fallo al conectar con la API');
         const ciudades = await response.json();
         
-        ciudadesCache = ciudades; // Guardamos copia
+        ciudadesCache = ciudades; 
         renderizarGrid(ciudades);
     } catch (error) {
         console.error(error);
-        gridCiudades.innerHTML = `<p style="color:red; text-align:center; width:100%;">No se pudo cargar las ciudades (Revisa el Backend).</p>`;
+        gridCiudades.innerHTML = `<p style="color:red; text-align:center; width:100%;">No se pudo cargar las ciudades.</p>`;
     }
 }
 
-// 2. GUARDAR (POST / PUT)
+// 2. GUARDAR CON SWEETALERT (POST / PUT)
 async function guardarCiudad(e) {
     e.preventDefault();
 
     const id = document.getElementById('idCiudad').value;
-    const nombre = document.getElementById('nombreCiudad').value;
+    const nombre = document.getElementById('nombreCiudad').value.trim();
 
-    // EL OBJETO JSON DEBE TENER LOS MISMOS NOMBRES QUE TU JAVA ENTITY
+    if (!nombre) {
+        return Swal.fire('Campo requerido', 'El nombre de la ciudad es obligatorio.', 'warning');
+    }
+
     const datosCiudad = {
         nombre_ciudad: nombre
     };
 
-    // Si hay ID, es PUT (Editar), si no, es POST (Crear)
     const metodo = id ? 'PUT' : 'POST';
     const url = id ? `${API_URL}/${id}` : API_URL;
 
     try {
+        // Bloquear botón
+        const btnGuardar = form.querySelector('.btn-guardar');
+        const txtOriginal = btnGuardar.innerText;
+        btnGuardar.disabled = true;
+        btnGuardar.innerText = "Guardando...";
+
         const response = await fetch(url, {
             method: metodo,
             headers: { 'Content-Type': 'application/json' },
@@ -81,39 +90,63 @@ async function guardarCiudad(e) {
 
         if (response.ok) {
             cerrarModal();
-            listarCiudades(); // Recargar lista
-            // alert(id ? 'Ciudad actualizada' : 'Ciudad creada');
+            listarCiudades(); 
+            Swal.fire({
+                title: '¡Éxito!',
+                text: id ? 'Ciudad actualizada correctamente' : 'Ciudad creada correctamente',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+            });
         } else {
-            alert('Error al guardar. Revisa la consola.');
+            Swal.fire('Error', 'No se pudo guardar la ciudad.', 'error');
         }
+
+        btnGuardar.disabled = false;
+        btnGuardar.innerText = txtOriginal;
+
     } catch (error) {
         console.error(error);
-        alert('Error de conexión.');
+        Swal.fire('Error', 'Error de conexión.', 'error');
     }
 }
 
-// 3. ELIMINAR (DELETE)
-window.eliminarCiudad = async function(id) {
-    if (!confirm('¿Seguro quieres borrar esta ciudad?')) return;
+// 3. ELIMINAR CON SWEETALERT (DELETE)
+window.eliminarCiudad = function(id) {
+    if (!id) return;
 
-    try {
-        const response = await fetch(`${API_URL}/${id}`, {
-            method: 'DELETE'
-        });
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "No podrás revertir esta acción",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const response = await fetch(`${API_URL}/${id}`, {
+                    method: 'DELETE'
+                });
 
-        if (response.ok || response.status === 204) {
-            listarCiudades();
-        } else {
-            alert('No se pudo eliminar.');
+                if (response.ok || response.status === 204) {
+                    listarCiudades();
+                    Swal.fire('Eliminado', 'La ciudad ha sido eliminada.', 'success');
+                } else {
+                    Swal.fire('Error', 'No se pudo eliminar la ciudad.', 'error');
+                }
+            } catch (error) {
+                console.error(error);
+                Swal.fire('Error', 'Error de conexión.', 'error');
+            }
         }
-    } catch (error) {
-        console.error(error);
-    }
+    });
 };
 
 // 4. PREPARAR EDICIÓN
 window.cargarEdicion = function(id) {
-    // Buscamos usando id_ciudad (nombre exacto de tu Java)
     const ciudad = ciudadesCache.find(c => c.id_ciudad === id);
     if (!ciudad) return;
 
@@ -138,17 +171,18 @@ function renderizarGrid(ciudades) {
         const card = document.createElement('div');
         card.className = 'card-ciudad';
 
-        // Usamos c.nombre_ciudad y c.id_ciudad
         card.innerHTML = `
-            <div style="font-size: 40px; margin-bottom: 10px;">🏙️</div>
+            <div style="font-size: 40px; margin-bottom: 10px; text-align:center; color: #2D5A4A;">
+                <i class="fa-solid fa-city"></i>
+            </div>
             <h3>${c.nombre_ciudad}</h3>
             
             <div class="acciones">
                 <button class="btn-editar" onclick="cargarEdicion(${c.id_ciudad})" title="Editar">
-                   ✎
+                    <i class="fa-solid fa-pen"></i>
                 </button>
                 <button class="btn-eliminar" onclick="eliminarCiudad(${c.id_ciudad})" title="Eliminar">
-                   🗑
+                    <i class="fa-solid fa-trash"></i>
                 </button>
             </div>
         `;

@@ -5,67 +5,91 @@
     <title>Gestión de Parroquias</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="parroquias.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        .btn-volver {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            margin-right: 15px;
+            font-size: 14px;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-volver:hover {
+            background: rgba(255,255,255,0.15);
+            border-color: white;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+    </style>
 </head>
 
 <body>
 
-<!-- 🟩 HEADER -->
 <header class="header">
-    <h1>Gestión de Parroquias</h1>
-    <button id="btnNuevaParroquia" class="btn-agregar">+ Agregar Parroquia</button>
+    <div class="header-left">
+        <a href="index.html" class="btn-volver">
+            <i class="fa-solid fa-arrow-left"></i> Volver
+        </a>
+        <h1>Gestión de Parroquias</h1>
+    </div>
+    <button id="btnNuevaParroquia" class="btn-agregar">
+        <i class="fa-solid fa-plus"></i> Agregar Parroquia
+    </button>
 </header>
 
-<!-- 🔎 BUSCADOR -->
 <div class="search-container">
-    <input type="text" id="buscarParroquia" placeholder="Buscar parroquias...">
+    <div style="position: relative;">
+        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #888;"></i>
+        <input type="text" id="buscarParroquia" placeholder="Buscar parroquias..." style="padding-left: 40px;">
+    </div>
 </div>
 
-<!-- 🟦 GRID -->
 <section id="gridParroquias" class="grid-container"></section>
 
-<!-- 🟧 MODAL -->
 <div class="modal-overlay" id="modalOverlay">
     <div class="modal-container">
 
         <div class="modal-header">
             <h2 id="modalTitle">Nueva Parroquia</h2>
-
             <button class="modal-close" id="btnCerrarModal">
-                <svg width="18" height="18" viewBox="0 0 24 24">
-                    <path fill="white" d="M18.3 5.71 12 12l6.3 6.29-1.41 1.41L12 14.83l-4.89 4.87-1.41-1.41L10.59 12 4.29 5.71 5.7 4.29 12 10.59l6.3-6.3z"/>
-                </svg>
+                <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
 
         <form id="formParroquia">
-
             <input type="hidden" id="idParroquia" name="idParroquia">
 
             <div class="modal-body">
-
-                <!-- Nombre -->
                 <label>Nombre de la Parroquia</label>
                 <input type="text" id="nombreParroquia" name="nombreParroquia" 
-                    class="input-field" required>
+                    class="input-field" required placeholder="Ej: Tarqui, El Vecino...">
 
-                <!-- Ciudad -->
                 <label>Ciudad</label>
                 <select id="ciudadParroquia" name="ciudadParroquia" class="input-field" required>
                     <option value="">Seleccione una ciudad</option>
                 </select>
-
             </div>
 
             <div class="modal-footer">
                 <button type="button" class="btn-cancelar" id="btnCancelar">Cancelar</button>
                 <button type="submit" class="btn-guardar">Guardar</button>
             </div>
-
         </form>
 
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="parroquias.js"></script>
 </body>
 </html>

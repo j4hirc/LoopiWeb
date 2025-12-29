@@ -28,7 +28,14 @@ btnGuardar.onclick = guardar;
 imagenInput.onchange = () => {
     const file = imagenInput.files[0];
     if (file) {
-        fotoNuevaFile = file; // Guardamos el archivo para enviarlo luego
+        // Validar tipo de archivo
+        if (!file.type.startsWith('image/')) {
+            Swal.fire('Error', 'Solo se permiten archivos de imagen.', 'error');
+            imagenInput.value = '';
+            return;
+        }
+        
+        fotoNuevaFile = file; 
         const reader = new FileReader();
         reader.onload = e => previewImg.style.backgroundImage = `url(${e.target.result})`;
         reader.readAsDataURL(file);
@@ -60,6 +67,7 @@ function resetForm() {
     imagenInput.value = '';
     previewImg.style.backgroundImage = '';
     fotoNuevaFile = null;
+    document.getElementById('modalTitle').innerText = 'Nuevo Contenido';
 }
 
 async function cargar() {
@@ -70,11 +78,17 @@ async function cargar() {
         render(cache);
     } catch (error) {
         console.error(error);
+        grid.innerHTML = '<p style="text-align:center; color:red;">No se pudo conectar con el servidor.</p>';
     }
 }
 
 function render(lista) {
     grid.innerHTML = '';
+    if (lista.length === 0) {
+        grid.innerHTML = '<p style="text-align:center; color:#777; width:100%;">No hay contenido multimedia.</p>';
+        return;
+    }
+
     lista.forEach(m => {
         const card = document.createElement('div');
         card.className = 'card';
@@ -96,8 +110,12 @@ function render(lista) {
                 <div class="card-desc">${m.descripcion || ''}</div>
             </div>
             <div class="card-actions">
-                <button class="btn-edit" onclick="editar(${m.id_multimedia})">Editar</button>
-                <button class="btn-delete" onclick="eliminar(${m.id_multimedia})">Eliminar</button>
+                <button class="btn-edit" onclick="editar(${m.id_multimedia})" title="Editar">
+                    <i class="fa-solid fa-pen"></i> Editar
+                </button>
+                <button class="btn-delete" onclick="eliminar(${m.id_multimedia})" title="Eliminar">
+                    <i class="fa-solid fa-trash"></i> Eliminar
+                </button>
             </div>
         `;
         grid.appendChild(card);
@@ -122,16 +140,22 @@ window.editar = (id) => {
         previewImg.style.backgroundImage = `url(${imageUrl})`;
     }
     
-    modal.style.display = 'flex'; // Abrimos modal directo
+    document.getElementById('modalTitle').innerText = 'Editar Contenido';
+    modal.style.display = 'flex'; 
 };
 
 async function guardar() {
     const id = idInput.value;
+    const titulo = tituloInput.value.trim();
+
+    if (!titulo) {
+        return Swal.fire('Campo requerido', 'El título es obligatorio.', 'warning');
+    }
     
     const dataObj = {
-        titulo: tituloInput.value,
+        titulo: titulo,
         descripcion: descripcionInput.value,
-        imagenes: null // El backend gestiona la foto por separado
+        imagenes: null 
     };
 
     const formData = new FormData();
@@ -145,6 +169,9 @@ async function guardar() {
     const method = id ? 'PUT' : 'POST';
 
     try {
+        // Bloquear botón
+        btnGuardar.disabled = true;
+        btnGuardar.innerText = "Guardando...";
 
         const res = await fetch(url, { 
             method: method, 
@@ -158,17 +185,50 @@ async function guardar() {
 
         cerrarModal();
         cargar(); 
-        alert("Guardado correctamente");
+        
+        Swal.fire({
+            title: '¡Éxito!',
+            text: id ? 'Contenido actualizado correctamente' : 'Contenido creado correctamente',
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false
+        });
+
     } catch (error) {
         console.error("Error al guardar:", error);
-        alert("Error al guardar el contenido.");
+        Swal.fire('Error', 'No se pudo guardar el contenido.', 'error');
+    } finally {
+        btnGuardar.disabled = false;
+        btnGuardar.innerText = "Guardar";
     }
 }
 
-window.eliminar = async (id) => {
-    if (!confirm('¿Eliminar este contenido?')) return;
-    try {
-        await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-        cargar();
-    } catch(e) { console.error(e); }
+window.eliminar = function(id) {
+    if (!id) return;
+
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "Esta acción no se puede deshacer.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const res = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    cargar();
+                    Swal.fire('Eliminado', 'El contenido ha sido eliminado.', 'success');
+                } else {
+                    Swal.fire('Error', 'No se pudo eliminar.', 'error');
+                }
+            } catch(e) { 
+                console.error(e); 
+                Swal.fire('Error', 'Error de conexión.', 'error');
+            }
+        }
+    });
 };
