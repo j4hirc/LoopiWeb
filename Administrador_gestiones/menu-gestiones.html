@@ -54,7 +54,7 @@
     <main class="dashboard-container">
         <h2 class="section-title">Accesos Rápidos</h2>
 
-        <div class="grid-cards">
+        <div class="grid-cards" id="gridCardsContainer">
 
             <div class="card card-validations" onclick="location.href='solicitudes_recoleccion/solicitud_recoleccion.html'">
                 <span class="badge-notificacion urgente" id="badgeEntregas" style="display:none;">0</span>
@@ -236,6 +236,21 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="Menugestiones.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const cards = document.querySelectorAll('.card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, 50 * index); // Efecto cascada
+            });
+        });
+    </script>
 
 </body>
 </html>
