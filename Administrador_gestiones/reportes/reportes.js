@@ -61,7 +61,6 @@ function aplicarFiltros() {
             if(fechaItem > dFin) return false;
         }
 
-        // 2. Filtro Estado
         if(estado !== "TODOS") {
             const estadoItem = item.estado || ""; 
             if (estado === "PENDIENTE") {
@@ -75,25 +74,18 @@ function aplicarFiltros() {
             }
         }
 
-        // =========================================================
-        // 3. Filtro Tipo (AQUÍ ESTÁ LA CORRECCIÓN ÑAÑO)
-        // =========================================================
         if (tipo !== "TODOS") {
             if (tipo === "RECICLADOR") {
-                // Si selecciono Reciclador, debe tener el objeto reciclador
                 if (!item.reciclador) return false;
             } 
             else if (tipo === "PUNTO_FIJO") {
-                // Si selecciono Punto Fijo, debe tener ubicación...
                 if (!item.ubicacion) return false;
-                
-                // ...PERO ADEMÁS, no debe tener reciclador asignado.
-                // Porque si tiene reciclador, tu tabla lo dibuja como reciclador.
+
                 if (item.reciclador) return false; 
             }
         }
 
-        // 4. Filtro Búsqueda
+
         if(busqueda) {
             let coincide = false;
             if(item.reciclador) {
@@ -115,8 +107,6 @@ function aplicarFiltros() {
 }
 
 function actualizarDashboard(datos) {
-    // ERROR ANTERIOR: const finalizados = datos.filter(s => s.estado === 'FINALIZADO');
-    // CORRECCIÓN: Usamos 'datos' directamente, porque ya viene filtrado por lo que tú elegiste arriba.
 
     let totalKg = 0;
     let totalPuntos = 0;

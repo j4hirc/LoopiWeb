@@ -43,7 +43,21 @@ function pintarHistorial(data = null) {
     const tpl = document.getElementById("tplHistorial");
     grid.innerHTML = "";
 
-    const lista = data || historial.filter((e) => estadoFiltro === "TODOS" ? (e.estado === "FINALIZADO" || e.estado === "CANCELADO") : e.estado === estadoFiltro);
+    // LÓGICA DE FILTRADO CORREGIDA
+    let lista = data || historial;
+
+    if (estadoFiltro !== "TODOS") {
+        if (estadoFiltro === "CANCELADO") {
+            // Si el filtro es CANCELADO, mostramos tanto CANCELADO como RECHAZADO
+            lista = lista.filter(e => e.estado === "CANCELADO" || e.estado === "RECHAZADO");
+        } else {
+            // Para FINALIZADO u otros estados específicos
+            lista = lista.filter(e => e.estado === estadoFiltro);
+        }
+    } else {
+        // Si es TODOS, mostramos FINALIZADO, CANCELADO y RECHAZADO (excluyendo pendientes activos si los hubiera)
+        lista = lista.filter(e => ["FINALIZADO", "CANCELADO", "RECHAZADO"].includes(e.estado));
+    }
 
     if (lista.length === 0) {
         grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:40px; color:#94A3B8;">
@@ -56,8 +70,17 @@ function pintarHistorial(data = null) {
         const clone = tpl.content.cloneNode(true);
         const card = clone.querySelector(".history-card");
 
-        card.classList.add(item.estado === "FINALIZADO" ? "status-finalizado" : "status-cancelado");
-        clone.querySelector(".status-badge").innerText = item.estado === "FINALIZADO" ? "Completada" : "Cancelada";
+        // Determinar si es una transacción exitosa o fallida
+        const esExitosa = item.estado === "FINALIZADO";
+
+        card.classList.add(esExitosa ? "status-finalizado" : "status-cancelado");
+        
+        // Texto del badge según el estado exacto
+        let textoEstado = "Completada";
+        if (item.estado === "CANCELADO") textoEstado = "Cancelada";
+        if (item.estado === "RECHAZADO") textoEstado = "Rechazada";
+
+        clone.querySelector(".status-badge").innerText = textoEstado;
 
         const fechaObj = new Date(item.fecha_recoleccion_real || item.fecha_creacion);
         const opcionesFecha = { day: 'numeric', month: 'short' };
@@ -68,8 +91,8 @@ function pintarHistorial(data = null) {
 
         const puntos = item.puntos_ganados || 0;
         const ptsLabel = clone.querySelector(".points-tag");
-        ptsLabel.innerText = item.estado === "FINALIZADO" ? `🏆 +${puntos} pts` : "🚫 0 pts";
-        ptsLabel.style.color = item.estado === "FINALIZADO" ? "var(--primary)" : "var(--text-gray)";
+        ptsLabel.innerText = esExitosa ? `🏆 +${puntos} pts` : "🚫 0 pts";
+        ptsLabel.style.color = esExitosa ? "var(--primary)" : "var(--text-gray)";
 
         clone.querySelector(".btn-ver-detalle").onclick = () => abrirDetalle(item);
 
@@ -93,14 +116,16 @@ function abrirDetalle(entrega) {
     let materialesHTML = "";
     if(entrega.detalles && entrega.detalles.length > 0) {
         materialesHTML = entrega.detalles.map(d => {
-            const ptsUnit = d.material.puntos_ganados || 10; 
+            // Nota: Aquí asumo que d.material.puntos_ganados es por unidad de peso.
+            // Si tu API no trae ese dato en 'material', usa un default o ajusta según tu modelo.
+            const ptsUnit = (d.material && d.material.puntos_por_kg) ? d.material.puntos_por_kg : 10; 
             const subtotal = ptsUnit * d.cantidad_kg;
             totalPuntos += subtotal;
 
             return `
                 <div class="material-list-item">
-                    <span>${d.material.nombre} <small>(${d.cantidad_kg} kg)</small></span>
-                    <strong>${subtotal} pts</strong>
+                    <span>${d.material ? d.material.nombre : 'Material'} <small>(${d.cantidad_kg} kg)</small></span>
+                    <strong>${subtotal.toFixed(0)} pts</strong>
                 </div>
             `;
         }).join("");
@@ -108,8 +133,14 @@ function abrirDetalle(entrega) {
         materialesHTML = "<p style='text-align:center; color:#999; font-style:italic;'>Sin materiales registrados</p>";
     }
 
+    // Si no está finalizado, los puntos reales son 0 aunque el cálculo teórico diga otra cosa
     if(entrega.estado !== "FINALIZADO") totalPuntos = 0;
+    // Si la entrega ya trae el total de puntos ganados desde el backend, usamos ese valor
     if(entrega.puntos_ganados > 0) totalPuntos = entrega.puntos_ganados;
+
+    // Color del estado en el modal
+    let colorEstado = '#10B981'; // Verde por defecto
+    if (entrega.estado === 'CANCELADO' || entrega.estado === 'RECHAZADO') colorEstado = '#EF4444'; // Rojo
 
     cont.innerHTML = `
         <div class="receipt-row">
@@ -122,7 +153,7 @@ function abrirDetalle(entrega) {
         </div>
         <div class="receipt-row">
             <span class="receipt-label">Estado:</span>
-            <span class="receipt-value" style="color:${entrega.estado === 'FINALIZADO' ? '#10B981' : '#EF4444'}">${entrega.estado}</span>
+            <span class="receipt-value" style="color:${colorEstado}">${entrega.estado}</span>
         </div>
         
         <div class="receipt-divider"></div>
