@@ -17,23 +17,25 @@ let fotoNuevaFile = null;
 document.addEventListener('DOMContentLoaded', () => {
     listarMateriales();
 
-    btnNuevo.addEventListener('click', () => abrirModal());
-    btnCerrarModal.addEventListener('click', cerrarModal);
-    btnCancelar.addEventListener('click', cerrarModal);
+    if(btnNuevo) btnNuevo.addEventListener('click', () => abrirModal());
+    if(btnCerrarModal) btnCerrarModal.addEventListener('click', cerrarModal);
+    if(btnCancelar) btnCancelar.addEventListener('click', cerrarModal);
     
-    btnSeleccionarImagen.addEventListener('click', () => inputImagen.click());
-    inputImagen.addEventListener('change', procesarImagen);
+    if(btnSeleccionarImagen) btnSeleccionarImagen.addEventListener('click', () => inputImagen.click());
+    if(inputImagen) inputImagen.addEventListener('change', procesarImagen);
 
-    form.addEventListener('submit', guardarMaterial);
+    if(form) form.addEventListener('submit', guardarMaterial);
 
-    searchInput.addEventListener('input', (e) => {
-        const termino = e.target.value.toLowerCase();
-        const filtrados = materialesCache.filter(m => 
-            m.nombre.toLowerCase().includes(termino) || 
-            (m.tipo_material && m.tipo_material.toLowerCase().includes(termino))
-        );
-        renderizarLista(filtrados);
-    });
+    if(searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const termino = e.target.value.toLowerCase();
+            const filtrados = materialesCache.filter(m => 
+                m.nombre.toLowerCase().includes(termino) || 
+                (m.tipo_material && m.tipo_material.toLowerCase().includes(termino))
+            );
+            renderizarLista(filtrados);
+        });
+    }
 });
 
 
@@ -100,8 +102,9 @@ async function guardarMaterial(e) {
     const nombre = document.getElementById('nombreMaterial').value.trim();
     const puntos = parseFloat(document.getElementById('puntosKg').value);
 
+    // VALIDACIÓN CON SWEETALERT
     if (isNaN(puntos) || puntos <= 0) {
-        return alert("⚠️ Los puntos por Kg deben ser mayor a 0.");
+        return Swal.fire('Atención', 'Los puntos por Kg deben ser mayores a 0.', 'warning');
     }
 
     const nombreDuplicado = materialesCache.some(m => {
@@ -110,7 +113,9 @@ async function guardarMaterial(e) {
         return mismoNombre;
     });
 
-    if (nombreDuplicado) return alert("Ya existe un material con ese nombre.");
+    if (nombreDuplicado) {
+        return Swal.fire('Duplicado', 'Ya existe un material con ese nombre.', 'error');
+    }
 
     const materialData = {
         nombre: nombre,
@@ -131,6 +136,10 @@ async function guardarMaterial(e) {
     const url = id ? `${API_URL}/${id}` : API_URL;
 
     try {
+        const btnGuardar = document.getElementById('btnGuardar');
+        btnGuardar.disabled = true; 
+        btnGuardar.innerText = "Guardando...";
+
         const response = await fetch(url, {
             method: metodo,
             body: formData 
@@ -139,29 +148,57 @@ async function guardarMaterial(e) {
         if (response.ok) {
             cerrarModal();
             listarMateriales(); 
-            alert(id ? 'Material actualizado correctamente' : 'Material creado correctamente');
+            Swal.fire({
+                title: '¡Éxito!',
+                text: id ? 'Material actualizado correctamente' : 'Material creado correctamente',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+            });
         } else {
             const errText = await response.text();
             console.error(errText);
-            alert('Error al guardar. Verifica los datos.');
+            Swal.fire('Error', 'No se pudo guardar. Verifica los datos.', 'error');
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('Error de conexión');
+        Swal.fire('Error de conexión', 'Intenta nuevamente más tarde.', 'error');
+    } finally {
+        const btnGuardar = document.getElementById('btnGuardar');
+        btnGuardar.disabled = false;
+        btnGuardar.innerText = "Guardar";
     }
 }
 
-window.eliminarMaterial = async function(id) {
-    if (!confirm('¿Seguro que quieres eliminar este material?')) return;
+// ELIMINAR CON SWEETALERT
+window.eliminarMaterial = function(id) {
+    if (!id) return;
 
-    try {
-        const response = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-        if (response.ok || response.status === 204) {
-            listarMateriales();
-        } else {
-            alert('No se pudo eliminar');
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "Esta acción no se puede deshacer",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const response = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+                if (response.ok || response.status === 204) {
+                    listarMateriales();
+                    Swal.fire('¡Eliminado!', 'El material ha sido eliminado.', 'success');
+                } else {
+                    Swal.fire('Error', 'No se pudo eliminar el material.', 'error');
+                }
+            } catch (error) { 
+                console.error(error); 
+                Swal.fire('Error', 'Error de conexión', 'error');
+            }
         }
-    } catch (error) { console.error(error); }
+    });
 }
 
 function renderizarLista(materiales) {
@@ -187,6 +224,7 @@ function renderizarLista(materiales) {
         const card = document.createElement('div');
         card.className = 'card-material';
         
+        // Se cambiaron los SVG inline por íconos de FontAwesome para mantener consistencia
         card.innerHTML = `
             <div class="card-icono">
                 <div class="card-icono-inner">
@@ -203,10 +241,10 @@ function renderizarLista(materiales) {
             </div>
             <div class="card-acciones">
                 <button class="btn-editar" onclick="cargarDatosEdicion(${mat.id_material})" title="Editar">
-                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                   <i class="fa-solid fa-pen"></i>
                 </button>
                 <button class="btn-eliminar" onclick="eliminarMaterial(${mat.id_material})" title="Eliminar">
-                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                   <i class="fa-solid fa-trash"></i>
                 </button>
             </div>
         `;
@@ -218,15 +256,14 @@ function procesarImagen(event) {
     const file = event.target.files[0];
     if (file) {
         if (!file.type.startsWith('image/')) {
-            alert("Solo se permiten imágenes");
+            Swal.fire('Formato inválido', 'Solo se permiten imágenes.', 'warning');
             return;
         }
         if (file.size > 2 * 1024 * 1024) { 
-            alert("La imagen es muy pesada (Máx 5MB)");
+            Swal.fire('Muy pesado', 'La imagen es muy pesada (Máx 2MB)', 'warning');
             return;
         }
 
-   
         fotoNuevaFile = file;
 
         const reader = new FileReader();

@@ -5,39 +5,65 @@
     <title>Gestión de Materiales</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="materiales.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        .btn-volver {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            margin-right: 15px;
+            font-size: 14px;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-volver:hover {
+            background: rgba(255,255,255,0.15);
+            border-color: white;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+    </style>
 </head>
 <body>
 
-    <!-- ENCABEZADO -->
     <header class="header">
-        <h1>Gestión de Materiales</h1>
+        <div class="header-left">
+            <a href="index.html" class="btn-volver">
+                <i class="fa-solid fa-arrow-left"></i> Volver
+            </a>
+            <h1>Gestión de Materiales</h1>
+        </div>
         <button id="btnNuevoMaterial" type="button" class="btn-agregar">
-            + Agregar Material
+            <i class="fa-solid fa-plus"></i> Agregar Material
         </button>
     </header>
 
     <div class="search-container">
         <input type="text" id="searchInput"
-        placeholder="Buscar Material" autocomplete="on">
+        placeholder="Buscar Material (ej: plástico, vidrio...)" autocomplete="on">
     </div>
 
-    <!-- LISTA DE MATERIALES -->
     <main class="contenedor" id="listaMateriales">
-        <!-- Las tarjetas de materiales se generan con JS -->
-    </main>
+        </main>
 
-    <!-- MODAL AGREGAR / EDITAR MATERIAL -->
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal-container" id="modalContainer">
 
             <div class="modal-header">
                 <h2 id="modalTitle">Agregar Material</h2>
-                <button type="button" class="modal-close" id="btnCerrarModal">✕</button>
+                <button type="button" class="modal-close" id="btnCerrarModal"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
             <form id="materialForm">
 
-                <!-- IMPORTANTE: hidden para ID -->
                 <input type="hidden" id="idMaterial" name="idMaterial">
 
                 <div class="modal-body">
@@ -48,7 +74,7 @@
                         id="nombreMaterial"
                         name="nombreMaterial"
                         class="input-field"
-                        placeholder="Botellas Plásticas"
+                        placeholder="Ej: Botellas Plásticas"
                         required
                     >
 
@@ -74,7 +100,7 @@
                                 class="btn-upload"
                                 id="btnSeleccionarImagen"
                             >
-                                Subir Foto
+                                <i class="fa-solid fa-cloud-arrow-up"></i> Subir Foto
                             </button>
                             <input
                                 type="file"
@@ -92,7 +118,7 @@
                         id="tipoMaterial"
                         name="tipoMaterial"
                         class="input-field"
-                        placeholder="Plástico, Papel, Vidrio..."
+                        placeholder="Ej: Plástico, Papel, Vidrio..."
                     >
 
                     <label for="puntosKg">Puntos por Kg</label>
@@ -101,8 +127,9 @@
                         id="puntosKg"
                         name="puntosKg"
                         class="input-field"
-                        placeholder="5"
+                        placeholder="Ej: 5"
                         min="0"
+                        step="0.01"
                         required
                     >
 
@@ -122,6 +149,8 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <script src="materiales.js" defer></script>
 </body>
 </html>
