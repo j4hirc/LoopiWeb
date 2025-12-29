@@ -1,106 +1,162 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Ubicación - Loopi</title>
+    <title>Gestión de Ubicación | Loopi</title>
     <link rel="stylesheet" href="ubicacion.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-
 <body>
 
+    <div class="bg-decoration"></div>
+
     <header class="header">
-        <h2>Gestión de Ubicaciones</h2>
-        <button class="btn-agregar" onclick="abrirModal()">+ Nueva Ubicación</button>
+        <div class="header-content">
+            <div class="header-left">
+                <div class="titulo-seccion">
+                    <h1><i class="fa-solid fa-map-location-dot"></i> Puntos de Reciclaje</h1>
+                    <p>Gestiona las ubicaciones y horarios</p>
+                </div>
+            </div>
+            
+            <button class="btn-agregar" onclick="abrirModal()">
+                <div class="icon-circle"><i class="fa-solid fa-plus"></i></div>
+                <span>Nueva Ubicación</span>
+            </button>
+        </div>
     </header>
 
-    <div class="search-container">
-        <input type="text" id="buscarUbicacion" placeholder="Buscar ubicación...">
+    <div class="search-wrapper">
+        <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="buscarUbicacion" placeholder="Buscar por nombre, parroquia o calle...">
+        </div>
     </div>
 
     <div class="grid-container" id="gridUbicaciones">
-    </div>
+        </div>
 
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal-container">
 
             <div class="modal-header">
-                <span id="tituloModal">Nueva Ubicación</span>
-                <button class="modal-close" onclick="cerrarModal()">✕</button>
+                <h2 id="tituloModal">Nueva Ubicación</h2>
+                <button class="modal-close" onclick="cerrarModal()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
 
             <div class="modal-body">
                 <input type="hidden" id="idUbicacion">
 
-                <label>Imagen del Punto</label>
-                <div class="img-row">
-                    <div class="img-preview" id="previewImg"></div>
-                    <input type="file" id="inputImg" accept="image/*">
-                </div>
-
-                <label>Nombre del Punto</label>
-                <input type="text" class="input-field" id="nombrePunto">
-
-                <label>Parroquia</label>
-                <select class="input-field" id="parroquia">
-                    <option value="">Seleccione...</option>
-                </select>
-
-                <label>Reciclador Asignado</label>
-                <select class="input-field" id="selectReciclador">
-                    <option value="">Ninguno (Sin asignar)</option>
-                </select>
-
-                <label>Materiales que acepta</label>
-                <div id="containerMateriales" class="materiales-grid">
-                    <p>Cargando materiales...</p>
-                </div>
-
-                <label style="margin-top: 15px; display: block;">Horarios de Atención</label>
-                <div id="containerHorarios" style="margin-bottom: 10px;">
+                <div class="form-section">
+                    <label>Fotografía del Punto</label>
+                    <div class="img-row">
+                        <div class="img-preview" id="previewImg">
+                            <i class="fa-regular fa-image"></i>
+                        </div>
+                        <div class="file-input-wrapper">
+                            <label for="inputImg" class="btn-upload">
+                                <i class="fa-solid fa-camera"></i> Subir Foto
+                            </label>
+                            <input type="file" id="inputImg" accept="image/*">
+                        </div>
                     </div>
-                <button class="btn-mapa" style="background-color: #3498db; width: auto; font-size: 0.8rem; padding: 5px 10px;" onclick="agregarFilaHorario()">
-                    + Agregar Horario
-                </button>
-                <label style="margin-top: 15px;">Dirección</label>
-                <input type="text" class="input-field" id="direccion">
+                </div>
 
-                <label>Ubicación Geográfica</label>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nombre del Punto</label>
+                        <input type="text" class="input-field" id="nombrePunto" placeholder="Ej: Parque Central">
+                    </div>
+                    <div class="form-group">
+                        <label>Parroquia</label>
+                        <select class="input-field" id="parroquia">
+                            <option value="">Seleccione...</option>
+                            </select>
+                    </div>
+                </div>
+
+                <div class="form-group full-width">
+                    <label>Reciclador Asignado</label>
+                    <div class="select-wrapper">
+                        <select class="input-field" id="selectReciclador">
+                            <option value="">Ninguno (Sin asignar)</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down arrow-icon"></i>
+                    </div>
+                </div>
+
+                <div class="form-group full-width">
+                    <label>Materiales Aceptados</label>
+                    <div id="containerMateriales" class="materiales-grid">
+                        <p class="loading-text">Cargando materiales...</p>
+                    </div>
+                </div>
+
+                <div class="form-divider"></div>
+                <div class="header-horarios">
+                    <label>Horarios de Atención</label>
+                    <button class="btn-small-add" onclick="agregarFilaHorario()">
+                        <i class="fa-solid fa-plus"></i> Agregar
+                    </button>
+                </div>
+                <div id="containerHorarios" class="horarios-container">
+                    </div>
+
+                <div class="form-group full-width">
+                    <label>Dirección Escrita</label>
+                    <input type="text" class="input-field" id="direccion" placeholder="Calle principal y secundaria...">
+                </div>
+
+                <label>Geolocalización</label>
                 <div class="geo-row">
-                    <button class="btn-mapa" onclick="abrirModalMapa()">📍 Abrir Mapa</button>
                     <div class="coords-display">
-                        Lat: <span id="txtLat">0.0</span> <br>
-                        Lng: <span id="txtLng">0.0</span>
+                        <div><i class="fa-solid fa-location-crosshairs"></i> Lat: <span id="txtLat">0.0</span></div>
+                        <div><i class="fa-solid fa-location-crosshairs"></i> Lng: <span id="txtLng">0.0</span></div>
                     </div>
+                    <button class="btn-mapa" onclick="abrirModalMapa()">
+                        <i class="fa-solid fa-map-location"></i> Abrir Mapa
+                    </button>
                 </div>
             </div>
 
             <div class="modal-footer">
                 <button class="btn-cancelar" onclick="cerrarModal()">Cancelar</button>
-                <button class="btn-guardar" onclick="guardarUbicacion()">Guardar</button>
+                <button class="btn-guardar" onclick="guardarUbicacion()">
+                    <i class="fa-solid fa-floppy-disk"></i> Guardar
+                </button>
             </div>
 
         </div>
     </div>
 
-    <div class="modal-overlay" id="modalMapa" style="z-index: 99999;">
-        <div class="modal-container" style="height: 80vh; max-width: 800px; width: 95%;">
-            <div class="modal-header" style="display: flex; align-items: center; justify-content: space-between;">
-                <span>Selecciona el punto</span>
-                <button class="btn-gps" onclick="obtenerUbicacionActual()">
-                    📍 Usar mi ubicación
+    <div class="modal-overlay" id="modalMapa">
+        <div class="modal-container map-modal-size">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-thumbtack"></i> Pinchar Ubicación</h2>
+                <button class="modal-close" onclick="cerrarModalMapa()">
+                    <i class="fa-solid fa-xmark"></i>
                 </button>
-                <button class="modal-close" onclick="cerrarModalMapa()">✕</button>
             </div>
-            <div class="modal-body" style="padding: 0; display: flex; flex-direction: column; flex: 1;">
-                <div id="mapaLeaflet" style="width: 100%; height: 100%; min-height: 400px;"></div>
+            
+            <div class="modal-map-body">
+                <div class="map-controls">
+                     <button class="btn-gps" onclick="obtenerUbicacionActual()">
+                        <i class="fa-solid fa-crosshairs"></i> Mi Ubicación
+                    </button>
+                </div>
+                <div id="mapaLeaflet"></div>
             </div>
+
             <div class="modal-footer">
                 <button class="btn-cancelar" onclick="cerrarModalMapa()">Cancelar</button>
-                <button class="btn-guardar" onclick="confirmarCoordenadas()">Confirmar Ubicación</button>
+                <button class="btn-guardar" onclick="confirmarCoordenadas()">
+                    <i class="fa-solid fa-check"></i> Confirmar
+                </button>
             </div>
         </div>
     </div>
