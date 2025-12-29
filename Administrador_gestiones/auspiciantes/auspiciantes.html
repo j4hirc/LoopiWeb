@@ -107,30 +107,6 @@
                 });
             });
         });
-
-        if(grid) {
-            observer.observe(grid, { childList: true });
-        }
-
-        const btnUpload = document.getElementById('btnImagenAusp');
-        const inputFile = document.getElementById('imagenAusp');
-        const imgPreview = document.getElementById('previewAusp');
-        const fileNameSpan = document.querySelector('.file-name');
-
-        if(btnUpload && inputFile) {
-            btnUpload.addEventListener('click', () => inputFile.click());
-            
-            inputFile.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if(file){
-                    fileNameSpan.textContent = file.name;
-                    // Previsualización rápida local (antes de que tu lógica lo procese)
-                    const reader = new FileReader();
-                    reader.onload = (evt) => imgPreview.src = evt.target.result;
-                    reader.readAsDataURL(file);
-                }
-            });
-        }
     </script>
 </body>
 </html>
