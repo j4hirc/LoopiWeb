@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -70,6 +71,14 @@
                 <div class="card-info">
                     <h3>Historial</h3>
                     <p>Entregas realizadas</p>
+                </div>
+
+                <div class="card card-purple" onclick="abrirEstadisticas()">
+                    <div class="card-icon"><i class="fa-solid fa-chart-pie"></i></div>
+                    <div class="card-info">
+                        <h3>Mis Estadísticas</h3>
+                        <p>Tu impacto ambiental</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -151,6 +160,33 @@
             </div>
         </div>
     </div>
+
+    <div class="modal-overlay-perfil" id="modalEstadisticas" style="display: none;">
+    <div class="modal-container-perfil" style="max-width: 90%; width: 600px;">
+        <div class="modal-header-perfil">
+            <span class="modal-title-perfil"><i class="fa-solid fa-chart-line"></i> Mi Impacto</span>
+            <button class="modal-close-perfil" onclick="cerrarModalEstadisticas()">✕</button>
+        </div>
+        
+        <div class="modal-body-perfil" style="padding: 20px;">
+            <div style="display: flex; gap: 15px; margin-bottom: 20px; overflow-x: auto;">
+                <div class="stat-box" style="flex:1; background:#e8f5e9; padding:15px; border-radius:10px; text-align:center;">
+                    <h3 id="statKilos" style="color:#2ecc71; font-size:1.8rem; margin:0;">0.0</h3>
+                    <small style="color:#555;">Kilos Totales</small>
+                </div>
+                <div class="stat-box" style="flex:1; background:#e3f2fd; padding:15px; border-radius:10px; text-align:center;">
+                    <h3 id="statEntregas" style="color:#3498db; font-size:1.8rem; margin:0;">0</h3>
+                    <small style="color:#555;">Entregas Hechas</small>
+                </div>
+            </div>
+
+            <h4 style="margin-bottom: 10px; color: #333;">Materiales Recolectados</h4>
+            <div style="position: relative; height: 300px; width: 100%;">
+                <canvas id="chartMisMateriales"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
 
     <script src="reciclador.js"></script>
 </body>

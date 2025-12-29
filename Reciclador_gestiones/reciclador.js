@@ -377,3 +377,96 @@ function cerrarSesion() {
 function redirigirLogin() {
   location.href = "../incio_de_sesion/login-registro.html";
 }
+
+let chartInstance = null;
+
+async function abrirEstadisticas() {
+    Swal.fire({ title: "Cargando datos...", didOpen: () => Swal.showLoading() });
+
+    try {
+        const res = await fetch(`${API_BASE}/solicitud_recolecciones`);
+        if (!res.ok) throw new Error("Error al cargar datos");
+        
+        const todas = await res.json();
+        
+        // Filtramos: Solo donde soy el reciclador Y están FINALIZADAS
+        const misEntregas = todas.filter(s => 
+            s.reciclador && s.reciclador.cedula === usuario.cedula && 
+            s.estado === 'FINALIZADO'
+        );
+
+        calcularYMostrarStats(misEntregas);
+        
+        Swal.close();
+        document.getElementById("modalEstadisticas").style.display = "flex";
+
+    } catch (e) {
+        console.error(e);
+        Swal.fire("Error", "No se pudieron cargar tus estadísticas", "error");
+    }
+}
+
+function calcularYMostrarStats(entregas) {
+    let totalKg = 0;
+    const materialesCount = {};
+
+    entregas.forEach(s => {
+        if(s.detalles) {
+            s.detalles.forEach(d => {
+                totalKg += d.cantidad_kg;
+                const matName = d.material ? d.material.nombre : "Otros";
+                materialesCount[matName] = (materialesCount[matName] || 0) + d.cantidad_kg;
+            });
+        }
+    });
+
+    // Actualizar números
+    document.getElementById("statKilos").innerText = totalKg.toFixed(1);
+    document.getElementById("statEntregas").innerText = entregas.length;
+
+    // Generar Gráfica
+    const ctx = document.getElementById('chartMisMateriales').getContext('2d');
+    
+    if (chartInstance) {
+        chartInstance.destroy(); // Destruir anterior para no sobreponer
+    }
+
+    // Si no hay datos, mostrar mensaje o gráfica vacía
+    const labels = Object.keys(materialesCount);
+    const data = Object.values(materialesCount);
+
+    chartInstance = new Chart(ctx, {
+        type: 'doughnut', // Gráfica de dona
+        data: {
+            labels: labels.length ? labels : ['Sin datos'],
+            datasets: [{
+                data: data.length ? data : [1],
+                backgroundColor: labels.length 
+                    ? ['#2ecc71', '#3498db', '#9b59b6', '#f1c40f', '#e74c3c'] 
+                    : ['#e0e0e0'],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            if (label) label += ': ';
+                            if (context.parsed !== null) label += context.parsed + ' Kg';
+                            return label;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function cerrarModalEstadisticas() {
+    document.getElementById("modalEstadisticas").style.display = "none";
+}

@@ -610,3 +610,12 @@ body {
 #menu-toggle {
     display: none;
 }
+
+.card-purple {
+    background: linear-gradient(135deg, #9b59b6, #8e44ad);
+    color: white;
+}
+.card-purple:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(155, 89, 182, 0.4);
+}
