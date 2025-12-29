@@ -115,25 +115,37 @@ function aplicarFiltros() {
 }
 
 function actualizarDashboard(datos) {
-    const finalizados = datos.filter(s => s.estado === 'FINALIZADO');
+    // ELIMINAMOS EL FILTRO FORZOSO DE 'FINALIZADO'
+    // Ahora usamos 'datos', que trae exactamente lo que elegiste en los filtros de arriba.
+    
     let totalKg = 0;
     let totalPuntos = 0;
 
-    finalizados.forEach(s => {
+    // Calculamos los totales basados en lo que estás viendo actualmente
+    datos.forEach(s => {
+        // Sumamos puntos si tiene
         totalPuntos += (s.puntos_ganados || 0);
-        if(s.detalles) s.detalles.forEach(d => totalKg += d.cantidad_kg);
+        
+        // Sumamos Kilos si tiene detalles
+        if(s.detalles) {
+            s.detalles.forEach(d => totalKg += d.cantidad_kg);
+        }
     });
 
+    // Actualizamos los cuadritos de arriba (KPIs)
     document.getElementById("totalKgGlobal").innerText = totalKg.toFixed(1);
     document.getElementById("totalUsuarios").innerText = usuariosTotal;
     document.getElementById("totalRecolecciones").innerText = datos.length; 
     document.getElementById("totalPuntos").innerText = totalPuntos;
 
-    generarGraficoMateriales(finalizados);
-    generarGraficoTopRecicladores(finalizados);
-    generarGraficoTendencia(finalizados);
-    generarTablaRecicladores(datos);
+    // --- AQUÍ EL CAMBIO CLAVE ---
+    // Le pasamos 'datos' (que incluye los pendientes) a las gráficas
+    generarGraficoMateriales(datos);
+    generarGraficoTopRecicladores(datos);
+    generarGraficoTendencia(datos);
     
+    // Las tablas también reciben 'datos'
+    generarTablaRecicladores(datos);
     generarTopUsuarios(datos); 
 }
 
