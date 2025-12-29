@@ -9,21 +9,22 @@ let chartTendenciaInstance = null;
 document.addEventListener("DOMContentLoaded", async () => {
     await cargarTodo();
 
-    // Listeners
+    // Listeners para los filtros
     document.getElementById('filtroInicio').addEventListener('change', aplicarFiltros);
     document.getElementById('filtroFin').addEventListener('change', aplicarFiltros);
     document.getElementById('filtroEstado').addEventListener('change', aplicarFiltros);
     document.getElementById('filtroTipoRecolector').addEventListener('change', aplicarFiltros);
     document.getElementById('filtroReciclador').addEventListener('keyup', aplicarFiltros);
 });
+
 async function cargarTodo() {
     try {
         const resSol = await fetch(`${API_BASE}/solicitud_recolecciones`);
         if(!resSol.ok) throw new Error("Error fetching solicitudes");
         datosCrudos = await resSol.json();
 
-        // Debug: Ver qué llega en consola
-        console.log("Datos cargados:", datosCrudos);
+        // Debug: Mira esto en la consola (F12) para ver tus datos reales
+        console.log("Datos Recibidos:", datosCrudos);
 
         const resUs = await fetch(`${API_BASE}/usuarios`);
         if(resUs.ok) {
@@ -47,7 +48,7 @@ function aplicarFiltros() {
     const busqueda = document.getElementById('filtroReciclador').value.toLowerCase().trim();
 
     const filtrados = datosCrudos.filter(item => {
-        // 1. Validar fechas (Solo si existen)
+        // 1. Validar fechas
         if (item.fecha_recoleccion_real || item.fecha_creacion) {
             const fechaItem = new Date(item.fecha_recoleccion_real || item.fecha_creacion);
             fechaItem.setHours(0,0,0,0);
@@ -73,19 +74,19 @@ function aplicarFiltros() {
             }
         }
 
-        // 3. --- LÓGICA DE TIPO DE RECOLECTOR (CORREGIDA Y SIMPLIFICADA) ---
-        // Fijo: Si tiene ID de ubicación válido
-        // Móvil: Si NO es fijo y tiene reciclador
+        // 3. --- LÓGICA DE TIPO DE RECOLECTOR (LA CORRECCIÓN ESTÁ AQUÍ) ---
         
-        const tieneUbicacion = item.ubicacion && item.ubicacion.id_ubicacion_reciclaje;
-        const esPuntoFijo = !!tieneUbicacion; // Convertir a booleano real
-        const esMovil = !esPuntoFijo && (item.reciclador && item.reciclador.cedula);
+        // Verificamos por ID para evitar falsos positivos con objetos vacíos
+        const tieneIDUbicacion = item.ubicacion && item.ubicacion.id_ubicacion_reciclaje != null;
+        const tieneIDReciclador = item.reciclador && item.reciclador.cedula != null;
 
         if(tipoRec === "RECICLADOR") {
-            if (!esMovil) return false; 
+            // Es móvil si TIENE reciclador y NO TIENE ID de ubicación
+            if (!tieneIDReciclador || tieneIDUbicacion) return false; 
         }
         if(tipoRec === "PUNTO") {
-            if (!esPuntoFijo) return false;
+            // Es punto fijo si TIENE ID de ubicación
+            if (!tieneIDUbicacion) return false;
         }
         // ----------------------------------------------------
 
@@ -109,9 +110,9 @@ function aplicarFiltros() {
         return true;
     });
 
+    console.log("Filtrados (" + tipoRec + "):", filtrados.length); // Para debug
     actualizarDashboard(filtrados);
 }
-
 
 function actualizarDashboard(datos) {
     const finalizados = datos.filter(s => s.estado === 'FINALIZADO' || s.estado === 'COMPLETADA');
@@ -131,9 +132,109 @@ function actualizarDashboard(datos) {
     generarGraficoMateriales(finalizados);
     generarGraficoTopRecicladores(finalizados);
     generarGraficoTendencia(finalizados);
+    
+    // IMPORTANTE: Aquí se genera la tabla con la lógica corregida
     generarTablaRecicladores(datos);
     generarTopUsuarios(datos); 
 }
+
+function generarTablaRecicladores(lista) {
+    const tbody = document.getElementById("tbodyRecicladores");
+    tbody.innerHTML = "";
+    const mapa = {}; 
+
+    lista.forEach(s => {
+        let key = "";
+        let nombreDisplay = "Desconocido";
+        let cedulaDisplay = "-";
+        let esFijo = false;
+        
+        // --- LÓGICA DE AGRUPACIÓN (IGUAL QUE EL FILTRO) ---
+        
+        // Validamos por ID para estar seguros
+        if (s.ubicacion && s.ubicacion.id_ubicacion_reciclaje != null) {
+            // ES PUNTO FIJO
+            key = "U_" + s.ubicacion.id_ubicacion_reciclaje;
+            nombreDisplay = s.ubicacion.nombre || "Sin Nombre";
+            cedulaDisplay = "Punto Fijo";
+            esFijo = true;
+        } 
+        else if(s.reciclador && s.reciclador.cedula != null) {
+            // ES RECICLADOR MÓVIL
+            key = "R_" + s.reciclador.cedula;
+            nombreDisplay = `${s.reciclador.primer_nombre || ""} ${s.reciclador.apellido_paterno || ""}`.trim();
+            cedulaDisplay = s.reciclador.cedula;
+            esFijo = false;
+        } 
+        else {
+            // Si llega aquí, el dato está huérfano (sin ID de nada), lo ignoramos
+            return; 
+        }
+        
+        // --- FIN LÓGICA ---
+
+        if(!mapa[key]) {
+            mapa[key] = { 
+                nombre: nombreDisplay,
+                cedula: cedulaDisplay,
+                esFijo: esFijo, 
+                entregas: 0,
+                canceladas: 0,
+                totalKg: 0,
+                matCount: {}
+            };
+        }
+        
+        mapa[key].entregas++;
+        
+        if (s.estado === 'CANCELADO' || s.estado === 'RECHAZADO') {
+            mapa[key].canceladas++;
+        }
+
+        if((s.estado === 'FINALIZADO' || s.estado === 'COMPLETADA') && s.detalles) {
+            s.detalles.forEach(d => {
+                mapa[key].totalKg += d.cantidad_kg;
+                const mName = d.material ? d.material.nombre : "?";
+                mapa[key].matCount[mName] = (mapa[key].matCount[mName] || 0) + d.cantidad_kg;
+            });
+        }
+    });
+
+    const entidadesArray = Object.values(mapa);
+    document.getElementById("countRecicladores").innerText = entidadesArray.length + " encontrados";
+
+    if(entidadesArray.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px; color:#999;">No hay datos para mostrar.</td></tr>`;
+        return;
+    }
+
+    entidadesArray.sort((a,b) => b.totalKg - a.totalKg);
+
+    entidadesArray.forEach(r => {
+        let topMat = "N/A";
+        let maxVal = 0;
+        Object.entries(r.matCount).forEach(([k,v]) => {
+            if(v > maxVal) { maxVal = v; topMat = k; }
+        });
+
+        const resumenEntregas = `${r.entregas} <small style="color:#e74c3c">(${r.canceladas} canc.)</small>`;
+        
+        const icono = r.esFijo 
+            ? '<i class="fa-solid fa-map-pin" style="color:#e67e22; margin-right:5px;"></i>' 
+            : '<i class="fa-solid fa-user" style="color:#3498db; margin-right:5px;"></i>';
+
+        const row = `<tr>
+            <td>${icono} <strong>${r.nombre}</strong></td>
+            <td>${r.cedula}</td>
+            <td>${resumenEntregas}</td>
+            <td><strong>${r.totalKg.toFixed(1)} Kg</strong></td>
+            <td><span style="background:#e8f5e9; color:#2e7d32; padding:3px 8px; border-radius:4px; font-size:0.85rem;">${topMat}</span></td>
+        </tr>`;
+        tbody.innerHTML += row;
+    });
+}
+
+// --- FUNCIONES GRÁFICAS (SIN CAMBIOS, SOLO PARA QUE NO DE ERROR DE REFERENCIA) ---
 
 function generarGraficoMateriales(lista) {
     const matStats = {};
@@ -200,10 +301,10 @@ function generarGraficoTopRecicladores(lista) {
     const recStats = {};
     lista.forEach(s => {
         let nombreEntidad = "Desconocido";
-        if(s.reciclador) {
-            nombreEntidad = `👤 ${s.reciclador.primer_nombre} ${s.reciclador.apellido_paterno}`;
-        } else if (s.ubicacion) {
-            nombreEntidad = `📍 ${s.ubicacion.nombre}`;
+        if(s.ubicacion && s.ubicacion.id_ubicacion_reciclaje != null) {
+             nombreEntidad = `📍 ${s.ubicacion.nombre}`;
+        } else if(s.reciclador && s.reciclador.cedula != null) {
+             nombreEntidad = `👤 ${s.reciclador.primer_nombre} ${s.reciclador.apellido_paterno}`;
         } else {
             return;
         }
@@ -237,103 +338,6 @@ function generarGraficoTopRecicladores(lista) {
     });
 }
 
-function generarTablaRecicladores(lista) {
-    const tbody = document.getElementById("tbodyRecicladores");
-    tbody.innerHTML = "";
-    const mapa = {}; 
-
-    lista.forEach(s => {
-        let key = "";
-        let nombreDisplay = "Desconocido";
-        let cedulaDisplay = "-";
-        let esFijo = false;
-        
-        // --- LÓGICA DE AGRUPACIÓN ROBUSTA ---
-        
-        if (s.ubicacion && s.ubicacion.id_ubicacion_reciclaje) {
-            // ES PUNTO FIJO
-            key = "U_" + s.ubicacion.id_ubicacion_reciclaje;
-            nombreDisplay = s.ubicacion.nombre || "Sin Nombre";
-            cedulaDisplay = "Punto Fijo";
-            esFijo = true;
-        } 
-        else if(s.reciclador && s.reciclador.cedula) {
-            // ES RECICLADOR MÓVIL
-            key = "R_" + s.reciclador.cedula;
-            nombreDisplay = `${s.reciclador.primer_nombre || ""} ${s.reciclador.apellido_paterno || ""}`.trim();
-            cedulaDisplay = s.reciclador.cedula;
-            esFijo = false;
-        } 
-        else {
-            // DATO HUÉRFANO (No tiene ni uno ni otro) -> Lo ignoramos o lo agrupamos en "Otros"
-            return; 
-        }
-        
-        // --- FIN LÓGICA ---
-
-        if(!mapa[key]) {
-            mapa[key] = { 
-                nombre: nombreDisplay,
-                cedula: cedulaDisplay,
-                esFijo: esFijo, // Guardamos el tipo para el icono
-                entregas: 0,
-                canceladas: 0,
-                totalKg: 0,
-                matCount: {}
-            };
-        }
-        
-        mapa[key].entregas++;
-        
-        if (s.estado === 'CANCELADO' || s.estado === 'RECHAZADO') {
-            mapa[key].canceladas++;
-        }
-
-        if(s.estado === 'FINALIZADO' && s.detalles) {
-            s.detalles.forEach(d => {
-                mapa[key].totalKg += d.cantidad_kg;
-                const mName = d.material ? d.material.nombre : "?";
-                mapa[key].matCount[mName] = (mapa[key].matCount[mName] || 0) + d.cantidad_kg;
-            });
-        }
-    });
-
-    const entidadesArray = Object.values(mapa);
-    document.getElementById("countRecicladores").innerText = entidadesArray.length + " encontrados";
-
-    if(entidadesArray.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px; color:#999;">No hay datos para mostrar.</td></tr>`;
-        return;
-    }
-
-    // Ordenar de mayor a menor peso recolectado
-    entidadesArray.sort((a,b) => b.totalKg - a.totalKg);
-
-    entidadesArray.forEach(r => {
-        let topMat = "N/A";
-        let maxVal = 0;
-        Object.entries(r.matCount).forEach(([k,v]) => {
-            if(v > maxVal) { maxVal = v; topMat = k; }
-        });
-
-        const resumenEntregas = `${r.entregas} <small style="color:#e74c3c">(${r.canceladas} canc.)</small>`;
-        
-        // Icono basado en la bandera que guardamos
-        const icono = r.esFijo 
-            ? '<i class="fa-solid fa-map-pin" style="color:#e67e22; margin-right:5px;"></i>' 
-            : '<i class="fa-solid fa-user" style="color:#3498db; margin-right:5px;"></i>';
-
-        const row = `<tr>
-            <td>${icono} <strong>${r.nombre}</strong></td>
-            <td>${r.cedula}</td>
-            <td>${resumenEntregas}</td>
-            <td><strong>${r.totalKg.toFixed(1)} Kg</strong></td>
-            <td><span style="background:#e8f5e9; color:#2e7d32; padding:3px 8px; border-radius:4px; font-size:0.85rem;">${topMat}</span></td>
-        </tr>`;
-        tbody.innerHTML += row;
-    });
-}
-
 function generarTopUsuarios(lista) {
     const tbody = document.getElementById("tbodyTopUsuarios");
     if (!tbody) return; 
@@ -342,7 +346,7 @@ function generarTopUsuarios(lista) {
     const mapaUsuarios = {};
 
     lista.forEach(s => {
-        if (s.estado !== 'FINALIZADO' || !s.solicitante) return;
+        if ((s.estado !== 'FINALIZADO' && s.estado !== 'COMPLETADA') || !s.solicitante) return;
 
         const ced = s.solicitante.cedula;
 
@@ -397,15 +401,14 @@ function resetearFiltros() {
     document.getElementById('filtroInicio').value = '';
     document.getElementById('filtroFin').value = '';
     document.getElementById('filtroEstado').value = 'TODOS';
-    document.getElementById('filtroTipoRecolector').value = 'TODOS'; // RESETEAR NUEVO FILTRO
+    document.getElementById('filtroTipoRecolector').value = 'TODOS'; 
     document.getElementById('filtroReciclador').value = '';
     aplicarFiltros();
 }
 
-
 function descargarPDF() {
     const elemento = document.getElementById('reporteContent');
-    const botones = document.querySelectorAll('button, .navbar, .filters-card'); // Ocultamos filtros y nav también
+    const botones = document.querySelectorAll('button, .navbar, .filters-card'); 
     
     botones.forEach(b => b.style.display = 'none');
 
@@ -422,20 +425,11 @@ function descargarPDF() {
     });
 
     const opt = {
-        margin:       [0.4, 0.4, 0.4, 0.4], // Margen: Arriba, Izq, Abajo, Der (pulgadas)
+        margin:       [0.4, 0.4, 0.4, 0.4], 
         filename:     `Reporte_Loopi_${new Date().toISOString().slice(0,10)}.pdf`,
-        image:        { type: 'jpeg', quality: 1 }, // Máxima calidad
-        html2canvas:  { 
-            scale: 2, 
-            useCORS: true, 
-            letterRendering: true,
-            scrollY: 0
-        },
-        jsPDF:        { 
-            unit: 'in', 
-            format: 'a4', 
-            orientation: 'portrait' 
-        },
+        image:        { type: 'jpeg', quality: 1 }, 
+        html2canvas:  { scale: 2, useCORS: true, letterRendering: true, scrollY: 0 },
+        jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' },
         pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
@@ -458,4 +452,4 @@ function descargarPDF() {
             showConfirmButton: false
         });
     });
-}    
+}
