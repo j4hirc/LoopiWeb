@@ -2,155 +2,129 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Gestión de Materiales</title>
+    <title>Gestión de Materiales | Loopi</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="materiales.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <style>
-        .btn-volver {
-            background: transparent;
-            border: 1px solid rgba(255,255,255,0.3);
-            color: white;
-            padding: 8px 15px;
-            border-radius: 8px;
-            text-decoration: none;
-            margin-right: 15px;
-            font-size: 14px;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .btn-volver:hover {
-            background: rgba(255,255,255,0.15);
-            border-color: white;
-        }
-        .header-left {
-            display: flex;
-            align-items: center;
-        }
-    </style>
+    <link rel="stylesheet" href="materiales.css">
 </head>
 <body>
 
+    <div class="bg-decoration"></div>
+
     <header class="header">
-        <div class="header-left">
-            <a href="../menu-gestiones.html" class="btn-volver">
-                <i class="fa-solid fa-arrow-left"></i> Volver
-            </a>
-            <h1>Gestión de Materiales</h1>
+        <div class="header-content">
+            <div class="header-left">
+                <a href="../menu-gestiones.html" class="btn-volver">
+                    <i class="fa-solid fa-arrow-left"></i> <span>Volver</span>
+                </a>
+                <div class="titulo-seccion">
+                    <h1><i class="fa-solid fa-recycle"></i> Materiales</h1>
+                    <p>Gestiona precios y tipos de residuos</p>
+                </div>
+            </div>
+            
+            <button id="btnNuevoMaterial" type="button" class="btn-agregar">
+                <div class="icon-circle"><i class="fa-solid fa-plus"></i></div>
+                <span>Nuevo Material</span>
+            </button>
         </div>
-        <button id="btnNuevoMaterial" type="button" class="btn-agregar">
-            <i class="fa-solid fa-plus"></i> Agregar Material
-        </button>
     </header>
 
-    <div class="search-container">
-        <input type="text" id="searchInput"
-        placeholder="Buscar Material (ej: plástico, vidrio...)" autocomplete="on">
+    <div class="search-wrapper">
+        <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="searchInput" placeholder="Buscar material (ej: Botellas, Cartón...)" autocomplete="off">
+        </div>
     </div>
 
-    <main class="contenedor" id="listaMateriales">
+    <main class="grid-container" id="listaMateriales">
         </main>
 
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal-container" id="modalContainer">
 
             <div class="modal-header">
-                <h2 id="modalTitle">Agregar Material</h2>
-                <button type="button" class="modal-close" id="btnCerrarModal"><i class="fa-solid fa-xmark"></i></button>
+                <h2 id="modalTitle">Detalle del Material</h2>
+                <button type="button" class="modal-close" id="btnCerrarModal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
 
             <form id="materialForm">
-
                 <input type="hidden" id="idMaterial" name="idMaterial">
 
                 <div class="modal-body">
-
-                    <label for="nombreMaterial">Nombre del Material</label>
-                    <input
-                        type="text"
-                        id="nombreMaterial"
-                        name="nombreMaterial"
-                        class="input-field"
-                        placeholder="Ej: Botellas Plásticas"
-                        required
-                    >
-
-                    <label for="descripcionMaterial">Descripción</label>
-                    <textarea
-                        id="descripcionMaterial"
-                        name="descripcionMaterial"
-                        class="input-field"
-                        rows="3"
-                        placeholder="Describe brevemente el material"
-                    ></textarea>
-
-                    <label>Imagen (Opcional)</label>
-                    <div class="image-section">
-                        <img
-                            id="previewImagenMaterial"
-                            src="https://cdn-icons-png.flaticon.com/512/685/685662.png"
-                            alt="Vista previa"
-                        >
-                        <div class="image-actions">
-                            <button
-                                type="button"
-                                class="btn-upload"
-                                id="btnSeleccionarImagen"
-                            >
-                                <i class="fa-solid fa-cloud-arrow-up"></i> Subir Foto
+                    
+                    <div class="img-upload-section">
+                        <div class="preview-box">
+                            <img id="previewImagenMaterial" src="https://cdn-icons-png.flaticon.com/512/685/685662.png" alt="Vista previa">
+                        </div>
+                        <div class="upload-btn-wrapper">
+                            <button type="button" class="btn-upload" id="btnSeleccionarImagen">
+                                <i class="fa-solid fa-camera"></i> Subir Imagen
                             </button>
-                            <input
-                                type="file"
-                                id="imagenMaterial"
-                                name="imagenMaterial"
-                                accept="image/*"
-                                hidden
-                            >
+                            <input type="file" id="imagenMaterial" name="imagenMaterial" accept="image/*" hidden>
                         </div>
                     </div>
 
-                    <label for="tipoMaterial">Tipo de Material</label>
-                    <input
-                        type="text"
-                        id="tipoMaterial"
-                        name="tipoMaterial"
-                        class="input-field"
-                        placeholder="Ej: Plástico, Papel, Vidrio..."
-                    >
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="nombreMaterial">Nombre</label>
+                            <input type="text" id="nombreMaterial" name="nombreMaterial" class="input-field" placeholder="Ej: Botellas PET" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="tipoMaterial">Tipo / Categoría</label>
+                            <input type="text" id="tipoMaterial" name="tipoMaterial" class="input-field" placeholder="Ej: Plástico">
+                        </div>
+                    </div>
 
-                    <label for="puntosKg">Puntos por Kg</label>
-                    <input
-                        type="number"
-                        id="puntosKg"
-                        name="puntosKg"
-                        class="input-field"
-                        placeholder="Ej: 5"
-                        min="0"
-                        step="0.01"
-                        required
-                    >
+                    <div class="form-group full-width">
+                        <label for="descripcionMaterial">Descripción</label>
+                        <textarea id="descripcionMaterial" name="descripcionMaterial" class="input-field" rows="2" placeholder="Detalles del material..."></textarea>
+                    </div>
+
+                    <div class="form-group full-width highlight-group">
+                        <label for="puntosKg">Valor en Puntos (por Kg)</label>
+                        <div class="input-with-icon">
+                            <i class="fa-solid fa-star"></i>
+                            <input type="number" id="puntosKg" name="puntosKg" class="input-field" placeholder="0.00" min="0" step="0.01" required>
+                        </div>
+                    </div>
 
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn-cancelar" id="btnCancelar">
-                        Cancelar
-                    </button>
+                    <button type="button" class="btn-cancelar" id="btnCancelar">Cancelar</button>
                     <button type="submit" class="btn-guardar" id="btnGuardar">
-                        Guardar
+                        <i class="fa-solid fa-floppy-disk"></i> Guardar
                     </button>
                 </div>
 
             </form>
-
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
-    <script src="materiales.js" defer></script>
+    <script src="materiales.js"></script>
+
+    <script>
+        const grid = document.getElementById('listaMateriales');
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                mutation.addedNodes.forEach((node) => {
+                    if (node.nodeType === 1 && node.classList.contains('card-material')) { 
+                        node.style.opacity = '0';
+                        node.style.transform = 'translateY(20px)';
+                        setTimeout(() => {
+                            node.style.opacity = '1';
+                            node.style.transform = 'translateY(0)';
+                        }, 50);
+                    }
+                });
+            });
+        });
+        observer.observe(grid, { childList: true });
+    </script>
 </body>
 </html>
