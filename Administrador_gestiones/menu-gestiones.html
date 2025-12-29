@@ -5,40 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel Administrativo | Loopi</title>
-    <link rel="stylesheet" href="styles.css">
-
-    <style>
-        .profile-img-container {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 20px;
-        }
-
-        .profile-img-preview {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid #3A6958;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .swal2-container {
-            z-index: 20000 !important;
-        }
-
-        /* --- NUEVO ESTILO PARA LA TARJETA DE VALIDACIONES --- */
-        .card-validations {
-            background: linear-gradient(135deg, #1abc9c 0%, #16a085 100%);
-            color: white;
-        }
-
-        /* ---------------------------------------------------- */
-    </style>
-
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="styles.css">
+    
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
@@ -47,7 +19,7 @@
     <nav class="navbar">
         <div class="nav-container">
             <div class="nav-logo">
-                <img src="../Imagenes/logo_icon.png" alt="Loopi Logo" class="logo-img">
+                <img src="../Imagenes/logo_icon.png" alt="Loopi Logo" class="logo-img animate-logo">
                 <span>Loopi Admin</span>
             </div>
 
@@ -56,48 +28,59 @@
 
             <ul class="nav-menu">
                 <li><a href="#" id="btnAbrirPerfil"><i class="fa-solid fa-user-gear"></i> Perfil</a></li>
-                <li><a href="#" id="btnCerrarSesion" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i>
-                        Salir</a></li>
+                <li><a href="#" id="btnCerrarSesion" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Salir</a></li>
             </ul>
         </div>
     </nav>
 
     <header class="header">
+        <div class="header-overlay"></div>
         <div class="header-content">
             <div class="header-text">
                 <h1>Centro de Control</h1>
-                <p>Bienvenido de nuevo, gestiona tu ecosistema de reciclaje.</p>
+                <p>Bienvenido de nuevo, gestiona tu ecosistema de reciclaje de forma eficiente.</p>
             </div>
             <div class="user-badge" id="saludoUsuario">
-                <i class="fa-solid fa-circle-user"></i> <span>Cargando usuario...</span>
+                <div class="user-avatar-placeholder"><i class="fa-solid fa-circle-user"></i></div>
+                <span>Cargando usuario...</span>
             </div>
         </div>
     </header>
 
     <main class="dashboard-container">
-        <h2 class="section-title">Accesos Rápidos</h2>
+        <div class="section-header">
+            <h2 class="section-title">Accesos Rápidos</h2>
+            <div class="section-line"></div>
+        </div>
 
         <div class="grid-cards">
 
-            <div class="card card-validations"
-                onclick="location.href='solicitudes_recoleccion/solicitud_recoleccion.html'">
+            <div class="card card-special card-validations" onclick="location.href='solicitudes_recoleccion/solicitud_recoleccion.html'">
                 <span class="badge-notificacion" id="badgeEntregas" style="display:none;">0</span>
-                <div class="card-icon"><i class="fa-solid fa-clipboard-check"></i></div>
+                <div class="card-icon-container">
+                    <i class="fa-solid fa-truck-fast"></i>
+                </div>
                 <div class="card-info">
                     <h3>Solicitudes Entrega</h3>
-                    <p>Revisar entregas</p>
+                    <p>Revisar y validar entregas</p>
                 </div>
+                <div class="card-arrow"><i class="fa-solid fa-chevron-right"></i></div>
             </div>
+
             <div class="card card-purple" onclick="location.href='materiales/materiales.html'">
-                <div class="card-icon"><i class="fa-solid fa-clipboard-check"></i></div>
+                <div class="card-icon-container">
+                    <i class="fa-solid fa-recycle"></i>
+                </div>
                 <div class="card-info">
                     <h3>Materiales</h3>
-                    <p>Gestionar tipos</p>
+                    <p>Gestionar precios y tipos</p>
                 </div>
             </div>
 
             <div class="card card-blue" onclick="location.href='usuarios/usuarios.html'">
-                <div class="card-icon"><i class="fa-solid fa-users"></i></div>
+                <div class="card-icon-container">
+                    <i class="fa-solid fa-users"></i>
+                </div>
                 <div class="card-info">
                     <h3>Usuarios</h3>
                     <p>Administrar cuentas</p>
@@ -105,7 +88,9 @@
             </div>
 
             <div class="card card-orange" onclick="location.href='ubicaciones/ubicacion.html'">
-                <div class="card-icon"><i class="fa-solid fa-map-location-dot"></i></div>
+                <div class="card-icon-container">
+                    <i class="fa-solid fa-map-location-dot"></i>
+                </div>
                 <div class="card-info">
                     <h3>Ubicaciones</h3>
                     <p>Puntos de reciclaje</p>
@@ -113,7 +98,9 @@
             </div>
 
             <div class="card card-pink" onclick="location.href='recompensas/recompensas.html'">
-                <div class="card-icon"><i class="fa-solid fa-gift"></i></div>
+                <div class="card-icon-container">
+                    <i class="fa-solid fa-gift"></i>
+                </div>
                 <div class="card-info">
                     <h3>Recompensas</h3>
                     <p>Catálogo de premios</p>
@@ -121,15 +108,19 @@
             </div>
 
             <div class="card card-cyan" onclick="location.href='reportes/reportes.html'">
-                <div class="card-icon"><i class="fa-solid fa-chart-pie"></i></div>
+                <div class="card-icon-container">
+                    <i class="fa-solid fa-chart-pie"></i>
+                </div>
                 <div class="card-info">
                     <h3>Reportes</h3>
-                    <p>Estadísticas</p>
+                    <p>Estadísticas globales</p>
                 </div>
             </div>
 
             <div class="card card-yellow" onclick="location.href='logros/logros.html'">
-                <div class="card-icon"><i class="fa-solid fa-trophy"></i></div>
+                <div class="card-icon-container">
+                    <i class="fa-solid fa-trophy"></i>
+                </div>
                 <div class="card-info">
                     <h3>Logros</h3>
                     <p>Medallas y metas</p>
@@ -137,7 +128,9 @@
             </div>
 
             <div class="card card-indigo" onclick="location.href='auspiciantes/auspiciantes.html'">
-                <div class="card-icon"><i class="fa-solid fa-handshake"></i></div>
+                <div class="card-icon-container">
+                    <i class="fa-solid fa-handshake"></i>
+                </div>
                 <div class="card-info">
                     <h3>Auspiciantes</h3>
                     <p>Aliados estratégicos</p>
@@ -145,15 +138,19 @@
             </div>
 
             <div class="card card-slate" onclick="location.href='ciudades/ciudades.html'">
-                <div class="card-icon"><i class="fa-solid fa-city"></i></div>
+                <div class="card-icon-container">
+                    <i class="fa-solid fa-city"></i>
+                </div>
                 <div class="card-info">
                     <h3>Ciudades</h3>
-                    <p>Cobertura</p>
+                    <p>Áreas de cobertura</p>
                 </div>
             </div>
 
             <div class="card card-red" onclick="location.href='rango/rango.html'">
-                <div class="card-icon"><i class="fa-solid fa-layer-group"></i></div>
+                <div class="card-icon-container">
+                    <i class="fa-solid fa-layer-group"></i>
+                </div>
                 <div class="card-info">
                     <h3>Rangos</h3>
                     <p>Niveles de usuario</p>
@@ -161,7 +158,9 @@
             </div>
 
             <div class="card card-green" onclick="location.href='parroquias/parroquias.html'">
-                <div class="card-icon"><i class="fa-solid fa-tree-city"></i></div>
+                <div class="card-icon-container">
+                    <i class="fa-solid fa-tree-city"></i>
+                </div>
                 <div class="card-info">
                     <h3>Parroquias</h3>
                     <p>Zonas locales</p>
@@ -169,17 +168,18 @@
             </div>
 
             <div class="card card-multimedia" onclick="location.href='multimedias/multimedia.html'">
-                <div class="card-icon"><i class="fa-solid fa-photo-film"></i></div>
+                <div class="card-icon-container">
+                    <i class="fa-solid fa-photo-film"></i>
+                </div>
                 <div class="card-info">
                     <h3>Aprende</h3>
-                    <p>Galería fotos</p>
+                    <p>Galería y educación</p>
                 </div>
             </div>
 
             <div class="card card-teal" onclick="location.href='formulario_reciclador/formularios_reciclador.html'">
                 <span class="badge-notificacion" id="badgeReciclador" style="display:none;">0</span>
-
-                <div class="card-icon">
+                <div class="card-icon-container">
                     <i class="fa-solid fa-user-check"></i>
                 </div>
                 <div class="card-info">
@@ -188,82 +188,68 @@
                 </div>
             </div>
 
-
-
-
         </div>
     </main>
 
-    <div class="modal-overlay" id="modalPerfil"
-        style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
-        <div class="modal-container"
-            style="background: white; padding: 0; border-radius: 16px; width: 95%; max-width: 500px; display: flex; flex-direction: column; overflow: hidden; animation: pop .3s ease;">
-
-            <div class="modal-header"
-                style="background: #3A6958; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-weight: 600; font-size: 1.1rem;">Mi Perfil</span>
-                <button onclick="cerrarModalPerfil()"
-                    style="background:none; border:none; color:white; font-size: 1.2rem; cursor: pointer;">✕</button>
+    <div class="modal-overlay" id="modalPerfil">
+        <div class="modal-container">
+            <div class="modal-header">
+                <span><i class="fa-solid fa-id-card"></i> Mi Perfil</span>
+                <button onclick="cerrarModalPerfil()" class="btn-close-modal">✕</button>
             </div>
 
-            <div class="modal-body" style="padding: 20px; overflow-y: auto; max-height: 80vh;">
-
+            <div class="modal-body">
                 <div class="profile-img-container">
                     <img id="perfilPreview" src="https://via.placeholder.com/100" class="profile-img-preview">
+                    <div class="profile-edit-overlay">
+                        <label for="inputPerfilFoto" class="btn-change-photo">
+                            <i class="fa-solid fa-camera"></i>
+                        </label>
+                    </div>
                 </div>
-                <div style="text-align: center; margin-bottom: 15px;">
-                    <label for="inputPerfilFoto"
-                        style="color: #3A6958; cursor: pointer; font-weight: 600; font-size: 0.9rem;">Cambiar
-                        Foto</label>
-                    <input type="file" id="inputPerfilFoto" accept="image/*" style="display: none;">
-                    <input type="hidden" id="perfilFotoBase64">
-                </div>
+                
+                <p class="text-center-muted">Toca la cámara para cambiar tu foto</p>
+                <input type="file" id="inputPerfilFoto" accept="image/*" style="display: none;">
+                <input type="hidden" id="perfilFotoBase64">
 
-                <div style="display: grid; gap: 15px;">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                        <div>
-                            <label style="font-size: 0.85rem; color: #666;">Primer Nombre</label>
-                            <input type="text" id="perfilPrimerNombre" class="input-field"
-                                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                <div class="form-grid">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Primer Nombre</label>
+                            <input type="text" id="perfilPrimerNombre" class="input-field">
                         </div>
-                        <div>
-                            <label style="font-size: 0.85rem; color: #666;">Segundo Nombre</label>
-                            <input type="text" id="perfilSegundoNombre" class="input-field"
-                                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                        <div class="form-group">
+                            <label>Segundo Nombre</label>
+                            <input type="text" id="perfilSegundoNombre" class="input-field">
                         </div>
                     </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                        <div>
-                            <label style="font-size: 0.85rem; color: #666;">Apellido Paterno</label>
-                            <input type="text" id="perfilApellidoPaterno" class="input-field"
-                                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Apellido Paterno</label>
+                            <input type="text" id="perfilApellidoPaterno" class="input-field">
                         </div>
-                        <div>
-                            <label style="font-size: 0.85rem; color: #666;">Apellido Materno</label>
-                            <input type="text" id="perfilApellidoMaterno" class="input-field"
-                                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                        <div class="form-group">
+                            <label>Apellido Materno</label>
+                            <input type="text" id="perfilApellidoMaterno" class="input-field">
                         </div>
                     </div>
-                    <div>
-                        <label style="font-size: 0.85rem; color: #666;">Correo</label>
-                        <input type="email" id="perfilCorreo" class="input-field"
-                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                    
+                    <div class="form-group">
+                        <label>Correo Electrónico</label>
+                        <input type="email" id="perfilCorreo" class="input-field" disabled style="opacity: 0.7; cursor: not-allowed;">
                     </div>
-                    <div>
-                        <label style="font-size: 0.85rem; color: #666;">Nueva Contraseña <small>(Dejar vacío para no
-                                cambiar)</small></label>
-                        <input type="password" id="perfilPassword" class="input-field" placeholder="******"
-                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                    
+                    <div class="form-group">
+                        <label>Nueva Contraseña <small>(Opcional)</small></label>
+                        <input type="password" id="perfilPassword" class="input-field" placeholder="Dejar vacío para mantener actual">
                     </div>
                 </div>
             </div>
 
-            <div class="modal-footer" style="padding: 15px 20px; background: #f8f9fa; text-align: right;">
-                <button onclick="cerrarModalPerfil()"
-                    style="padding: 8px 16px; border: 1px solid #ccc; background: white; border-radius: 6px; cursor: pointer; margin-right: 10px;">Cancelar</button>
-                <button onclick="guardarPerfil()"
-                    style="padding: 8px 16px; border: none; background: #3A6958; color: white; border-radius: 6px; cursor: pointer;">Guardar
-                    Cambios</button>
+            <div class="modal-footer">
+                <button onclick="cerrarModalPerfil()" class="btn-secondary">Cancelar</button>
+                <button onclick="guardarPerfil()" class="btn-primary">Guardar Cambios</button>
             </div>
         </div>
     </div>
@@ -271,5 +257,4 @@
     <script src="Menugestiones.js"></script>
 
 </body>
-
 </html>

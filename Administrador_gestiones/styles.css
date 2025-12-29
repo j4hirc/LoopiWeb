@@ -1,15 +1,24 @@
 /* --- VARIABLES & RESET --- */
 :root {
+    /* Identidad de Marca (Loopi) */
     --primary: #3A6958;
-    --primary-dark: #2c5043;
+    --primary-dark: #2A4D40;
+    --primary-light: #E8F5E9;
     --accent: #6DB85C;
-    --bg-body: #F0F4F8;
+    
+    /* Fondo y Superficies */
+    --bg-body: #F4F7FE; /* Un gris azulado muy suave, más moderno */
     --bg-card: #FFFFFF;
-    --text-main: #2D3748;
-    --text-light: #718096;
-    --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 10px 15px rgba(0, 0, 0, 0.1);
-    --radius: 16px;
+    
+    /* Textos */
+    --text-main: #2B3674; /* Azul oscuro profundo en lugar de negro puro */
+    --text-secondary: #A3AED0;
+    
+    /* Sombras y Bordes */
+    --shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.04);
+    --shadow-hover: 0 20px 40px rgba(0, 0, 0, 0.08);
+    --radius-card: 20px;
+    --radius-btn: 12px;
 }
 
 * {
@@ -23,59 +32,71 @@ body {
     background-color: var(--bg-body);
     color: var(--text-main);
     min-height: 100vh;
+    padding-bottom: 40px;
+}
+
+/* --- ANIMACIONES --- */
+@keyframes floatLogo {
+    0% { transform: translateY(0px); filter: drop-shadow(0 2px 2px rgba(58, 105, 88, 0.2)); }
+    50% { transform: translateY(-6px); filter: drop-shadow(0 10px 8px rgba(58, 105, 88, 0.3)); }
+    100% { transform: translateY(0px); filter: drop-shadow(0 2px 2px rgba(58, 105, 88, 0.2)); }
+}
+
+.animate-logo {
+    animation: floatLogo 4s ease-in-out infinite;
+}
+
+@keyframes fadeInModal {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
 }
 
 /* --- NAVBAR --- */
 .navbar {
-    background: var(--bg-card);
-    padding: 0.8rem 2rem;
-    /* Reduje un poco el padding vertical para ajustar la imagen */
-    box-shadow: var(--shadow-sm);
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    padding: 1rem 2rem;
     position: sticky;
     top: 0;
-    z-index: 100;
+    z-index: 1000;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.02);
+    border-bottom: 1px solid rgba(255,255,255,0.5);
 }
 
 .nav-container {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-/* ESTILO DEL LOGO AJUSTADO */
 .nav-logo {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: var(--primary);
     display: flex;
     align-items: center;
     gap: 12px;
-    /* Espacio entre imagen y texto */
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--primary);
     text-transform: uppercase;
-    /* Opcional: hace que "LOOPI ADMIN" se vea más imponente */
     letter-spacing: 0.5px;
 }
 
-/* IMAGEN DEL LOGO */
 .logo-img {
-    height: 45px;
-    /* Altura controlada */
+    height: 42px;
     width: auto;
-    object-fit: contain;
 }
 
 .nav-menu {
     display: flex;
     list-style: none;
-    gap: 2rem;
+    gap: 2.5rem;
     align-items: center;
 }
 
 .nav-menu a {
     text-decoration: none;
-    color: var(--text-light);
+    color: #707EAE;
     font-weight: 500;
     font-size: 0.95rem;
     transition: 0.3s;
@@ -84,27 +105,46 @@ body {
     gap: 8px;
 }
 
-.nav-menu a:hover,
-.nav-menu a.active {
+.nav-menu a:hover {
     color: var(--primary);
 }
 
+/* Botón Salir Estilizado */
 .btn-logout {
-    color: #e53e3e !important;
+    color: #E03131 !important;
+    background: #FFF5F5;
+    padding: 8px 16px;
+    border-radius: 30px;
+    transition: all 0.3s ease;
 }
 
 .btn-logout:hover {
-    background: #fff5f5;
-    padding: 5px 12px;
-    border-radius: 20px;
+    background: #E03131;
+    color: white !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(224, 49, 49, 0.3);
 }
 
 /* --- HEADER --- */
 .header {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-    padding: 3rem 2rem 5rem;
+    background: var(--primary);
+    background: linear-gradient(120deg, var(--primary) 0%, #243B33 100%);
+    padding: 4rem 2rem 6rem;
     color: white;
-    margin-bottom: -3rem;
+    position: relative;
+    border-bottom-right-radius: 40px;
+    border-bottom-left-radius: 40px;
+    margin-bottom: -3.5rem; /* Efecto overlap con las cartas */
+    overflow: hidden;
+}
+
+/* Patrón de fondo sutil */
+.header-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    opacity: 0.05;
+    background-image: radial-gradient(#ffffff 2px, transparent 2px);
+    background-size: 30px 30px;
 }
 
 .header-content {
@@ -113,57 +153,90 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    position: relative;
+    z-index: 2;
     flex-wrap: wrap;
-    gap: 1rem;
+    gap: 20px;
 }
 
 .header-text h1 {
-    font-size: 2.2rem;
+    font-size: 2.4rem;
+    font-weight: 700;
     margin-bottom: 0.5rem;
+    letter-spacing: -0.5px;
 }
 
 .header-text p {
     opacity: 0.9;
     font-weight: 300;
+    font-size: 1.05rem;
 }
 
 .user-badge {
-    background: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(5px);
-    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(8px);
+    padding: 8px 20px 8px 8px;
     border-radius: 50px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     font-weight: 500;
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
-/* --- DASHBOARD GRID --- */
+.user-avatar-placeholder {
+    background: white;
+    color: var(--primary);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+/* --- DASHBOARD MAIN --- */
 .dashboard-container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0 2rem 4rem;
+    padding: 0 2rem;
+    position: relative;
+    z-index: 10;
 }
 
-.section-title {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: var(--text-light);
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
     margin-bottom: 1.5rem;
     margin-top: 1rem;
 }
 
-.grid-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 1.5rem;
+.section-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-main);
 }
 
-/* --- CARDS MODERNAS --- */
+.section-line {
+    flex-grow: 1;
+    height: 2px;
+    background: #E0E5F2;
+    border-radius: 2px;
+}
+
+.grid-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.8rem;
+}
+
+/* --- TARJETAS PRO (Estilo Limpio) --- */
 .card {
     background: var(--bg-card);
-    border-radius: var(--radius);
+    border-radius: var(--radius-card);
     padding: 1.5rem;
     display: flex;
     align-items: center;
@@ -172,167 +245,363 @@ body {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: var(--shadow-sm);
     border: 1px solid transparent;
-    position: relative !important;
-    overflow: visible !important;
+    position: relative;
+    overflow: visible; /* Importante para el badge */
+    min-height: 110px;
 }
 
 .card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-md);
-    border-color: rgba(0, 0, 0, 0.05);
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-hover);
 }
 
-.card-icon {
-    width: 60px;
-    height: 60px;
-    border-radius: 12px;
+/* Contenedor del Icono (El Círculo de color) */
+.card-icon-container {
+    width: 64px;
+    height: 64px;
+    border-radius: 18px; /* Cuadrado redondeado moderno */
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.8rem;
+    font-size: 1.6rem;
     flex-shrink: 0;
+    transition: transform 0.3s ease;
+}
+
+.card:hover .card-icon-container {
+    transform: scale(1.1) rotate(5deg);
 }
 
 .card-info h3 {
-    font-size: 1.1rem;
-    font-weight: 600;
+    font-size: 1.05rem;
+    font-weight: 700;
     color: var(--text-main);
-    margin-bottom: 0.2rem;
+    margin-bottom: 4px;
+    line-height: 1.2;
 }
 
 .card-info p {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-weight: 400;
+}
+
+/* === GESTIÓN DE COLORES === */
+/* Estilo base para cada tipo de tarjeta: Fondo suave en icono + Color de texto */
+
+/* Default / Generico */
+.card .card-icon-container { background: #F4F7FE; color: var(--primary); }
+
+/* Validaciones (Destacada) */
+.card-validations {
+    background: white; /* Mantener blanco para consistencia o usar gradiente suave */
+    border: 1px solid #1abc9c; /* Borde sutil para destacar */
+}
+.card-validations .card-icon-container { background: #E0F2F1; color: #1abc9c; }
+.card-validations:hover { border-color: #16a085; }
+
+/* Materiales (Purple) */
+.card-purple .card-icon-container { background: #F3E5F5; color: #8e24aa; }
+.card-purple:hover .card-info h3 { color: #8e24aa; }
+
+/* Usuarios (Blue) */
+.card-blue .card-icon-container { background: #E3F2FD; color: #1e88e5; }
+.card-blue:hover .card-info h3 { color: #1e88e5; }
+
+/* Ubicaciones (Orange) */
+.card-orange .card-icon-container { background: #FFF3E0; color: #fb8c00; }
+.card-orange:hover .card-info h3 { color: #fb8c00; }
+
+/* Recompensas (Pink) */
+.card-pink .card-icon-container { background: #FCE4EC; color: #d81b60; }
+.card-pink:hover .card-info h3 { color: #d81b60; }
+
+/* Reportes (Cyan) */
+.card-cyan .card-icon-container { background: #E0F7FA; color: #00acc1; }
+.card-cyan:hover .card-info h3 { color: #00acc1; }
+
+/* Logros (Yellow) */
+.card-yellow .card-icon-container { background: #FFF8E1; color: #fbc02d; }
+.card-yellow:hover .card-info h3 { color: #fbc02d; }
+
+/* Auspiciantes (Indigo) */
+.card-indigo .card-icon-container { background: #E8EAF6; color: #3949ab; }
+.card-indigo:hover .card-info h3 { color: #3949ab; }
+
+/* Ciudades (Slate) */
+.card-slate .card-icon-container { background: #ECEFF1; color: #546e7a; }
+.card-slate:hover .card-info h3 { color: #546e7a; }
+
+/* Rangos (Red) */
+.card-red .card-icon-container { background: #FBE9E7; color: #e64a19; }
+.card-red:hover .card-info h3 { color: #e64a19; }
+
+/* Parroquias (Green) */
+.card-green .card-icon-container { background: #E0F2F1; color: #00897b; }
+.card-green:hover .card-info h3 { color: #00897b; }
+
+/* Multimedia (Custom) */
+.card-multimedia .card-icon-container { background: #E1F5FE; color: #0277bd; }
+
+/* Reciclador (Teal) */
+.card-teal .card-icon-container { background: #E0F2F1; color: #009688; }
+.card-teal:hover .card-info h3 { color: #009688; }
+
+
+/* Flechita decorativa en tarjeta especial */
+.card-arrow {
+    margin-left: auto;
+    color: #1abc9c;
+    opacity: 0;
+    transform: translateX(-10px);
+    transition: all 0.3s ease;
+}
+.card:hover .card-arrow {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* --- BADGES Y NOTIFICACIONES --- */
+.badge-notificacion {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #FF5252;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 6px;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 4px 10px rgba(255, 82, 82, 0.4);
+    z-index: 20;
+    display: none; /* Se activa con JS */
+    align-items: center;
+    justify-content: center;
+    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popIn {
+    from { transform: scale(0); }
+    to { transform: scale(1); }
+}
+
+/* --- MODAL ESTILIZADO --- */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(17, 25, 40, 0.6); /* Fondo oscuro moderno */
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    display: none; /* Controlado por JS */
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-container {
+    background: white;
+    border-radius: 24px;
+    width: 95%;
+    max-width: 520px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: fadeInModal 0.3s ease-out;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.modal-header {
+    padding: 20px 25px;
+    border-bottom: 1px solid #F4F7FE;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header span {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-close-modal {
+    background: #F4F7FE;
+    border: none;
+    color: var(--text-secondary);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: 0.2s;
+}
+
+.btn-close-modal:hover {
+    background: #E0E5F2;
+    color: #FF5252;
+}
+
+.modal-body {
+    padding: 25px;
+    overflow-y: auto;
+    max-height: 75vh;
+}
+
+.profile-img-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 15px;
+    position: relative;
+    width: 110px;
+    height: 110px;
+    margin: 0 auto 10px;
+}
+
+.profile-img-preview {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid white;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.profile-edit-overlay {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+}
+
+.btn-change-photo {
+    background: var(--primary);
+    color: white;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: 3px solid white;
+    transition: 0.2s;
+    font-size: 0.9rem;
+}
+
+.btn-change-photo:hover {
+    background: var(--primary-dark);
+    transform: scale(1.1);
+}
+
+.text-center-muted {
+    text-align: center;
+    color: var(--text-secondary);
     font-size: 0.85rem;
-    color: var(--text-light);
+    margin-bottom: 25px;
 }
 
-/* Colores Específicos */
-.card-purple .card-icon {
-    background: #F3E5F5;
-    color: #8e24aa;
+/* Formularios dentro del modal */
+.form-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
-.card-purple:hover .card-icon {
-    background: #8e24aa;
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-main);
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.input-field {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #E0E5F2;
+    border-radius: 12px;
+    background: #F9FAFC; /* Input suave */
+    font-family: inherit;
+    font-size: 0.9rem;
+    color: var(--text-main);
+    transition: 0.3s;
+}
+
+.input-field:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: white;
+    box-shadow: 0 0 0 3px rgba(58, 105, 88, 0.1);
+}
+
+.modal-footer {
+    padding: 20px 25px;
+    background: #F9FAFC; /* Footer ligeramente diferente */
+    text-align: right;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.btn-secondary {
+    padding: 10px 20px;
+    border: 1px solid #E0E5F2;
+    background: white;
+    color: var(--text-main);
+    border-radius: var(--radius-btn);
+    cursor: pointer;
+    font-weight: 500;
+    transition: 0.2s;
+}
+
+.btn-secondary:hover {
+    background: #F4F7FE;
+}
+
+.btn-primary {
+    padding: 10px 24px;
+    border: none;
+    background: var(--primary);
     color: white;
+    border-radius: var(--radius-btn);
+    cursor: pointer;
+    font-weight: 500;
+    box-shadow: 0 4px 10px rgba(58, 105, 88, 0.25);
+    transition: 0.2s;
 }
 
-.card-blue .card-icon {
-    background: #E3F2FD;
-    color: #1e88e5;
+.btn-primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
 }
 
-.card-blue:hover .card-icon {
-    background: #1e88e5;
-    color: white;
+/* SweetAlert customization override */
+.swal2-container {
+    z-index: 20000 !important;
 }
-
-.card-orange .card-icon {
-    background: #FFF3E0;
-    color: #fb8c00;
-}
-
-.card-orange:hover .card-icon {
-    background: #fb8c00;
-    color: white;
-}
-
-.card-pink .card-icon {
-    background: #FCE4EC;
-    color: #d81b60;
-}
-
-.card-pink:hover .card-icon {
-    background: #d81b60;
-    color: white;
-}
-
-.card-cyan .card-icon {
-    background: #E0F7FA;
-    color: #00acc1;
-}
-
-.card-cyan:hover .card-icon {
-    background: #00acc1;
-    color: white;
-}
-
-.card-yellow .card-icon {
-    background: #FFF8E1;
-    color: #fbc02d;
-}
-
-.card-yellow:hover .card-icon {
-    background: #fbc02d;
-    color: white;
-}
-
-.card-indigo .card-icon {
-    background: #E8EAF6;
-    color: #3949ab;
-}
-
-.card-indigo:hover .card-icon {
-    background: #3949ab;
-    color: white;
-}
-
-.card-slate .card-icon {
-    background: #ECEFF1;
-    color: #546e7a;
-}
-
-.card-slate:hover .card-icon {
-    background: #546e7a;
-    color: white;
-}
-
-.card-red .card-icon {
-    background: #FBE9E7;
-    color: #e64a19;
-}
-
-.card-red:hover .card-icon {
-    background: #e64a19;
-    color: white;
-}
-
-.card-green .card-icon {
-    background: #E0F2F1;
-    color: #00897b;
-}
-
-.card-green:hover .card-icon {
-    background: #00897b;
-    color: white;
-}
-
 
 /* --- RESPONSIVE --- */
-.menu-icon,
-#menu-toggle {
-    display: none;
-}
+.menu-icon, #menu-toggle { display: none; }
 
 @media (max-width: 768px) {
-    .header {
-        padding: 2rem 1.5rem 4rem;
-    }
-
-    .header-content {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .user-badge {
-        width: 100%;
-        justify-content: center;
-        margin-top: 10px;
-    }
-
+    .header { padding: 3rem 1.5rem 5rem; border-radius: 0 0 30px 30px; }
+    .header-content { flex-direction: column; align-items: flex-start; }
+    .user-badge { width: 100%; margin-top: 10px; }
+    
     .menu-icon {
         display: block;
         font-size: 1.5rem;
-        color: var(--primary);
+        color: var(--text-main);
         cursor: pointer;
     }
 
@@ -344,116 +613,19 @@ body {
         flex-direction: column;
         width: 100%;
         padding: 1rem 0;
-        box-shadow: var(--shadow-md);
+        box-shadow: var(--shadow-hover);
         transform: translateY(-150%);
         transition: 0.3s ease;
         z-index: 99;
     }
 
-    .nav-menu.active,
-    #menu-toggle:checked~.nav-menu {
+    .nav-menu.active, #menu-toggle:checked ~ .nav-menu {
         transform: translateY(0);
     }
-
-    .nav-menu li {
-        width: 100%;
-        text-align: center;
-    }
-
-    .nav-menu a {
-        justify-content: center;
-        padding: 10px;
-    }
-}
-
-.badge-notificacion {
-    position: absolute;
-    top: 10px;
-    right: 12px;
-    background: #e74c3c;
-    color: white;
-    font-size: 0.75rem;
-    font-weight: 700;
-    padding: 4px 8px;
-    border-radius: 50px;
-    min-width: 22px;
-    text-align: center;
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
-}
-
-/* Para que la tarjeta pueda posicionar el badge */
-.card {
-    position: relative;
-}
-
-/* Color nuevo para reciclador */
-.card-teal {
-    background: linear-gradient(135deg, #1abc9c, #16a085);
-    color: white;
-}
-
-/* Para que la tarjeta aguante el globo flotante */
-.card {
-    position: relative;
-    overflow: visible;
-}
-
-/* El globo rojo flotante */
-.badge-notificacion {
-    position: absolute;
-    top: -10px;
-    right: -10px;
-    background: #ff4757;
-    color: white;
-    font-size: 0.9rem;
-    font-weight: 700;
-    min-width: 28px;
-    height: 28px;
-    padding: 0 6px;
-    border-radius: 50px;
-    border: 2px solid #fff;
-    box-shadow: 0 4px 8px rgba(255, 71, 87, 0.4);
-    z-index: 10;
-
-    /* Para centrar el número perfectamente */
-    display: none;
-    /* Se activa con JS */
-    align-items: center;
-    justify-content: center;
-
-    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-@keyframes popIn {
-    from {
-        transform: scale(0);
-        opacity: 0;
-    }
-
-    to {
-        transform: scale(1);
-        opacity: 1;
-    }
-}
-
-/* Efecto opcional de latido */
-.badge-notificacion.urgente {
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0% {
-        transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7);
-    }
-
-    70% {
-        transform: scale(1.05);
-        box-shadow: 0 0 0 10px rgba(255, 71, 87, 0);
-    }
-
-    100% {
-        transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(255, 71, 87, 0);
-    }
+    
+    .nav-menu li { width: 100%; text-align: center; }
+    .nav-menu a { justify-content: center; padding: 15px; }
+    
+    .grid-cards { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
 }
