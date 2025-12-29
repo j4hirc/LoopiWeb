@@ -35,8 +35,8 @@ const ROLES_ID_MAP = {
     'USUARIO_NORMAL': 3
 };
 
-const filtroRol = document.getElementById('filtroRol');     // NUEVO
-const filtroEstado = document.getElementById('filtroEstado'); // NUEVO
+const filtroRol = document.getElementById('filtroRol');    
+const filtroEstado = document.getElementById('filtroEstado');
 
 document.addEventListener('DOMContentLoaded', () => {
     cargarParroquiasEnSelect();
@@ -44,8 +44,8 @@ document.addEventListener('DOMContentLoaded', () => {
     listarUsuarios();
 
     searchInput.addEventListener('input', filtrarUsuarios);
-    filtroRol.addEventListener('change', filtrarUsuarios);    // NUEVO
-    filtroEstado.addEventListener('change', filtrarUsuarios); // NUEVO
+    filtroRol.addEventListener('change', filtrarUsuarios);    
+    filtroEstado.addEventListener('change', filtrarUsuarios); 
     
     inpFoto.addEventListener('change', cargarImagen);
 });
@@ -86,22 +86,21 @@ async function listarUsuarios() {
     } catch (e) { console.error(e); }
 }
 
-// --- FUNCIÓN MODIFICADA PARA FORM-DATA (NUBE) ---
 async function guardarUsuario() {
+    // VALIDACIONES SWEETALERT
     if (!inpCedula.value || !inpNombre1.value || !inpApellido1.value || !inpCorreo.value) {
-        return alert("Completa los campos obligatorios (*)");
+        return Swal.fire('Faltan datos', 'Por favor completa los campos obligatorios.', 'warning');
     }
     if (!isEditMode && !inpPassword.value) {
-        return alert("La contraseña es obligatoria para usuarios nuevos");
+        return Swal.fire('Contraseña requerida', 'Debes asignar una contraseña para usuarios nuevos.', 'warning');
     }
 
     const cedula = parseInt(inpCedula.value);
     const correo = inpCorreo.value.trim().toLowerCase();
 
-    // Validaciones locales (opcional, el backend también valida)
     if (!isEditMode) {
         const cedulaExiste = usuariosCache.some(u => u.cedula === cedula);
-        if (cedulaExiste) return alert("Error: Ya existe un usuario registrado con esa CÉDULA.");
+        if (cedulaExiste) return Swal.fire('Duplicado', 'Ya existe un usuario con esa CÉDULA.', 'error');
     }
 
     const correoExiste = usuariosCache.some(u => {
@@ -110,7 +109,7 @@ async function guardarUsuario() {
         return mismoCorreo;
     });
 
-    if (correoExiste) return alert("Error: Ese CORREO ya está siendo usado.");
+    if (correoExiste) return Swal.fire('Duplicado', 'Ese CORREO ya está registrado.', 'error');
 
     // 1. Preparar Roles
     const rolesSeleccionados = [];
@@ -122,7 +121,7 @@ async function guardarUsuario() {
         });
     });
 
-    // 2. Preparar Objeto JSON (SIN LA FOTO BASE64)
+    // 2. Preparar Objeto JSON
     const dataObj = {
         cedula: cedula,
         primer_nombre: inpNombre1.value,
@@ -132,7 +131,7 @@ async function guardarUsuario() {
         genero: selGenero.value,
         fecha_nacimiento: inpFecha.value,
         correo: correo,
-        foto: null, // El backend maneja la foto por separado
+        foto: null, 
         estado: switchEstado.checked,
         puntos_actuales: parseInt(inpPuntos.value) || 0,
         parroquia: selParroquia.value ? { id_parroquia: parseInt(selParroquia.value) } : null,
@@ -142,11 +141,9 @@ async function guardarUsuario() {
 
     if (inpPassword.value) dataObj.password = inpPassword.value;
 
-    // 3. Crear FormData (Paquete mixto: JSON + Archivo)
     const formData = new FormData();
     formData.append("datos", JSON.stringify(dataObj));
 
-    // Solo si el usuario seleccionó un archivo nuevo, lo adjuntamos
     if (inpFoto.files[0]) {
         formData.append("archivo", inpFoto.files[0]);
     }
@@ -155,7 +152,11 @@ async function guardarUsuario() {
     const method = isEditMode ? 'PUT' : 'POST';
 
     try {
-        // ALERTA: No ponemos headers 'Content-Type', fetch lo pone solo para FormData
+        const btnGuardar = document.querySelector('.btn-guardar');
+        const txtOriginal = btnGuardar.innerText;
+        btnGuardar.disabled = true;
+        btnGuardar.innerText = "Guardando...";
+
         const res = await fetch(url, {
             method: method,
             body: formData 
@@ -165,7 +166,6 @@ async function guardarUsuario() {
 
         if (res.ok) {
             if (!isEditMode && respuesta.necesita_verificacion) {
-                // Lógica de verificación de correo
                 const { value: codigo } = await Swal.fire({
                     title: 'Verificación Requerida',
                     html: `Se ha enviado un código a <b>${correo}</b>.<br>Ingrésalo para activar este usuario ahora.`,
@@ -195,26 +195,52 @@ async function guardarUsuario() {
                     Swal.fire("Usuario Creado", "El usuario se creó como INACTIVO. Deberá verificar su correo.", "info");
                 }
             } else {
-                alert(isEditMode ? "Usuario actualizado correctamente" : "Usuario creado correctamente");
+                Swal.fire({
+                    title: '¡Éxito!',
+                    text: isEditMode ? 'Usuario actualizado correctamente' : 'Usuario creado correctamente',
+                    icon: 'success',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
             }
 
             cerrarModal();
             listarUsuarios();
         } else {
-            alert("Error del servidor: " + (respuesta.mensaje || "No se pudo guardar"));
+            Swal.fire("Error del servidor", respuesta.mensaje || "No se pudo guardar", "error");
         }
+
+        btnGuardar.disabled = false;
+        btnGuardar.innerText = txtOriginal;
+
     } catch (e) { 
         console.error(e);
-        alert("Error de conexión con el servidor"); 
+        Swal.fire("Error", "Error de conexión con el servidor", "error"); 
     }
 }
 
 async function eliminarUsuario(id) {
-    if (!confirm("¿Seguro que deseas eliminar este usuario?")) return;
-    try {
-        await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-        listarUsuarios();
-    } catch(e) { console.error(e); }
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "No podrás revertir esta acción.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+                listarUsuarios();
+                Swal.fire('Eliminado', 'El usuario ha sido eliminado.', 'success');
+            } catch(e) { 
+                console.error(e); 
+                Swal.fire('Error', 'No se pudo eliminar el usuario.', 'error');
+            }
+        }
+    });
 }
 
 function cargarEdicion(cedula) {
@@ -224,7 +250,6 @@ function cargarEdicion(cedula) {
     isEditMode = true;
     tituloModal.textContent = "Editar Usuario";
 
-    // Datos básicos
     inpCedula.value = user.cedula; 
     inpCedula.disabled = true; 
     
@@ -235,13 +260,13 @@ function cargarEdicion(cedula) {
     inpPuntos.value = user.puntos_actuales; switchEstado.checked = user.estado;
     inpPassword.value = ""; 
 
-    // Visualizar foto (Soporta URL Supabase y Base64 antigua)
+    // Visualizar foto
     let imgUrl = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
     if (user.foto && user.foto.length > 5) {
         if (user.foto.startsWith('http') || user.foto.startsWith('data:')) {
             imgUrl = user.foto;
         } else {
-            imgUrl = `data:image/png;base64,${user.foto}`; // Fallback para fotos viejas
+            imgUrl = `data:image/png;base64,${user.foto}`; 
         }
     }
     imgPreview.src = imgUrl;
@@ -273,10 +298,12 @@ function cargarEdicion(cedula) {
 
 function renderizarGrid(lista) {
     gridUsuarios.innerHTML = '';
-    if (!lista.length) { gridUsuarios.innerHTML = '<p style="text-align:center;width:100%">No hay usuarios registrados.</p>'; return; }
+    if (!lista.length) { 
+        gridUsuarios.innerHTML = '<p style="text-align:center;width:100%; color:#888;">No hay usuarios registrados.</p>'; 
+        return; 
+    }
 
     lista.forEach(u => {
-        // Lógica de visualización de imagen (URL o Base64)
         let img = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
         if (u.foto && u.foto.length > 5) {
              if (u.foto.startsWith('http') || u.foto.startsWith('data:')) {
@@ -301,16 +328,20 @@ function renderizarGrid(lista) {
                  style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin:0 auto 10px;"
                  onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'">
             <h3 style="text-align:center;">${u.primer_nombre} ${u.apellido_paterno}</h3>
-            <p style="text-align:center;font-size:0.9rem;color:#666;">${u.correo}</p>
+            <p style="text-align:center;font-size:0.9rem;color:#666;"><i class="fa-solid fa-envelope"></i> ${u.correo}</p>
             <div class="usuario-info" style="margin-top:10px;">
-                <span>📍 ${u.parroquia ? (u.parroquia.nombre_parroquia || u.parroquia.nombre) : 'Sin Parroquia'}</span>
-                <span>🏅 ${u.rango ? (u.rango.nombre_rango || u.rango.nombre) : 'Sin Rango'}</span>
+                <span><i class="fa-solid fa-map-pin"></i> ${u.parroquia ? (u.parroquia.nombre_parroquia || u.parroquia.nombre) : 'Sin Parroquia'}</span>
+                <span><i class="fa-solid fa-medal"></i> ${u.rango ? (u.rango.nombre_rango || u.rango.nombre) : 'Sin Rango'}</span>
             </div>
             <div style="font-size:12px; color:#555; margin-top:5px; text-align:center;"><strong>Roles:</strong> ${rolesTxt}</div>
             <div style="text-align:center;margin-top:5px;color:${colorEstado};font-weight:600;">● ${estadoTexto}</div>
             <div class="usuario-botones" style="display:flex;gap:10px;justify-content:center;margin-top:15px;">
-                <button class="btn-editar" onclick="cargarEdicion(${u.cedula})">Editar</button>
-                <button class="btn-eliminar" onclick="eliminarUsuario(${u.cedula})">Eliminar</button>
+                <button class="btn-editar" onclick="cargarEdicion(${u.cedula})" title="Editar">
+                    <i class="fa-solid fa-pen"></i>
+                </button>
+                <button class="btn-eliminar" onclick="eliminarUsuario(${u.cedula})" title="Eliminar">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
             </div>
         `;
         gridUsuarios.appendChild(div);
@@ -331,10 +362,8 @@ function filtrarUsuarios() {
 
         let coincideRol = true;
         if (rolSeleccionado !== "todos") {
-            // Verificamos si alguno de sus roles coincide con el seleccionado
             coincideRol = u.roles.some(ur => {
                 const nombreRol = ur.rol ? ur.rol.nombre.toUpperCase() : "";
-                // Mapeo por si en BD se llaman distinto (ej: "Usuario_normal" vs "USUARIO_NORMAL")
                 return nombreRol === rolSeleccionado || nombreRol.includes(rolSeleccionado);
             });
         }
@@ -369,13 +398,18 @@ function formReset() {
     inpCorreo.value = ""; inpPassword.value = ""; selParroquia.value = ""; selRango.value = "";
     inpPuntos.value = ""; switchEstado.checked = true; 
     imgPreview.src = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-    inpFoto.value = ""; // Limpiar input de archivo
+    inpFoto.value = ""; 
     document.querySelectorAll('.rol-checkbox').forEach(c => c.checked = false);
 }
 
 function cargarImagen() {
     const f = inpFoto.files[0];
     if(f) { 
+        if(!f.type.startsWith('image/')) {
+            Swal.fire('Error', 'Solo se permiten imágenes', 'error');
+            inpFoto.value = "";
+            return;
+        }
         const r = new FileReader(); 
         r.onload = e => imgPreview.src = e.target.result; 
         r.readAsDataURL(f); 

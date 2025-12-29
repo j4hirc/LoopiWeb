@@ -6,26 +6,62 @@
     <title>Gestión de Usuarios - Loopi</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="usuarios.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        .btn-volver {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            margin-right: 15px;
+            font-size: 14px;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-volver:hover {
+            background: rgba(255,255,255,0.15);
+            border-color: white;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+    </style>
 </head>
 <body>
 
 <header class="header">
-    <h2>Gestión de Usuario</h2>
-    <button class="btn-agregar" onclick="abrirModalNuevo()">+ Nuevo Usuario</button>
+    <div class="header-left">
+        <a href="index.html" class="btn-volver">
+            <i class="fa-solid fa-arrow-left"></i> Volver
+        </a>
+        <h2>Gestión de Usuario</h2>
+    </div>
+    <button class="btn-agregar" onclick="abrirModalNuevo()">
+        <i class="fa-solid fa-user-plus"></i> Nuevo Usuario
+    </button>
 </header>
 
 <section class="search-container" style="display: flex; gap: 10px; flex-wrap: wrap; padding: 10px;">
-    <input type="text" id="buscarUsuario" placeholder="Buscar por nombre, cédula o correo..." 
-           style="flex: 2; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+    <div style="flex: 2; position: relative;">
+        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #999;"></i>
+        <input type="text" id="buscarUsuario" placeholder="Buscar por nombre, cédula o correo..." 
+               style="width: 100%; padding: 10px 10px 10px 35px; border-radius: 8px; border: 1px solid #ccc;">
+    </div>
 
-    <select id="filtroRol" style="flex: 1; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+    <select id="filtroRol" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
         <option value="todos">Todos los Roles</option>
         <option value="ADMINISTRADOR">Administrador</option>
         <option value="RECICLADOR">Reciclador</option>
         <option value="USUARIO_NORMAL">Usuario Normal</option>
     </select>
 
-    <select id="filtroEstado" style="flex: 1; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+    <select id="filtroEstado" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
         <option value="todos">Todos los Estados</option>
         <option value="activo">Activos</option>
         <option value="inactivo">Inactivos</option>
@@ -33,36 +69,31 @@
 </section>
 
 <section id="gridUsuarios" class="grid-container">
-    <!-- Tarjetas generadas por JS -->
-</section>
+    </section>
 
-<!-- MODAL -->
 <div id="modalOverlay" class="modal-overlay">
     <div class="modal-container">
-        <!-- Header modal -->
         <div class="modal-header">
             <h3 id="tituloModal">Nuevo Usuario</h3>
-            <button class="modal-close" onclick="cerrarModal()">✕</button>
+            <button class="modal-close" onclick="cerrarModal()">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
         </div>
 
-        <!-- Cuerpo con scroll -->
         <div class="modal-body">
-            <!-- Foto -->
             <div class="img-user-upload">
-                <img id="previewFoto" src="imgs/user-default.png" alt="Foto usuario">
+                <img id="previewFoto" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Foto usuario">
                 <label class="btn-file">
-                    Cambiar foto
+                    <i class="fa-solid fa-camera"></i> Cambiar foto
                     <input type="file" id="fotoInput" accept="image/*" onchange="cargarImagen()">
                 </label>
             </div>
 
-            <!-- Cédula -->
             <div class="form-group">
                 <label for="cedula">Cédula de Identidad</label>
                 <input type="number" id="cedula" name="cedula" class="input-field" maxlength="10">
             </div>
 
-            <!-- Nombres -->
             <div class="form-row">
                 <div class="form-group">
                     <label for="primerNombre">1er Nombre</label>
@@ -74,7 +105,6 @@
                 </div>
             </div>
 
-            <!-- Apellidos -->
             <div class="form-row">
                 <div class="form-group">
                     <label for="apellidoPaterno">Ap. Paterno</label>
@@ -86,7 +116,6 @@
                 </div>
             </div>
 
-            <!-- Fecha nacimiento + género -->
             <div class="form-row">
                 <div class="form-group">
                     <label for="fechaNacimiento">Nacimiento</label>
@@ -103,30 +132,23 @@
                 </div>
             </div>
 
-            <!-- Correo -->
             <div class="form-group">
                 <label for="correo">Correo electrónico</label>
                 <input type="email" id="correo" name="correo" class="input-field">
             </div>
 
-            <!-- Password -->
             <div class="form-group">
                 <label for="password">Contraseña (dejar vacío si no desea cambiar)</label>
                 <input type="password" id="password" name="password" class="input-field">
             </div>
 
-            <!-- Parroquia -->
             <div class="form-group">
                 <label for="parroquia">Parroquia de residencia</label>
                 <select id="parroquia" name="parroquia" class="input-field">
                     <option value="">Seleccione una parroquia</option>
-                    <option value="El Batán">El Batán</option>
-                    <option value="Yanuncay">Yanuncay</option>
-                    <option value="Monay">Monay</option>
                 </select>
             </div>
 
-            <!-- Puntos + Rango -->
             <div class="form-row">
                 <div class="form-group">
                     <label for="puntos">Puntos</label>
@@ -136,36 +158,27 @@
                     <label for="rango">Rango</label>
                     <select id="rango" name="rango" class="input-field">
                         <option value="">Seleccione</option>
-                        <option value="Bronce">Bronce</option>
-                        <option value="Plata">Plata</option>
-                        <option value="Oro">Oro</option>
-                        <option value="Diamante">Diamante</option>
                     </select>
                 </div>
             </div>
 
             <hr class="divider">
 
-            <!-- Roles -->
             <div class="form-group">
                 <label>ROLES ASIGNADOS</label>
                 <div class="roles-container">
                     <label>
-                        <input type="checkbox" class="rol-checkbox" value="Administrador">
-                        Admin
+                        <input type="checkbox" class="rol-checkbox" value="Administrador"> Admin
                     </label>
                     <label>
-                        <input type="checkbox" class="rol-checkbox" value="Reciclador">
-                        Reciclador
+                        <input type="checkbox" class="rol-checkbox" value="Reciclador"> Reciclador
                     </label>
                     <label>
-                        <input type="checkbox" class="rol-checkbox" value="Usuario_normal">
-                        Cliente
+                        <input type="checkbox" class="rol-checkbox" value="Usuario_normal"> Cliente
                     </label>
                 </div>
             </div>
 
-            <!-- Estado -->
             <div class="form-group switch-row">
                 <span>Usuario Activo</span>
                 <label class="switch">
@@ -175,7 +188,6 @@
             </div>
         </div>
 
-        <!-- Footer -->
         <div class="modal-footer">
             <button class="btn-cancelar" onclick="cerrarModal()">Cancelar</button>
             <button class="btn-guardar" onclick="guardarUsuario()">Guardar Usuario</button>
@@ -183,6 +195,7 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="usuarios.js"></script>
 </body>
 </html>
