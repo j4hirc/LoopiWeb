@@ -1,280 +1,392 @@
-/* ==========================
-   ESTILO GENERAL
-========================== */
+:root {
+    --primary: #2D5A4A;
+    --primary-light: #3A6958;
+    --accent: #6DB85C;
+    --bg-body: #F0F2F5; /* Gris muy suave, moderno */
+    --bg-card: #FFFFFF;
+    --text-dark: #2c3e50;
+    --text-gray: #7f8c8d;
+    --radius: 12px;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
+    --shadow-md: 0 8px 24px rgba(0,0,0,0.12);
+}
+
 * {
     box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
 body {
-    font-family: "Poppins", sans-serif;
-    margin: 0;
-    background: #fcfbe8;
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--bg-body);
+    color: var(--text-dark);
+    padding-bottom: 40px;
 }
 
+/* --- HEADER --- */
 .header {
-    background: #2D5A4A;
-    padding: 20px;
+    background: var(--primary);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
     color: white;
+    padding: 30px 20px 60px; /* Padding extra abajo para que el buscador "flote" encima */
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-radius: 0 0 20px 20px;
+    box-shadow: var(--shadow-sm);
+}
+
+.header h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.header p {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    font-weight: 300;
+    margin-left: 2px;
 }
 
 .btn-agregar {
-    background: #6DB85C;
+    background: var(--accent);
     color: white;
     border: none;
-    padding: 10px 14px;
-    border-radius: 10px;
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-weight: 500;
     cursor: pointer;
-    font-weight: 600;
+    box-shadow: 0 4px 10px rgba(109, 184, 92, 0.4);
+    transition: transform 0.2s, background 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-/* ==========================
-   BUSCADOR
-========================== */
-.search-container {
-    padding: 20px;
-    max-width: 900px;
-    margin: auto;
+.btn-agregar:hover {
+    transform: translateY(-2px);
+    background: #5aa14c;
+}
+
+/* --- BUSCADOR FLOTANTE --- */
+.search-wrapper {
+    max-width: 800px;
+    margin: -30px auto 30px; /* Sube sobre el header */
+    padding: 0 20px;
+}
+
+.search-box {
+    background: white;
+    padding: 5px 20px;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    box-shadow: var(--shadow-md);
+    height: 55px;
+}
+
+.search-box i {
+    color: #aaa;
+    font-size: 1.1rem;
+    margin-right: 10px;
 }
 
 #buscarAusp {
+    border: none;
+    outline: none;
     width: 100%;
-    padding: 12px;
-    font-size: 14px;
-    border-radius: 12px;
-    border: 2px solid #ccc;
+    font-size: 1rem;
+    color: var(--text-dark);
 }
 
-/* ==========================
-   GRID CUADRADO
-========================== */
+/* --- GRID --- */
 .grid-container {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 18px;
-    padding: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
     max-width: 1100px;
-    margin: auto;
+    margin: 0 auto;
+    padding: 0 20px;
 }
 
+/* Estilo de las tarjetas (que generará tu JS) */
 .card-ausp {
-    background: white;
-    border-radius: 18px;
-    padding: 16px;
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    padding: 20px;
     text-align: center;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-    transition: 0.2s;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid rgba(0,0,0,0.03);
+    position: relative;
+    overflow: hidden;
 }
 
 .card-ausp:hover {
-    transform: translateY(-3px);
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
 }
 
 .card-ausp img {
     width: 100%;
-    height: 110px;
+    height: 120px;
     object-fit: contain;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
 }
 
 .card-ausp h3 {
-    margin: 6px 0 4px;
-    font-size: 15px;
-    font-weight: bold;
+    font-size: 1.1rem;
+    color: var(--text-dark);
+    margin-bottom: 5px;
+}
+
+.card-ausp p {
+    font-size: 0.85rem;
+    color: var(--text-gray);
 }
 
 .card-ausp .acciones {
-    margin-top: 10px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #f0f0f0;
     display: flex;
     justify-content: center;
-    gap: 12px;
+    gap: 15px;
 }
 
 .acciones button {
-    border: none;
     background: none;
-    font-size: 20px;
+    border: none;
     cursor: pointer;
+    font-size: 1.1rem;
+    transition: transform 0.2s;
+    padding: 5px;
 }
 
-.btn-editar { color: #2196F3; }
-.btn-eliminar { color: #E53935; }
+.acciones button:hover {
+    transform: scale(1.2);
+}
 
-/* ==========================
-   MODAL AUSPICIANTE
-========================== */
+.btn-editar { color: #3498db; }
+.btn-eliminar { color: #e74c3c; }
+
+/* Loader */
+.loader-container {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    color: var(--text-gray);
+}
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #ddd;
+    border-top: 4px solid var(--accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 10px;
+}
+@keyframes spin { 100% { transform: rotate(360deg); } }
+
+/* --- MODAL --- */
 .modal-overlay {
     position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.55);
-    backdrop-filter: blur(5px);
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
     display: none;
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+/* Clase para abrir el modal (JS debe poner display: flex y luego opacity 1) */
+.modal-overlay[style*="display: flex"] {
+    opacity: 1;
 }
 
 .modal-container {
-    width: 95%;
-    max-width: 430px;
     background: white;
-    border-radius: 18px;
-    box-shadow: 0 12px 30px rgba(0,0,0,0.25);
-    animation: fadeScale 0.25s ease;
+    width: 90%;
+    max-width: 500px;
+    border-radius: 20px;
+    box-shadow: var(--shadow-md);
     overflow: hidden;
+    transform: scale(0.9);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-@keyframes fadeScale {
-    from { transform: scale(0.85); opacity: 0; }
-    to   { transform: scale(1); opacity: 1; }
+.modal-overlay[style*="display: flex"] .modal-container {
+    transform: scale(1);
 }
 
 .modal-header {
-    background: #2D5A4A;
-    padding: 16px 20px;
-    color: white;
+    background: #f9f9f9;
+    padding: 20px 25px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: 1px solid #eee;
 }
 
 .modal-header h2 {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 600;
+    font-size: 1.1rem;
+    color: var(--primary);
 }
 
 .modal-close {
+    background: none;
     border: none;
-    background: transparent;
-    color: white;
-    font-size: 20px;
+    font-size: 1.2rem;
+    color: #999;
     cursor: pointer;
 }
 
-/* Cuerpo del formulario bien uniforme */
 .modal-body {
-    padding: 20px 20px 10px;
+    padding: 25px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.form-group {
+    flex: 1 1 45%; /* Dos columnas */
     display: flex;
     flex-direction: column;
-    gap: 12px; /* separación uniforme entre elementos */
+    gap: 5px;
 }
 
-.modal-body label {
-    font-size: 13px;
-    color: #555;
-    margin-bottom: 2px;
+.form-group.full-width {
+    flex: 1 1 100%;
 }
 
-/* Todos los campos con mismo estilo */
+label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #666;
+    margin-left: 5px;
+}
+
 .input-field {
     width: 100%;
-    padding: 10px 11px;
+    padding: 12px 15px;
+    border: 2px solid #eee;
     border-radius: 10px;
-    border: 2px solid #DDDDDD;
-    font-size: 14px;
-    outline: none;
-    resize: vertical;
-    min-height: 42px;
+    font-size: 0.9rem;
+    transition: border-color 0.3s;
+    font-family: inherit;
 }
 
 .input-field:focus {
-    border-color: #2D5A4A;
+    outline: none;
+    border-color: var(--primary-light);
 }
 
-/* Descripción un poco más alta pero manteniendo el estilo */
-#descripcionAusp {
-    min-height: 70px;
-}
-
-/* Sección imagen bien alineada */
-.image-section {
+/* Área de imagen */
+.image-upload-area {
     display: flex;
     align-items: center;
-    gap: 14px;
-    margin-top: 4px;
-}
-
-#previewAusp {
-    width: 80px;
-    height: 80px;
-    background: #EEE;
+    gap: 15px;
+    background: #f8f9fa;
+    padding: 10px;
     border-radius: 12px;
-    object-fit: contain;
-    border: 1px solid #DDD;
+    border: 1px dashed #ccc;
 }
 
-.image-actions {
+.img-preview-box {
+    width: 60px;
+    height: 60px;
+    background: white;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 1px solid #eee;
+}
+
+.img-preview-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.upload-controls {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 5px;
+    flex: 1;
+}
+
+.file-name {
+    font-size: 0.75rem;
+    color: #888;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
 }
 
 .btn-upload {
-    padding: 8px 12px;
-    border-radius: 10px;
-    border: 2px solid #2D5A4A;
-    background: #fff;
-    color: #2D5A4A;
-    font-size: 13px;
-    font-weight: 600;
+    background: white;
+    border: 1px solid var(--primary);
+    color: var(--primary);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
     cursor: pointer;
+    font-weight: 600;
+    width: fit-content;
     transition: 0.2s;
 }
 
 .btn-upload:hover {
-    background: #2D5A4A;
+    background: var(--primary);
     color: white;
 }
 
-/* Footer del modal */
 .modal-footer {
-    padding: 12px 18px 16px;
+    padding: 15px 25px;
+    background: white;
     display: flex;
     justify-content: flex-end;
     gap: 10px;
-    border-top: 1px solid #eee;
 }
 
 .btn-cancelar {
-    background: transparent;
-    border: none;
+    background: #f1f1f1;
     color: #666;
-    font-size: 14px;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
     cursor: pointer;
+    font-weight: 500;
 }
 
 .btn-guardar {
-    background: #6DB85C;
+    background: var(--primary);
+    color: white;
     border: none;
-    padding: 8px 18px;
-    border-radius: 10px;
-    color: #fff;
-    font-size: 14px;
-    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 8px;
     cursor: pointer;
-    transition: 0.2s;
+    font-weight: 500;
+    box-shadow: 0 4px 10px rgba(45, 90, 74, 0.3);
 }
 
-.btn-guardar:hover {
-    background: #5aa14c;
+/* Responsive */
+@media (max-width: 600px) {
+    .header { flex-direction: column; gap: 15px; text-align: center; }
+    .form-group { flex: 1 1 100%; }
+    .search-wrapper { margin-top: -20px; }
 }
-
-/* Responsive pequeño: que no se desarme */
-@media (max-width: 480px) {
-    .modal-container {
-        max-width: 95%;
-    }
-
-    .image-section {
-        align-items: flex-start;
-    }
-
-    #previewAusp {
-        width: 70px;
-        height: 70px;
-    }
-}
-

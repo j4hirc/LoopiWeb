@@ -5,68 +5,132 @@
     <title>Gestión de Auspiciantes</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="auspiciantes.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
     <header class="header">
-        <h1>Gestión de Auspiciantes</h1>
+        <div class="header-content">
+            <h1><i class="fa-solid fa-handshake"></i> Auspiciantes</h1>
+            <p>Gestiona las marcas y colaboradores</p>
+        </div>
         <button id="btnNuevoAusp" class="btn-agregar">
-            <i class="fa-solid fa-plus"></i> Agregar Auspiciante
+            <i class="fa-solid fa-plus"></i> Nuevo
         </button>
     </header>
 
-    <div class="search-container">
-        <input type="text" id="buscarAusp" placeholder="Buscar por nombre...">
+    <div class="search-wrapper">
+        <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="buscarAusp" placeholder="Buscar auspiciante...">
+        </div>
     </div>
 
     <section id="gridAuspiciantes" class="grid-container">
-        <p style="width:100%; text-align:center;">Cargando...</p>
+        <div class="loader-container">
+            <div class="spinner"></div>
+            <p>Cargando datos...</p>
+        </div>
     </section>
 
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal-container">
-
+            
             <div class="modal-header">
-                <h2 id="modalTitle">Agregar Auspiciante</h2>
-                <button class="modal-close" id="btnCerrarModal">✕</button>
+                <h2 id="modalTitle">Detalles del Auspiciante</h2>
+                <button class="modal-close" id="btnCerrarModal"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
             <form id="formAusp">
                 <input type="hidden" id="idAusp" name="idAusp">
 
                 <div class="modal-body">
-
-                    <label>Nombre del Auspiciante</label>
-                    <input type="text" id="nombreAusp" class="input-field" required placeholder="Ej: McDonald's">
-
-                    <label>Código de Validación</label>
-                    <input type="text" id="codigoAusp" class="input-field" required placeholder="Ej: MCD-001 (Único)">
-
-                    <label>Descripción</label>
-                    <textarea id="descripcionAusp" class="input-field" rows="3" placeholder="Descripción breve..."></textarea>
-
-                    <label>Logo / Imagen</label>
-                    <div class="image-section">
-                        <img id="previewAusp" src="https://cdn-icons-png.flaticon.com/512/747/747543.png">
-                        <div class="image-actions">
-                            <button type="button" id="btnImagenAusp" class="btn-upload">Subir Imagen</button>
-                            <input type="file" id="imagenAusp" hidden accept="image/*">
-                        </div>
+                    <div class="form-group">
+                        <label>Nombre</label>
+                        <input type="text" id="nombreAusp" class="input-field" required placeholder="Ej: McDonald's">
                     </div>
 
+                    <div class="form-group">
+                        <label>Código (Único)</label>
+                        <input type="text" id="codigoAusp" class="input-field" required placeholder="Ej: MCD-001">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Descripción</label>
+                        <textarea id="descripcionAusp" class="input-field" rows="3" placeholder="Breve descripción..."></textarea>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Logo</label>
+                        <div class="image-upload-area">
+                            <div class="img-preview-box">
+                                <img id="previewAusp" src="https://cdn-icons-png.flaticon.com/512/747/747543.png" alt="Preview">
+                            </div>
+                            <div class="upload-controls">
+                                <span class="file-name">Seleccionar imagen...</span>
+                                <button type="button" id="btnImagenAusp" class="btn-upload">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i> Subir
+                                </button>
+                                <input type="file" id="imagenAusp" hidden accept="image/*">
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="modal-footer">
                     <button type="button" class="btn-cancelar" id="btnCancelar">Cancelar</button>
-                    <button type="submit" class="btn-guardar">Guardar</button>
+                    <button type="submit" class="btn-guardar">Guardar Cambios</button>
                 </div>
-
             </form>
         </div>
     </div>
 
     <script src="auspiciantes.js"></script>
+
+    <script>
+        const grid = document.getElementById('gridAuspiciantes');
+        
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                mutation.addedNodes.forEach((node) => {
+                    if (node.nodeType === 1) { 
+                        node.style.opacity = '0';
+                        node.style.transform = 'translateY(20px)';
+                        node.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                        
+                        setTimeout(() => {
+                            node.style.opacity = '1';
+                            node.style.transform = 'translateY(0)';
+                        }, 50);
+                    }
+                });
+            });
+        });
+
+        if(grid) {
+            observer.observe(grid, { childList: true });
+        }
+
+        const btnUpload = document.getElementById('btnImagenAusp');
+        const inputFile = document.getElementById('imagenAusp');
+        const imgPreview = document.getElementById('previewAusp');
+        const fileNameSpan = document.querySelector('.file-name');
+
+        if(btnUpload && inputFile) {
+            btnUpload.addEventListener('click', () => inputFile.click());
+            
+            inputFile.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if(file){
+                    fileNameSpan.textContent = file.name;
+                    // Previsualización rápida local (antes de que tu lógica lo procese)
+                    const reader = new FileReader();
+                    reader.onload = (evt) => imgPreview.src = evt.target.result;
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+    </script>
 </body>
 </html>
