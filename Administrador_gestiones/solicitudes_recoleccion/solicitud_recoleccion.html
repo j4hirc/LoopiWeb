@@ -7,60 +7,40 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <link rel="stylesheet" href="solicitud_recoleccion.css">
     
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    <style>
-        .btn-volver {
-            background: transparent;
-            border: 1px solid rgba(255,255,255,0.3);
-            color: white;
-            padding: 8px 15px;
-            border-radius: 8px;
-            text-decoration: none;
-            margin-right: 15px;
-            font-size: 14px;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .btn-volver:hover {
-            background: rgba(255,255,255,0.15);
-            border-color: white;
-        }
-        .header-left {
-            display: flex;
-            align-items: center;
-        }
-    </style>
 </head>
 <body>
 
+    <div class="bg-decoration"></div>
+
     <header class="admin-header">
-        <div class="header-left">
-            <a href="../menu-gestiones.html" class="btn-volver">
-                <i class="fa-solid fa-arrow-left"></i> Volver
-            </a>
-            
-            <div class="logo-area">
-                <i class="fa-solid fa-shield-cat"></i>
-                <h1>Loopi Admin</h1>
+        <div class="header-content">
+            <div class="header-left">
+                <a href="../menu-gestiones.html" class="btn-volver">
+                    <i class="fa-solid fa-arrow-left"></i> <span>Volver</span>
+                </a>
+                
+                <div class="logo-area">
+                    <i class="fa-solid fa-shield-cat logo-icon"></i>
+                    <h1>Validaciones</h1>
+                </div>
             </div>
-        </div>
-        
-        <div class="badge-area">
-            <span>Pendientes:</span>
-            <strong id="count-badge" class="pulse-badge">0</strong>
+            
+            <div class="badge-area">
+                <span>Pendientes</span>
+                <div id="count-badge" class="pulse-badge">0</div>
+            </div>
         </div>
     </header>
 
     <div class="main-wrapper">
         <div class="container" id="cards-container">
             <div class="loading-state">
-                <i class="fa-solid fa-circle-notch fa-spin"></i>
-                <p>Cargando solicitudes...</p>
+                <div class="spinner"></div>
+                <p>Buscando solicitudes...</p>
             </div>
         </div>
     </div>
