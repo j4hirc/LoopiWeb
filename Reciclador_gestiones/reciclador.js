@@ -67,9 +67,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
   initMapaReciclador();
-  cargarPuntosReciclajeReciclador();
+  
+  // Carga Paralela de Datos
+  await Promise.all([
+      cargarFiltrosMateriales(), // Cargar botones de filtro
+      cargarPuntosReciclajeReciclador(), // Cargar puntos
+      cargarNotificacionesReciclador()
+  ]);
 
-  cargarNotificacionesReciclador();
   setInterval(cargarNotificacionesReciclador, 15000);
 });
 
@@ -79,11 +84,8 @@ async function refrescarDatosUsuario() {
         if (res.ok) {
             const datosFrescos = await res.json();
             datosFrescos.rol_seleccionado = usuario.rol_seleccionado;
-            
             usuario = datosFrescos;
-            
             localStorage.setItem("usuario", JSON.stringify(usuario));
-            
             actualizarSaludoUI();
         }
     } catch (e) {
@@ -126,6 +128,61 @@ function initMapaReciclador() {
   recyclingLayer = L.layerGroup().addTo(map);
 }
 
+// --- NUEVA FUNCIÓN: CARGAR BOTONES DE FILTRO ---
+async function cargarFiltrosMateriales() {
+    const contenedor = document.getElementById("contenedorBotonesMateriales");
+    if (!contenedor) return;
+  
+    // Limpiar container pero dejar botón "Todos" si ya existe o crearlo de cero
+    contenedor.innerHTML = "";
+  
+    const btnTodos = document.createElement("button");
+    btnTodos.className = "btn-filtro active";
+    btnTodos.innerText = "Todos";
+    btnTodos.onclick = () => filtrarMapa("todos", btnTodos);
+    contenedor.appendChild(btnTodos);
+  
+    try {
+      const res = await fetch(`${API_BASE}/materiales`);
+      if (res.ok) {
+        const materiales = await res.json();
+        materiales.forEach((mat) => {
+          const btn = document.createElement("button");
+          btn.className = "btn-filtro";
+          btn.innerText = mat.nombre;
+          // Asignar evento de filtrado
+          btn.onclick = () => filtrarMapa(mat.id_material, btn);
+          contenedor.appendChild(btn);
+        });
+      }
+    } catch (e) {
+      console.error("Error cargando materiales:", e);
+    }
+}
+
+// --- NUEVA FUNCIÓN: LÓGICA DE FILTRADO ---
+window.filtrarMapa = function (idMaterial, btnElement) {
+    // 1. Gestionar clases visuales
+    document.querySelectorAll(".btn-filtro").forEach((b) => b.classList.remove("active"));
+    btnElement.classList.add("active");
+  
+    // 2. Filtrar Datos
+    if (idMaterial === "todos") {
+      renderizarPuntosReciclador(todasLasUbicaciones);
+    } else {
+      const filtradas = todasLasUbicaciones.filter((ubicacion) => {
+        // Validación de seguridad
+        if (!ubicacion.materialesAceptados || ubicacion.materialesAceptados.length === 0) return false;
+        
+        // Buscar si acepta el material seleccionado
+        return ubicacion.materialesAceptados.some(
+          (um) => um.material && um.material.id_material === idMaterial
+        );
+      });
+      renderizarPuntosReciclador(filtradas);
+    }
+};
+
 async function cargarPuntosReciclajeReciclador() {
   try {
     const res = await fetch(`${API_BASE}/ubicacion_reciclajes`);
@@ -144,6 +201,18 @@ function renderizarPuntosReciclador(lista) {
   lista.forEach((p) => {
     if (!p.latitud || !p.longitud) return;
 
+    // Mostrar materiales en el popup
+    let materialesHTML = "";
+    if (p.materialesAceptados && p.materialesAceptados.length > 0) {
+        materialesHTML = `<div style="margin-top:5px; display:flex; flex-wrap:wrap; gap:3px; justify-content:center;">`;
+        p.materialesAceptados.forEach((um) => {
+            if (um.material) {
+                materialesHTML += `<span style="font-size:9px; background:#e8f5e9; color:#2e7d32; padding:2px 5px; border-radius:4px;">${um.material.nombre}</span>`;
+            }
+        });
+        materialesHTML += `</div>`;
+    }
+
     const marker = L.marker([p.latitud, p.longitud], {
       icon: iconReciclador,
     });
@@ -152,6 +221,7 @@ function renderizarPuntosReciclador(lista) {
       <div style="text-align:center; min-width:170px;">
         <h4>${p.nombre}</h4>
         <p style="font-size:11px;">${p.direccion}</p>
+        ${materialesHTML}
         <button onclick="abrirRuta(${p.latitud}, ${p.longitud})"
           style="margin-top:8px;background:#2ecc71;color:white;
           border:none;padding:5px 10px;border-radius:6px;cursor:pointer;">
