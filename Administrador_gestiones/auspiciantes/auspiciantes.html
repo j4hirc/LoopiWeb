@@ -7,13 +7,39 @@
     <link rel="stylesheet" href="auspiciantes.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        .btn-volver {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 6px;
+            text-decoration: none;
+            margin-right: 15px;
+            font-size: 14px;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-volver:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: white;
+        }
+    </style>
 </head>
 <body>
 
     <header class="header">
-        <div class="header-content">
-            <h1><i class="fa-solid fa-handshake"></i> Auspiciantes</h1>
-            <p>Gestiona las marcas y colaboradores</p>
+        <div class="header-content" style="display: flex; align-items: center;">
+            <a href="index.html" class="btn-volver">
+                <i class="fa-solid fa-arrow-left"></i> Volver
+            </a>
+            <div>
+                <h1><i class="fa-solid fa-handshake"></i> Auspiciantes</h1>
+                <p>Gestiona las marcas y colaboradores</p>
+            </div>
         </div>
         <button id="btnNuevoAusp" class="btn-agregar">
             <i class="fa-solid fa-plus"></i> Nuevo
@@ -36,31 +62,25 @@
 
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal-container">
-            
             <div class="modal-header">
                 <h2 id="modalTitle">Detalles del Auspiciante</h2>
                 <button class="modal-close" id="btnCerrarModal"><i class="fa-solid fa-xmark"></i></button>
             </div>
-
             <form id="formAusp">
                 <input type="hidden" id="idAusp" name="idAusp">
-
                 <div class="modal-body">
                     <div class="form-group">
                         <label>Nombre</label>
                         <input type="text" id="nombreAusp" class="input-field" required placeholder="Ej: McDonald's">
                     </div>
-
                     <div class="form-group">
                         <label>Código (Único)</label>
                         <input type="text" id="codigoAusp" class="input-field" required placeholder="Ej: MCD-001">
                     </div>
-
                     <div class="form-group full-width">
                         <label>Descripción</label>
                         <textarea id="descripcionAusp" class="input-field" rows="3" placeholder="Breve descripción..."></textarea>
                     </div>
-
                     <div class="form-group full-width">
                         <label>Logo</label>
                         <div class="image-upload-area">
@@ -77,7 +97,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="modal-footer">
                     <button type="button" class="btn-cancelar" id="btnCancelar">Cancelar</button>
                     <button type="submit" class="btn-guardar">Guardar Cambios</button>
@@ -86,11 +105,12 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <script src="auspiciantes.js"></script>
 
     <script>
         const grid = document.getElementById('gridAuspiciantes');
-        
         const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
                 mutation.addedNodes.forEach((node) => {
@@ -98,7 +118,6 @@
                         node.style.opacity = '0';
                         node.style.transform = 'translateY(20px)';
                         node.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-                        
                         setTimeout(() => {
                             node.style.opacity = '1';
                             node.style.transform = 'translateY(0)';
@@ -107,6 +126,7 @@
                 });
             });
         });
+        observer.observe(grid, { childList: true });
     </script>
 </body>
 </html>

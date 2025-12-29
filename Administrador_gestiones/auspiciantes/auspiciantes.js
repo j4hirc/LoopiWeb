@@ -18,7 +18,7 @@ const inputImagen = document.getElementById('imagenAusp');
 const previewImagen = document.getElementById('previewAusp');
 
 let auspiciantesCache = [];
-let fotoNuevaFile = null; // Variable para la foto real
+let fotoNuevaFile = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     listarAuspiciantes();
@@ -80,13 +80,13 @@ async function guardarAuspiciante(e) {
     const desc = inpDescripcion.value.trim();
     const imagenSrc = previewImagen.src;
 
-    if (!nombre || nombre.length < 3) return alert("El nombre es muy corto.");
-    if (!codigo) return alert("El código es obligatorio.");
-    if (!desc) return alert("La descripción es obligatoria.");
+    // VALIDACIONES CON SWEETALERT
+    if (!nombre || nombre.length < 3) return Swal.fire('Cuidado', 'El nombre es muy corto.', 'warning');
+    if (!codigo) return Swal.fire('Falta información', 'El código es obligatorio.', 'warning');
+    if (!desc) return Swal.fire('Falta información', 'La descripción es obligatoria.', 'warning');
 
-    // Validar imagen
     if (imagenSrc.includes("flaticon")) {
-        return alert("⚠️ Debes subir una imagen para el auspiciante.");
+        return Swal.fire('Imagen requerida', 'Debes subir una imagen para el auspiciante.', 'warning');
     }
 
     const id = inpId.value;
@@ -120,32 +120,61 @@ async function guardarAuspiciante(e) {
         if (response.ok) {
             modalOverlay.style.display = 'none';
             listarAuspiciantes();
-            alert(id ? 'Actualizado correctamente' : 'Creado correctamente');
+            // ALERTA DE ÉXITO
+            Swal.fire({
+                title: '¡Excelente!',
+                text: id ? 'Auspiciante actualizado correctamente' : 'Auspiciante creado correctamente',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+            });
         } else {
             const errorText = await response.text();
             try {
                 const errJson = JSON.parse(errorText);
-                alert('Error: ' + (errJson.mensaje || errorText));
+                Swal.fire('Error', errJson.mensaje || errorText, 'error');
             } catch {
-                alert('Error al guardar: ' + errorText);
+                Swal.fire('Error al guardar', errorText, 'error');
             }
         }
     } catch (error) {
         console.error(error);
-        alert('Error de conexión.');
+        Swal.fire('Error de conexión', 'No se pudo contactar con el servidor', 'error');
     } finally {
         const btnSubmit = form.querySelector('button[type="submit"]');
         if(btnSubmit) { btnSubmit.disabled = false; btnSubmit.innerText = "Guardar"; }
     }
 }
 
-window.eliminarAuspiciante = async function(id) {
-    if (!id || !confirm('¿Eliminar auspiciante?')) return;
-    try {
-        const res = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-        if (res.ok || res.status === 204) listarAuspiciantes();
-        else alert('No se pudo eliminar.');
-    } catch (error) { console.error(error); }
+// ELIMINAR CON SWEETALERT (CONFIRMACIÓN)
+window.eliminarAuspiciante = function(id) {
+    if (!id) return;
+
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "No podrás revertir esta acción",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const res = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+                if (res.ok || res.status === 204) {
+                    Swal.fire('¡Eliminado!', 'El auspiciante ha sido eliminado.', 'success');
+                    listarAuspiciantes();
+                } else {
+                    Swal.fire('Error', 'No se pudo eliminar el registro.', 'error');
+                }
+            } catch (error) { 
+                console.error(error); 
+                Swal.fire('Error', 'Error de conexión.', 'error');
+            }
+        }
+    });
 };
 
 window.cargarEdicion = function(id) {
@@ -232,7 +261,7 @@ async function procesarImagen(event) {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-        alert('Solo se permiten imágenes.');
+        Swal.fire('Archivo incorrecto', 'Solo se permiten imágenes.', 'error');
         inputImagen.value = "";
         return;
     }
@@ -250,7 +279,7 @@ async function procesarImagen(event) {
 
     } catch (error) {
         console.error("Error al comprimir:", error);
-        alert("No se pudo procesar la imagen");
+        Swal.fire('Error', 'No se pudo procesar la imagen', 'error');
     }
 }
 
