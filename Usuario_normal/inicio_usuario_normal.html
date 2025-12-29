@@ -5,31 +5,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Mi Loopi | Inicio</title>
-    <link rel="stylesheet" href="styles.css">
-
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
 
     <nav class="navbar">
         <div class="nav-logo">
-            <img src="../Imagenes/logo_icon.png" alt="Loop" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3405/3405802.png'">
+            <img src="../Imagenes/logo_icon.png" alt="Loopi" class="animate-logo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3405/3405802.png'">
             <span class="logo-text">Loopi</span>
         </div>
 
         <div class="nav-right">
             <div class="nav-notificaciones" onclick="toggleNotificaciones()">
-                <i class="fa-solid fa-bell"></i>
-                <span id="contadorNotificaciones" class="badge" style="display:none;">0</span>
+                <div class="bell-container">
+                    <i class="fa-solid fa-bell"></i>
+                    <span id="contadorNotificaciones" class="badge" style="display:none;">0</span>
+                </div>
 
                 <div class="dropdown-notificaciones" id="panelNotificaciones" onclick="event.stopPropagation()">
                     <div class="noti-header">
                         <strong>Notificaciones</strong>
+                        <span style="font-size: 0.8rem; opacity: 0.7;">Recientes</span>
                     </div>
                     <div id="listaNotificaciones" class="noti-lista">
                         <p class="noti-vacia">No tienes notificaciones</p>
@@ -46,10 +50,14 @@
             <div class="dropdown-menu" id="userMenu">
                 <div class="menu-header-mobile">
                     <span>Mi Cuenta</span>
+                    <button onclick="toggleMenu()" style="background:none; border:none; color:white; font-size:1.2rem;">✕</button>
                 </div>
-                <a href="#" id="btnAbrirPerfil"><i class="fa-solid fa-user"></i> Mi Perfil</a>
-                <a href="Form_reciclador/ser-reciclador.html"><i class="fa-solid fa-briefcase"></i> Quiero ser Reciclador</a>
-                <a href="#" id="btnLogout" class="logout"><i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión</a>
+                <div class="menu-items-container">
+                    <a href="#" id="btnAbrirPerfil"><i class="fa-solid fa-user-circle"></i> Mi Perfil</a>
+                    <a href="Form_reciclador/ser-reciclador.html"><i class="fa-solid fa-hand-holding-heart"></i> Quiero ser Reciclador</a>
+                    <div class="divider"></div>
+                    <a href="#" id="btnLogout" class="logout"><i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar Sesión</a>
+                </div>
             </div>
         </div>
     </nav>
@@ -57,13 +65,16 @@
     <div class="main-container">
 
         <section class="points-card">
+            <div class="card-bg-decoration"></div>
             <div class="points-info">
-                <p>Tus Puntos Eco</p>
+                <p class="label-puntos">Tus Puntos Eco</p>
                 <h1 id="puntosActuales">0</h1>
 
                 <div class="rank-wrapper" onclick="abrirModalRangos()">
-                    <img id="imgRango" src="" alt="Rango" style="display: none;">
-                    <span class="rango-badge" id="rangoUsuario">Iniciando...</span>
+                    <div class="rank-content">
+                        <img id="imgRango" src="" alt="Rango" style="display: none;">
+                        <span class="rango-badge" id="rangoUsuario">Iniciando...</span>
+                    </div>
                     <i class="fa-solid fa-circle-info info-icon"></i>
                 </div>
             </div>
@@ -75,52 +86,66 @@
         <section class="actions-grid">
             <div class="action-card card-solicitud" onclick="window.location.href='solicitud_recoleccion/nueva_solicitud.html'">
                 <div class="icon-circle"><i class="fa-solid fa-truck-fast"></i></div>
-                <h3>Solicitud</h3>
-                <p>Solicitar retiro</p>
+                <div class="card-text">
+                    <h3>Solicitud</h3>
+                    <p>Pedir retiro</p>
+                </div>
             </div>
 
             <div class="action-card card-canje" onclick="window.location.href='catalogo/catalogo.html'">
                 <div class="icon-circle"><i class="fa-solid fa-gift"></i></div>
-                <h3>Canjear</h3>
-                <p>Premios</p>
+                <div class="card-text">
+                    <h3>Canjear</h3>
+                    <p>Tus premios</p>
+                </div>
             </div>
 
             <div class="action-card card-cupones" onclick="window.location.href='cupones/mis_cupones.html'">
                 <div class="icon-circle"><i class="fa-solid fa-ticket"></i></div>
-                <h3>Mis Cupones</h3>
-                <p>Ver QRs</p>
+                <div class="card-text">
+                    <h3>Cupones</h3>
+                    <p>Ver mis QRs</p>
+                </div>
             </div>
 
             <div class="action-card card-logros" onclick="window.location.href='logro/mis_logros.html'">
-                <div class="icon-circle"><i class="fa-solid fa-trophy"></i></div>
-                <h3>Logros</h3>
-                <p>Medallas</p>
+                <div class="icon-circle"><i class="fa-solid fa-medal"></i></div>
+                <div class="card-text">
+                    <h3>Logros</h3>
+                    <p>Medallas</p>
+                </div>
             </div>
 
             <div class="action-card card-fav" onclick="window.location.href='favorito/favorito.html'">
                 <div class="icon-circle"><i class="fa-solid fa-heart"></i></div>
-                <h3>Favoritos</h3>
-                <p>Guardados</p>
+                <div class="card-text">
+                    <h3>Favoritos</h3>
+                    <p>Guardados</p>
+                </div>
             </div>
 
             <div class="action-card card-edu" onclick="window.location.href='aprende/aprende.html'">
-                <div class="icon-circle"><i class="fa-solid fa-book-open"></i></div>
-                <h3>Aprende</h3>
-                <p>Tips Eco</p>
+                <div class="icon-circle"><i class="fa-solid fa-lightbulb"></i></div>
+                <div class="card-text">
+                    <h3>Aprende</h3>
+                    <p>Tips Eco</p>
+                </div>
             </div>
 
             <div class="action-card card-job" onclick="window.location.href='Form_reciclador/ser-reciclador.html'">
-                <div class="icon-circle" style="background: #ECEFF1; color: #455A64;">
-                    <i class="fa-solid fa-briefcase"></i>
+                <div class="icon-circle"><i class="fa-solid fa-briefcase"></i></div>
+                <div class="card-text">
+                    <h3>Trabaja</h3>
+                    <p>Únete</p>
                 </div>
-                <h3>Trabaja</h3>
-                <p>Únete</p>
             </div>
 
             <div class="action-card card-stats" onclick="window.location.href='stats_historial/estadisticas_historial.html'">
-                <div class="icon-circle"><i class="fa-solid fa-chart-line"></i></div>
-                <h3>Historial</h3>
-                <p>Estadísticas</p>
+                <div class="icon-circle"><i class="fa-solid fa-chart-pie"></i></div>
+                <div class="card-text">
+                    <h3>Historial</h3>
+                    <p>Estadísticas</p>
+                </div>
             </div>
         </section>
 
@@ -131,12 +156,12 @@
                 <div class="filtros-container">
                     <div id="contenedorBotonesMateriales" class="filtros-scroll">
                         <button class="btn-filtro active" data-id="todos">Todos</button>
-                        </div>
+                    </div>
                 </div>
 
                 <div class="leyenda">
-                    <div><span class="dot green"></span> Reciclaje</div>
-                    <div><span class="dot purple"></span> Canjes</div>
+                    <div class="badge-leyenda reciclaje"><span class="dot"></span> Reciclaje</div>
+                    <div class="badge-leyenda canjes"><span class="dot"></span> Canjes</div>
                 </div>
             </div>
 
@@ -159,12 +184,13 @@
             <div class="modal-body-perfil">
                 <div class="profile-img-container">
                     <img id="perfilPreview" src="https://via.placeholder.com/100" class="profile-img-preview" alt="Foto perfil">
-                </div>
-                <div style="text-align:center; margin-bottom: 20px;">
-                    <label for="inputPerfilFoto" class="perfil-link-foto">Cambiar Foto</label>
-                    <input type="file" id="inputPerfilFoto" accept="image/*" style="display:none;">
+                    <div class="edit-icon-overlay">
+                        <label for="inputPerfilFoto"><i class="fa-solid fa-camera"></i></label>
+                    </div>
                 </div>
                 
+                <input type="file" id="inputPerfilFoto" accept="image/*" style="display:none;">
+
                 <div class="perfil-grid">
                     <div class="perfil-row">
                         <div class="perfil-col">
@@ -189,17 +215,17 @@
                     
                     <div class="perfil-col">
                         <label class="perfil-label">Parroquia</label>
-                        <select id="perfilParroquia" class="perfil-input">
+                        <select id="perfilParroquia" class="perfil-input select-arrow">
                             <option value="">Cargando parroquias...</option>
                         </select>
                     </div>
 
                     <div class="perfil-col">
                         <label class="perfil-label">Correo Electrónico</label>
-                        <input type="email" id="perfilCorreo" class="perfil-input" disabled style="background:#f0f0f0; color:#888;">
+                        <input type="email" id="perfilCorreo" class="perfil-input disabled" disabled>
                     </div>
                     <div class="perfil-col">
-                        <label class="perfil-label">Nueva Contraseña <small>(Dejar vacío si no cambia)</small></label>
+                        <label class="perfil-label">Nueva Contraseña <small>(Opcional)</small></label>
                         <input type="password" id="perfilPassword" class="perfil-input" placeholder="******">
                     </div>
                 </div>
@@ -212,18 +238,18 @@
     </div>
 
     <div class="modal-overlay-perfil" id="modalRangos">
-        <div class="modal-container-perfil" style="max-width: 500px;">
-            <div class="modal-header-perfil">
+        <div class="modal-container-perfil" style="max-width: 450px;">
+            <div class="modal-header-perfil header-rango">
                 <span class="modal-title-perfil">Tu Progreso</span>
                 <button class="modal-close-perfil" onclick="cerrarModalRangos()">✕</button>
             </div>
             <div class="modal-body-perfil">
-                <div style="text-align: center; margin-bottom: 20px;">
-                    <p style="color: #7f8c8d; font-size: 0.9em;">Sigue reciclando para subir de nivel.</p>
+                <div class="progreso-header">
+                    <p>Sigue reciclando para subir de nivel.</p>
                     <div class="progress-bar-container">
                         <div class="progress-bar-fill" id="barraProgresoGlobal" style="width: 0%;"></div>
                     </div>
-                    <small id="textoProgreso" style="color:#2ecc71; font-weight:bold;">Calculando...</small>
+                    <small id="textoProgreso">Calculando...</small>
                 </div>
                 <div id="listaRangosContainer" class="timeline-rangos">
                     <p style="text-align:center">Cargando rangos...</p>
