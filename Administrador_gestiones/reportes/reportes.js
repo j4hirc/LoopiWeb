@@ -215,57 +215,34 @@ function aplicarFiltros() {
 
 
 function actualizarDashboard(datos) {
-
-
-
+    // AQUI ESTÁ LA CORRECCIÓN DE CÁLCULOS 
+    // Solo sumamos Kilos y Puntos de lo que realmente se completó
+    const finalizados = datos.filter(s => s.estado === 'FINALIZADO' || s.estado === 'COMPLETADA');
+    
     let totalKg = 0;
-
     let totalPuntos = 0;
 
-
-
-    datos.forEach(s => {
-
+    finalizados.forEach(s => {
         totalPuntos += (s.puntos_ganados || 0);
-
-        if (s.detalles) s.detalles.forEach(d => totalKg += d.cantidad_kg);
-
+        if(s.detalles) s.detalles.forEach(d => totalKg += d.cantidad_kg);
     });
 
-
-
+    // Actualizamos KPIs
     document.getElementById("totalKgGlobal").innerText = totalKg.toFixed(1);
-
     document.getElementById("totalUsuarios").innerText = usuariosTotal;
-
-    document.getElementById("totalRecolecciones").innerText = datos.length;
-
+    // Total Recolecciones muestra el conteo de lo que estás viendo en la tabla (filtrado)
+    document.getElementById("totalRecolecciones").innerText = datos.length; 
+    // Puntos solo de lo confirmado
     document.getElementById("totalPuntos").innerText = totalPuntos;
 
-
-
-    // --- AQUÍ ESTABA EL BLOQUEO ---
-
-    // Antes enviabas 'finalizados', ahora enviamos 'datos' (la lista filtrada actual)
-
-    generarGraficoMateriales(datos);
-
-    generarGraficoTopRecicladores(datos);
-
-    generarGraficoTendencia(datos);
-
-
-
-    // Las tablas también
-
+    // Gráficos solo con data real (finalizada)
+    generarGraficoMateriales(finalizados);
+    generarGraficoTopRecicladores(finalizados);
+    generarGraficoTendencia(finalizados);
+    
+    // Tabla con todo lo filtrado (para ver pendientes/cancelados también)
     generarTablaRecicladores(datos);
-
-
-
-    // El top de usuarios sí suele ser solo de lo confirmado, pero si quieres ver todo:
-
-    generarTopUsuarios(datos);
-
+    generarTopUsuarios(datos); 
 }
 
 
@@ -767,115 +744,74 @@ function resetearFiltros() {
 }
 
 
-
 function descargarPDF() {
-
     const elemento = document.getElementById('reporteContent');
-
-    const botones = document.querySelectorAll('button, .navbar, .filters-card'); // Ocultamos filtros y nav también
-
-
-
+    const botones = document.querySelectorAll('button, .navbar, .filters-card'); 
+    
+    // Ocultar botones
     botones.forEach(b => b.style.display = 'none');
 
-
-
+    // Estilos PDF
     const originalBackground = document.body.style.background;
-
     document.body.style.background = '#ffffff';
-
     elemento.style.background = '#ffffff';
+    elemento.style.padding = '20px'; // Un poco de padding
+    elemento.style.maxWidth = '100%'; 
 
-    elemento.style.padding = '0';
-
-    elemento.style.maxWidth = '100%';
-
-
-
+    // Ajustar gráficas para que quepan
     const canvasElements = document.querySelectorAll('canvas');
-
     canvasElements.forEach(c => {
-
-        c.style.maxWidth = '500px';
-
+        c.style.maxWidth = '500px'; 
         c.style.margin = '0 auto';
-
     });
 
-
+    // --- AGREGAR ENCABEZADO DINÁMICO ---
+    const headerHTML = `
+        <div id="pdfHeader" style="text-align:center; margin-bottom:20px; padding-bottom:10px; border-bottom:2px solid #2ecc71;">
+            <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
+                <img src="../Imagenes/logo_icon.png" style="width:50px; height:50px;"> 
+                <div>
+                    <h2 style="margin:0; color:#333;">Reporte Oficial Loopi</h2>
+                    <p style="margin:0; color:#666; font-size:12px;">Generado el: ${new Date().toLocaleString()}</p>
+                </div>
+            </div>
+        </div>
+    `;
+    // Insertamos al principio
+    elemento.insertAdjacentHTML('afterbegin', headerHTML);
 
     const opt = {
-
-        margin: [0.4, 0.4, 0.4, 0.4], // Margen: Arriba, Izq, Abajo, Der (pulgadas)
-
-        filename: `Reporte_Loopi_${new Date().toISOString().slice(0, 10)}.pdf`,
-
-        image: { type: 'jpeg', quality: 1 }, // Máxima calidad
-
-        html2canvas: {
-
-            scale: 2,
-
-            useCORS: true,
-
-            letterRendering: true,
-
-            scrollY: 0
-
-        },
-
-        jsPDF: {
-
-            unit: 'in',
-
-            format: 'a4',
-
-            orientation: 'portrait'
-
-        },
-
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-
+        margin:       [0.5, 0.5, 0.5, 0.5], 
+        filename:     `Reporte_Loopi_${new Date().toISOString().slice(0,10)}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 }, 
+        html2canvas:  { scale: 2, useCORS: true, letterRendering: true, scrollY: 0 },
+        jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' },
+        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
-
-
     html2pdf().set(opt).from(elemento).save().then(() => {
-
+        // Restaurar todo
         botones.forEach(b => b.style.display = '');
-
         document.body.style.background = originalBackground;
-
         elemento.style.background = '';
-
         elemento.style.padding = '';
-
         elemento.style.maxWidth = '';
+        
+        // Quitar encabezado temporal
+        const header = document.getElementById("pdfHeader");
+        if(header) header.remove();
 
         canvasElements.forEach(c => {
-
             c.style.maxWidth = '';
-
             c.style.margin = '';
-
         });
-
-
-
+        
         Swal.fire({
-
             icon: 'success',
-
             title: 'Reporte Descargado',
-
             text: 'El PDF se ha generado correctamente.',
-
             timer: 2000,
-
             showConfirmButton: false
-
         });
-
     });
-
 }
