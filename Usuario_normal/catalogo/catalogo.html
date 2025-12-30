@@ -8,7 +8,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <link rel="stylesheet" href="../styles.css"> 
     <link rel="stylesheet" href="catalogo.css">
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -16,20 +15,22 @@
 </head>
 <body>
 
+    <div class="bg-decoration"></div>
+
     <nav class="navbar">
         <div class="nav-container">
-            <a href="../inicio_usuario_normal.html" class="btn-back">
-                <i class="fa-solid fa-arrow-left"></i>
-            </a>
-            <div class="nav-title">
-                Catálogo de Premios
+            <div class="nav-left">
+                <a href="../inicio_usuario_normal.html" class="btn-back">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </a>
+                <div class="nav-title">Tienda de Premios</div>
             </div>
             
             <div class="points-wallet">
-                <div class="points-label">Tus Loopis</div>
+                <span class="points-label">TU SALDO</span>
                 <div class="points-value">
-                    <i class="fa-solid fa-coins"></i>
-                    <span id="misPuntos">0</span>
+                    <i class="fa-solid fa-star"></i>
+                    <span id="misPuntos">...</span>
                 </div>
             </div>
         </div>
@@ -39,25 +40,60 @@
         
         <header class="catalog-hero">
             <div class="hero-text">
-                <h1>Recompensas</h1>
-                <p>Canjea tus esfuerzos por grandes premios.</p>
+                <h1>Tus esfuerzos valen</h1>
+                <p>Canjea tus puntos por recompensas exclusivas de nuestros aliados.</p>
             </div>
 
             <div class="search-wrapper">
-                <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                <input type="text" id="buscador" placeholder="¿Qué se te antoja hoy? (ej: Cine, Pizza...)">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="buscador" placeholder="¿Qué se te antoja hoy? (Cine, Pizza...)" autocomplete="off">
+                </div>
+            </div>
+
+            <div class="category-scroll">
+                <button class="chip active">Todos</button>
+                <button class="chip">Comida</button>
+                <button class="chip">Entretenimiento</button>
+                <button class="chip">Tecnología</button>
+                <button class="chip">Bonos</button>
+                <button class="chip">Salud</button>
             </div>
         </header>
 
         <div id="gridPremios" class="grid-premios">
             <div class="loading-state">
                 <div class="spinner"></div>
-                <p>Buscando las mejores recompensas...</p>
+                <p>Cargando el catálogo...</p>
             </div>
         </div>
 
     </div>
 
+    <div class="modal-overlay" id="modalCanje"> <div class="modal-container">
+            </div>
+    </div>
+
     <script src="catalogo.js"></script>
+    
+    <script>
+        const grid = document.getElementById('gridPremios');
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                mutation.addedNodes.forEach((node) => {
+                    if (node.nodeType === 1) { 
+                        node.style.opacity = '0';
+                        node.style.transform = 'translateY(20px)';
+                        setTimeout(() => {
+                            node.style.transition = 'all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                            node.style.opacity = '1';
+                            node.style.transform = 'translateY(0)';
+                        }, 50);
+                    }
+                });
+            });
+        });
+        observer.observe(grid, { childList: true });
+    </script>
 </body>
 </html>
