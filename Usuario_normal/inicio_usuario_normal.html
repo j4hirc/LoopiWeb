@@ -28,15 +28,28 @@
                 <div class="bell-container">
                     <i class="fa-solid fa-bell"></i>
                     <span id="contadorNotificaciones" class="badge" style="display:none;">0</span>
-                </div>
+                    <div class="pulse-ring"></div> </div>
 
                 <div class="dropdown-notificaciones" id="panelNotificaciones" onclick="event.stopPropagation()">
                     <div class="noti-header">
-                        <strong>Notificaciones</strong>
-                        <span style="font-size: 0.8rem; opacity: 0.7;">Recientes</span>
+                        <div class="noti-title">
+                            <i class="fa-solid fa-bell"></i> Notificaciones
+                        </div>
+                        <span class="noti-badge-header">Recientes</span>
                     </div>
+                    
                     <div id="listaNotificaciones" class="noti-lista">
-                        <p class="noti-vacia">No tienes notificaciones</p>
+                        <div class="noti-vacia">
+                            <div class="empty-icon">
+                                <i class="fa-regular fa-bell-slash"></i>
+                            </div>
+                            <p>Todo tranquilo por aquí</p>
+                            <span>No tienes nuevas notificaciones</span>
+                        </div>
+                    </div>
+                    
+                    <div class="noti-footer">
+                        <span>Mantente al día con Loopi</span>
                     </div>
                 </div>
             </div>
