@@ -5,42 +5,78 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mis Favoritos | Loopi</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <link rel="stylesheet" href="favorito.css">
 </head>
 <body>
 
+    <div class="bg-decoration"></div>
+
     <nav class="navbar">
         <div class="nav-content">
             <a href="../inicio_usuario_normal.html" class="nav-back">
-                <i class="fa-solid fa-arrow-left"></i> Volver
+                <div class="icon-circle"><i class="fa-solid fa-arrow-left"></i></div>
+                <span>Volver</span>
             </a>
             <span class="nav-title">Mis Puntos Guardados</span>
         </div>
     </nav>
 
     <div class="container">
+        
         <div class="header">
-            <h2><i class="fa-solid fa-heart" style="color: #e74c3c;"></i> Tus Favoritos</h2>
-            <p>Acceso rápido a tus puntos de reciclaje preferidos.</p>
+            <div class="icon-header">
+                <i class="fa-solid fa-heart"></i>
+            </div>
+            <div class="text-header">
+                <h2>Tus Lugares Favoritos</h2>
+                <p>Acceso directo a tus puntos de reciclaje frecuentes.</p>
+            </div>
         </div>
 
         <div id="gridFavoritos" class="grid-favoritos">
             <div class="loading-spinner">
-                <i class="fa-solid fa-circle-notch fa-spin"></i> Cargando tus lugares...
+                <div class="spinner"></div>
+                <p>Cargando tus lugares...</p>
             </div>
         </div>
 
         <div id="emptyState" class="empty-state" style="display:none;">
-            <div class="empty-icon"><i class="fa-regular fa-heart"></i></div>
-            <h3>Aún no tienes favoritos</h3>
-            <p>Explora el mapa y guarda los puntos que más uses.</p>
-            <a href="../solicitud_recoleccion/nueva_solicitud.html" class="btn-explore">Ir al Mapa</a>
+            <div class="empty-img">
+                <i class="fa-regular fa-map"></i>
+            </div>
+            <h3>¡Aún no tienes favoritos!</h3>
+            <p>Explora el mapa, selecciona un punto y guárdalo aquí para encontrarlo rápido.</p>
+            <a href="../solicitud_recoleccion/nueva_solicitud.html" class="btn-explore">
+                Explorar el Mapa
+            </a>
         </div>
+
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="favorito.js"></script>
+    
+    <script>
+        const grid = document.getElementById('gridFavoritos');
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                mutation.addedNodes.forEach((node) => {
+                    if (node.nodeType === 1 && node.classList.contains('favorito-card')) { 
+                        node.style.opacity = '0';
+                        node.style.transform = 'translateY(20px)';
+                        setTimeout(() => {
+                            node.style.transition = 'all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                            node.style.opacity = '1';
+                            node.style.transform = 'translateY(0)';
+                        }, 50);
+                    }
+                });
+            });
+        });
+        observer.observe(grid, { childList: true });
+    </script>
 </body>
 </html>
