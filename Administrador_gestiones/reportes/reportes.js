@@ -107,30 +107,33 @@ function aplicarFiltros() {
 }
 
 function actualizarDashboard(datos) {
-
+    // AQUI ESTÁ LA CORRECCIÓN DE CÁLCULOS 
+    // Solo sumamos Kilos y Puntos de lo que realmente se completó
+    const finalizados = datos.filter(s => s.estado === 'FINALIZADO' || s.estado === 'COMPLETADA');
+    
     let totalKg = 0;
     let totalPuntos = 0;
 
-    datos.forEach(s => {
+    finalizados.forEach(s => {
         totalPuntos += (s.puntos_ganados || 0);
         if(s.detalles) s.detalles.forEach(d => totalKg += d.cantidad_kg);
     });
 
+    // Actualizamos KPIs
     document.getElementById("totalKgGlobal").innerText = totalKg.toFixed(1);
     document.getElementById("totalUsuarios").innerText = usuariosTotal;
+    // Total Recolecciones muestra el conteo de lo que estás viendo en la tabla (filtrado)
     document.getElementById("totalRecolecciones").innerText = datos.length; 
+    // Puntos solo de lo confirmado
     document.getElementById("totalPuntos").innerText = totalPuntos;
 
-    // --- AQUÍ ESTABA EL BLOQUEO ---
-    // Antes enviabas 'finalizados', ahora enviamos 'datos' (la lista filtrada actual)
-    generarGraficoMateriales(datos);
-    generarGraficoTopRecicladores(datos);
-    generarGraficoTendencia(datos);
+    // Gráficos solo con data real (finalizada)
+    generarGraficoMateriales(finalizados);
+    generarGraficoTopRecicladores(finalizados);
+    generarGraficoTendencia(finalizados);
     
-    // Las tablas también
+    // Tabla con todo lo filtrado (para ver pendientes/cancelados también)
     generarTablaRecicladores(datos);
-    
-    // El top de usuarios sí suele ser solo de lo confirmado, pero si quieres ver todo:
     generarTopUsuarios(datos); 
 }
 
@@ -243,25 +246,37 @@ function generarTablaRecicladores(lista) {
 
     lista.forEach(s => {
         let key = "";
-        let nombreDisplay = "";
-        let cedulaDisplay = "";
+        let nombreDisplay = "Desconocido";
+        let cedulaDisplay = "-";
+        let esFijo = false;
         
-        if(s.reciclador) {
-            key = "R_" + s.reciclador.cedula;
-            nombreDisplay = `${s.reciclador.primer_nombre} ${s.reciclador.apellido_paterno}`;
-            cedulaDisplay = s.reciclador.cedula;
-        } else if (s.ubicacion) {
-            key = "U_" + s.ubicacion.id_ubicacion_reciclaje;
-            nombreDisplay = s.ubicacion.nombre;
+        const idUbicacion = s.ubicacion ? s.ubicacion.id_ubicacion_reciclaje : null;
+        const cedulaReciclador = s.reciclador ? s.reciclador.cedula : null;
+
+        if (idUbicacion) {
+            key = "U_" + idUbicacion;
+            nombreDisplay = s.ubicacion.nombre || "Punto Sin Nombre";
             cedulaDisplay = "Punto Fijo";
-        } else {
-            return; 
+            esFijo = true;
+        } 
+        else if (cedulaReciclador) {
+            key = "R_" + cedulaReciclador;
+            nombreDisplay = `${s.reciclador.primer_nombre || ""} ${s.reciclador.apellido_paterno || ""}`.trim();
+            cedulaDisplay = cedulaReciclador;
+            esFijo = false;
+        } 
+        else {
+            key = "PENDIENTE";
+            nombreDisplay = "Por Asignar";
+            cedulaDisplay = "---";
+            esFijo = false;
         }
-        
+
         if(!mapa[key]) {
             mapa[key] = { 
                 nombre: nombreDisplay,
                 cedula: cedulaDisplay,
+                esFijo: esFijo, 
                 entregas: 0,
                 canceladas: 0,
                 totalKg: 0,
@@ -275,7 +290,8 @@ function generarTablaRecicladores(lista) {
             mapa[key].canceladas++;
         }
 
-        if(s.estado === 'FINALIZADO' && s.detalles) {
+        // Solo sumamos kilos si está finalizado
+        if((s.estado === 'FINALIZADO' || s.estado === 'COMPLETADA') && s.detalles) {
             s.detalles.forEach(d => {
                 mapa[key].totalKg += d.cantidad_kg;
                 const mName = d.material ? d.material.nombre : "?";
@@ -285,10 +301,11 @@ function generarTablaRecicladores(lista) {
     });
 
     const entidadesArray = Object.values(mapa);
-    document.getElementById("countRecicladores").innerText = entidadesArray.length + " activos";
+    const labelCount = document.getElementById("countRecicladores");
+    if(labelCount) labelCount.innerText = entidadesArray.length + " encontrados";
 
     if(entidadesArray.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px; color:#999;">No hay datos para mostrar.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px; color:#999;">No hay datos.</td></tr>`;
         return;
     }
 
@@ -302,13 +319,16 @@ function generarTablaRecicladores(lista) {
         });
 
         const resumenEntregas = `${r.entregas} <small style="color:#e74c3c">(${r.canceladas} canc.)</small>`;
-        const icono = r.cedula === "Punto Fijo" ? '<i class="fa-solid fa-map-pin" style="color:#e67e22"></i>' : '<i class="fa-solid fa-user" style="color:#3498db"></i>';
+        
+        const icono = r.esFijo 
+            ? '<i class="fa-solid fa-map-pin" style="color:#e67e22; margin-right:5px;"></i>' 
+            : '<i class="fa-solid fa-user" style="color:#3498db; margin-right:5px;"></i>';
 
         const row = `<tr>
             <td>${icono} <strong>${r.nombre}</strong></td>
             <td>${r.cedula}</td>
             <td>${resumenEntregas}</td>
-            <td>${r.totalKg.toFixed(1)} Kg</td>
+            <td><strong>${r.totalKg.toFixed(1)} Kg</strong></td>
             <td><span style="background:#e8f5e9; color:#2e7d32; padding:3px 8px; border-radius:4px; font-size:0.85rem;">${topMat}</span></td>
         </tr>`;
         tbody.innerHTML += row;
@@ -385,46 +405,61 @@ function resetearFiltros() {
 
 function descargarPDF() {
     const elemento = document.getElementById('reporteContent');
-    const botones = document.querySelectorAll('button, .navbar, .filters-card'); // Ocultamos filtros y nav también
+    const botones = document.querySelectorAll('button, .navbar, .filters-card'); 
     
+    // Ocultar botones
     botones.forEach(b => b.style.display = 'none');
 
+    // Estilos PDF
     const originalBackground = document.body.style.background;
     document.body.style.background = '#ffffff';
     elemento.style.background = '#ffffff';
-    elemento.style.padding = '0'; 
+    elemento.style.padding = '20px'; // Un poco de padding
     elemento.style.maxWidth = '100%'; 
 
+    // Ajustar gráficas para que quepan
     const canvasElements = document.querySelectorAll('canvas');
     canvasElements.forEach(c => {
         c.style.maxWidth = '500px'; 
         c.style.margin = '0 auto';
     });
 
+    // --- AGREGAR ENCABEZADO DINÁMICO ---
+    const headerHTML = `
+        <div id="pdfHeader" style="text-align:center; margin-bottom:20px; padding-bottom:10px; border-bottom:2px solid #2ecc71;">
+            <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
+                <img src="../Imagenes/logo_icon.png" style="width:50px; height:50px;"> 
+                <div>
+                    <h2 style="margin:0; color:#333;">Reporte Oficial Loopi</h2>
+                    <p style="margin:0; color:#666; font-size:12px;">Generado el: ${new Date().toLocaleString()}</p>
+                </div>
+            </div>
+        </div>
+    `;
+    // Insertamos al principio
+    elemento.insertAdjacentHTML('afterbegin', headerHTML);
+
     const opt = {
-        margin:       [0.4, 0.4, 0.4, 0.4], // Margen: Arriba, Izq, Abajo, Der (pulgadas)
+        margin:       [0.5, 0.5, 0.5, 0.5], 
         filename:     `Reporte_Loopi_${new Date().toISOString().slice(0,10)}.pdf`,
-        image:        { type: 'jpeg', quality: 1 }, // Máxima calidad
-        html2canvas:  { 
-            scale: 2, 
-            useCORS: true, 
-            letterRendering: true,
-            scrollY: 0
-        },
-        jsPDF:        { 
-            unit: 'in', 
-            format: 'a4', 
-            orientation: 'portrait' 
-        },
+        image:        { type: 'jpeg', quality: 0.98 }, 
+        html2canvas:  { scale: 2, useCORS: true, letterRendering: true, scrollY: 0 },
+        jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' },
         pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
     html2pdf().set(opt).from(elemento).save().then(() => {
+        // Restaurar todo
         botones.forEach(b => b.style.display = '');
         document.body.style.background = originalBackground;
         elemento.style.background = '';
         elemento.style.padding = '';
         elemento.style.maxWidth = '';
+        
+        // Quitar encabezado temporal
+        const header = document.getElementById("pdfHeader");
+        if(header) header.remove();
+
         canvasElements.forEach(c => {
             c.style.maxWidth = '';
             c.style.margin = '';
