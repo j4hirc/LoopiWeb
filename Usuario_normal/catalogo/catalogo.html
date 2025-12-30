@@ -21,15 +21,14 @@
             <a href="../inicio_usuario_normal.html" class="btn-back">
                 <i class="fa-solid fa-arrow-left"></i>
             </a>
-            <div class="nav-title">
-                Catálogo de Premios
-            </div>
+            
+            <div class="nav-title">Tienda de Premios</div>
             
             <div class="points-wallet">
-                <div class="points-label">Tus Loopis</div>
+                <span class="points-label">Saldo</span>
                 <div class="points-value">
-                    <i class="fa-solid fa-coins"></i>
-                    <span id="misPuntos">0</span>
+                    <i class="fa-solid fa-star"></i>
+                    <span id="misPuntos">...</span>
                 </div>
             </div>
         </div>
@@ -39,20 +38,28 @@
         
         <header class="catalog-hero">
             <div class="hero-text">
-                <h1>Recompensas</h1>
-                <p>Canjea tus esfuerzos por grandes premios.</p>
+                <h1>Tus esfuerzos valen</h1>
+                <p>Canjea tus puntos por recompensas exclusivas.</p>
             </div>
 
             <div class="search-wrapper">
                 <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                <input type="text" id="buscador" placeholder="¿Qué se te antoja hoy? (ej: Cine, Pizza...)">
+                <input type="text" id="buscador" placeholder="Busca tu premio favorito..." autocomplete="off">
+            </div>
+
+            <div class="category-scroll">
+                <div class="chip active">Todos</div>
+                <div class="chip">Comida</div>
+                <div class="chip">Cine</div>
+                <div class="chip">Tecnología</div>
+                <div class="chip">Bonos</div>
             </div>
         </header>
 
         <div id="gridPremios" class="grid-premios">
             <div class="loading-state">
                 <div class="spinner"></div>
-                <p>Buscando las mejores recompensas...</p>
+                <p>Cargando catálogo...</p>
             </div>
         </div>
 
