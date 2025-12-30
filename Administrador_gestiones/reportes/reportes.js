@@ -107,33 +107,30 @@ function aplicarFiltros() {
 }
 
 function actualizarDashboard(datos) {
-    // AQUI ESTÁ LA CORRECCIÓN DE CÁLCULOS 
-    // Solo sumamos Kilos y Puntos de lo que realmente se completó
-    const finalizados = datos.filter(s => s.estado === 'FINALIZADO' || s.estado === 'COMPLETADA');
+    const finalizadosParaKPI = datos.filter(s => s.estado === 'FINALIZADO' || s.estado === 'COMPLETADA');
     
     let totalKg = 0;
     let totalPuntos = 0;
 
-    finalizados.forEach(s => {
+    finalizadosParaKPI.forEach(s => {
         totalPuntos += (s.puntos_ganados || 0);
         if(s.detalles) s.detalles.forEach(d => totalKg += d.cantidad_kg);
     });
 
-    // Actualizamos KPIs
     document.getElementById("totalKgGlobal").innerText = totalKg.toFixed(1);
     document.getElementById("totalUsuarios").innerText = usuariosTotal;
-    // Total Recolecciones muestra el conteo de lo que estás viendo en la tabla (filtrado)
+    
     document.getElementById("totalRecolecciones").innerText = datos.length; 
-    // Puntos solo de lo confirmado
+    
     document.getElementById("totalPuntos").innerText = totalPuntos;
 
-    // Gráficos solo con data real (finalizada)
-    generarGraficoMateriales(finalizados);
-    generarGraficoTopRecicladores(finalizados);
-    generarGraficoTendencia(finalizados);
+    generarGraficoMateriales(datos);
+    generarGraficoTopRecicladores(datos);
+    generarGraficoTendencia(datos);
     
-    // Tabla con todo lo filtrado (para ver pendientes/cancelados también)
+    // Tablas
     generarTablaRecicladores(datos);
+    
     generarTopUsuarios(datos); 
 }
 
@@ -186,7 +183,7 @@ function generarGraficoTendencia(lista) {
         data: {
             labels: meses,
             datasets: [{
-                label: `Kilos Reciclados ${anioActual}`,
+                label: `Kilos (${anioActual}) - Vista Actual`,
                 data: dataMeses,
                 borderColor: '#6DB85C',
                 backgroundColor: 'rgba(109, 184, 92, 0.1)',
@@ -202,13 +199,15 @@ function generarGraficoTopRecicladores(lista) {
     const recStats = {};
     lista.forEach(s => {
         let nombreEntidad = "Desconocido";
-        if(s.reciclador) {
-            nombreEntidad = `👤 ${s.reciclador.primer_nombre} ${s.reciclador.apellido_paterno}`;
-        } else if (s.ubicacion) {
-            nombreEntidad = `📍 ${s.ubicacion.nombre}`;
+        
+        if(s.ubicacion?.id_ubicacion_reciclaje) {
+             nombreEntidad = `📍 ${s.ubicacion.nombre}`;
+        } else if(s.reciclador?.cedula) {
+             nombreEntidad = `👤 ${s.reciclador.primer_nombre} ${s.reciclador.apellido_paterno}`;
         } else {
-            return;
+            nombreEntidad = "⏳ Pendiente Asignación";
         }
+
         let pesoEntrega = 0;
         if(s.detalles) s.detalles.forEach(d => pesoEntrega += d.cantidad_kg);
         recStats[nombreEntidad] = (recStats[nombreEntidad] || 0) + pesoEntrega;
@@ -224,7 +223,7 @@ function generarGraficoTopRecicladores(lista) {
         data: {
             labels: sorted.map(i => i[0]),
             datasets: [{
-                label: 'Kilos Recolectados (Kg)',
+                label: 'Kilos (Kg)',
                 data: sorted.map(i => i[1].toFixed(1)),
                 backgroundColor: '#3A6958',
                 borderRadius: 4
@@ -250,8 +249,8 @@ function generarTablaRecicladores(lista) {
         let cedulaDisplay = "-";
         let esFijo = false;
         
-        const idUbicacion = s.ubicacion ? s.ubicacion.id_ubicacion_reciclaje : null;
-        const cedulaReciclador = s.reciclador ? s.reciclador.cedula : null;
+        const idUbicacion = s.ubicacion?.id_ubicacion_reciclaje;
+        const cedulaReciclador = s.reciclador?.cedula;
 
         if (idUbicacion) {
             key = "U_" + idUbicacion;
@@ -290,8 +289,7 @@ function generarTablaRecicladores(lista) {
             mapa[key].canceladas++;
         }
 
-        // Solo sumamos kilos si está finalizado
-        if((s.estado === 'FINALIZADO' || s.estado === 'COMPLETADA') && s.detalles) {
+        if(s.detalles) {
             s.detalles.forEach(d => {
                 mapa[key].totalKg += d.cantidad_kg;
                 const mName = d.material ? d.material.nombre : "?";
@@ -301,8 +299,7 @@ function generarTablaRecicladores(lista) {
     });
 
     const entidadesArray = Object.values(mapa);
-    const labelCount = document.getElementById("countRecicladores");
-    if(labelCount) labelCount.innerText = entidadesArray.length + " encontrados";
+    document.getElementById("countRecicladores").innerText = entidadesArray.length + " encontrados";
 
     if(entidadesArray.length === 0) {
         tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px; color:#999;">No hay datos.</td></tr>`;
@@ -343,7 +340,7 @@ function generarTopUsuarios(lista) {
     const mapaUsuarios = {};
 
     lista.forEach(s => {
-        if (s.estado !== 'FINALIZADO' || !s.solicitante) return;
+        if ((s.estado !== 'FINALIZADO' && s.estado !== 'COMPLETADA') || !s.solicitante) return;
 
         const ced = s.solicitante.cedula;
 
