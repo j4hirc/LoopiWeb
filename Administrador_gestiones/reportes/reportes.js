@@ -6,12 +6,13 @@ let chartMatInstance = null;
 let chartTopInstance = null;
 let chartTendenciaInstance = null;
 
+
+const RUTA_LOGO_LOCAL = "../../Imagenes/Logo.png"; 
+
 document.addEventListener("DOMContentLoaded", async () => {
     await cargarTodo();
-
     document.getElementById('filtroInicio').addEventListener('change', aplicarFiltros);
     document.getElementById('filtroFin').addEventListener('change', aplicarFiltros);
-    // Se eliminó el listener de filtroEstado
     document.getElementById('filtroTipo').addEventListener('change', aplicarFiltros);
     document.getElementById('filtroReciclador').addEventListener('keyup', aplicarFiltros);
 });
@@ -21,15 +22,12 @@ async function cargarTodo() {
         const resSol = await fetch(`${API_BASE}/solicitud_recolecciones`);
         if (!resSol.ok) throw new Error("Error fetching solicitudes");
         datosCrudos = await resSol.json();
-
         const resUs = await fetch(`${API_BASE}/usuarios`);
         if (resUs.ok) {
             const users = await resUs.json();
             usuariosTotal = users.length;
         }
-
         aplicarFiltros();
-
     } catch (e) {
         console.error(e);
         Swal.fire("Error", "No se pudieron cargar los datos.", "error");
@@ -44,26 +42,21 @@ function aplicarFiltros() {
 
     const filtrados = datosCrudos.filter(item => {
         if (!item) return false;
-
         const fechaItem = new Date(item.fecha_recoleccion_real || item.fecha_creacion);
         fechaItem.setHours(0, 0, 0, 0);
-
+        
         if (fInicio) {
             const [y, m, d] = fInicio.split('-');
             const dInicio = new Date(y, m - 1, d); 
             dInicio.setHours(0, 0, 0, 0);
-            
             if (fechaItem < dInicio) return false;
         }
-
         if (fFin) {
             const [y, m, d] = fFin.split('-');
             const dFin = new Date(y, m - 1, d);
             dFin.setHours(23, 59, 59, 999); 
-            
             if (fechaItem > dFin) return false;
         }
-
         if (tipo !== "TODOS") {
             if (tipo === "RECICLADOR") {
                 if (!item.reciclador) return false;
@@ -73,7 +66,6 @@ function aplicarFiltros() {
                 if (item.reciclador) return false;
             }
         }
-
         if (busqueda) {
             let coincide = false;
             if (item.reciclador) {
@@ -87,39 +79,26 @@ function aplicarFiltros() {
             }
             if (!coincide) return false;
         }
-
         return true;
     });
-
     actualizarDashboard(filtrados);
 }
 
 function actualizarDashboard(datos) {
-    // Solo sumamos Kilos y Puntos de lo que realmente se completó
     const finalizados = datos.filter(s => s.estado === 'FINALIZADO' || s.estado === 'COMPLETADA');
-    
     let totalKg = 0;
     let totalPuntos = 0;
-
     finalizados.forEach(s => {
         totalPuntos += (s.puntos_ganados || 0);
         if(s.detalles) s.detalles.forEach(d => totalKg += d.cantidad_kg);
     });
-
-    // Actualizamos KPIs
     document.getElementById("totalKgGlobal").innerText = totalKg.toFixed(1);
     document.getElementById("totalUsuarios").innerText = usuariosTotal;
-    // Total Recolecciones muestra el conteo de lo que estás viendo en la tabla (filtrado)
     document.getElementById("totalRecolecciones").innerText = datos.length; 
-    // Puntos solo de lo confirmado
     document.getElementById("totalPuntos").innerText = totalPuntos;
-
-    // Gráficos solo con data real (finalizada)
     generarGraficoMateriales(finalizados);
     generarGraficoTopRecicladores(finalizados);
     generarGraficoTendencia(finalizados);
-    
-    // Tabla con todo lo filtrado
     generarTablaRecicladores(datos);
     generarTopUsuarios(datos); 
 }
@@ -132,10 +111,8 @@ function generarGraficoMateriales(lista) {
             matStats[nombre] = (matStats[nombre] || 0) + d.cantidad_kg;
         });
     });
-
     const ctx = document.getElementById('chartMaterialesGlobal').getContext('2d');
     if (chartMatInstance) chartMatInstance.destroy();
-
     chartMatInstance = new Chart(ctx, {
         type: 'doughnut',
         data: {
@@ -155,7 +132,6 @@ function generarGraficoTendencia(lista) {
     const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
     const dataMeses = new Array(12).fill(0);
     const anioActual = new Date().getFullYear();
-
     lista.forEach(s => {
         const fecha = new Date(s.fecha_recoleccion_real || s.fecha_creacion);
         if (fecha.getFullYear() === anioActual) {
@@ -164,10 +140,8 @@ function generarGraficoTendencia(lista) {
             dataMeses[fecha.getMonth()] += peso;
         }
     });
-
     const ctx = document.getElementById('chartTendencia').getContext('2d');
     if (chartTendenciaInstance) chartTendenciaInstance.destroy();
-
     chartTendenciaInstance = new Chart(ctx, {
         type: 'line',
         data: {
@@ -200,12 +174,9 @@ function generarGraficoTopRecicladores(lista) {
         if (s.detalles) s.detalles.forEach(d => pesoEntrega += d.cantidad_kg);
         recStats[nombreEntidad] = (recStats[nombreEntidad] || 0) + pesoEntrega;
     });
-
     const sorted = Object.entries(recStats).sort((a, b) => b[1] - a[1]).slice(0, 5);
-
     const ctx = document.getElementById('chartTopRecicladores').getContext('2d');
     if (chartTopInstance) chartTopInstance.destroy();
-
     chartTopInstance = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -230,12 +201,10 @@ function generarTablaRecicladores(lista) {
     const tbody = document.getElementById("tbodyRecicladores");
     tbody.innerHTML = "";
     const mapa = {};
-
     lista.forEach(s => {
         let key = "";
         let nombreDisplay = "";
         let cedulaDisplay = "";
-
         if (s.reciclador) {
             key = "R_" + s.reciclador.cedula;
             nombreDisplay = `${s.reciclador.primer_nombre} ${s.reciclador.apellido_paterno}`;
@@ -247,7 +216,6 @@ function generarTablaRecicladores(lista) {
         } else {
             return;
         }
-
         if (!mapa[key]) {
             mapa[key] = {
                 nombre: nombreDisplay,
@@ -258,13 +226,10 @@ function generarTablaRecicladores(lista) {
                 matCount: {}
             };
         }
-
         mapa[key].entregas++;
-
         if (s.estado === 'CANCELADO' || s.estado === 'RECHAZADO') {
             mapa[key].canceladas++;
         }
-
         if (s.estado === 'FINALIZADO' && s.detalles) {
             s.detalles.forEach(d => {
                 mapa[key].totalKg += d.cantidad_kg;
@@ -273,27 +238,21 @@ function generarTablaRecicladores(lista) {
             });
         }
     });
-
     const entidadesArray = Object.values(mapa);
     document.getElementById("countRecicladores").innerText = entidadesArray.length + " activos";
-
     if (entidadesArray.length === 0) {
         tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px; color:#999;">No hay datos para mostrar.</td></tr>`;
         return;
     }
-
     entidadesArray.sort((a, b) => b.totalKg - a.totalKg);
-
     entidadesArray.forEach(r => {
         let topMat = "N/A";
         let maxVal = 0;
         Object.entries(r.matCount).forEach(([k, v]) => {
             if (v > maxVal) { maxVal = v; topMat = k; }
         });
-
         const resumenEntregas = `${r.entregas} <small style="color:#e74c3c">(${r.canceladas} canc.)</small>`;
         const icono = r.cedula === "Punto Fijo" ? '<i class="fa-solid fa-map-pin" style="color:#e67e22"></i>' : '<i class="fa-solid fa-user" style="color:#3498db"></i>';
-
         const row = `<tr>
             <td>${icono} <strong>${r.nombre}</strong></td>
             <td>${r.cedula}</td>
@@ -308,15 +267,11 @@ function generarTablaRecicladores(lista) {
 function generarTopUsuarios(lista) {
     const tbody = document.getElementById("tbodyTopUsuarios");
     if (!tbody) return;
-
     tbody.innerHTML = "";
     const mapaUsuarios = {};
-
     lista.forEach(s => {
         if (s.estado !== 'FINALIZADO' || !s.solicitante) return;
-
         const ced = s.solicitante.cedula;
-
         if (!mapaUsuarios[ced]) {
             mapaUsuarios[ced] = {
                 nombre: `${s.solicitante.primer_nombre} ${s.solicitante.apellido_paterno}`,
@@ -326,32 +281,25 @@ function generarTopUsuarios(lista) {
                 puntos: 0
             };
         }
-
         mapaUsuarios[ced].puntos += (s.puntos_ganados || 0);
-
         if (s.detalles) {
             s.detalles.forEach(d => {
                 mapaUsuarios[ced].totalKg += d.cantidad_kg;
             });
         }
     });
-
     const ranking = Object.values(mapaUsuarios).sort((a, b) => b.totalKg - a.totalKg);
-
     const countLabel = document.getElementById("countUsuariosTop");
     if (countLabel) countLabel.innerText = ranking.length + " en ranking";
-
     if (ranking.length === 0) {
         tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; color:#999;">No hay datos de reciclaje completado.</td></tr>`;
         return;
     }
-
     ranking.slice(0, 10).forEach((u, index) => {
         let medalla = `<span style="color:#999; font-weight:600;">${index + 1}</span>`;
         if (index === 0) medalla = '🥇';
         if (index === 1) medalla = '🥈';
         if (index === 2) medalla = '🥉';
-
         const row = `<tr>
             <td style="font-size:1.2rem;">${medalla}</td>
             <td><strong>${u.nombre}</strong></td>
@@ -367,78 +315,140 @@ function generarTopUsuarios(lista) {
 function resetearFiltros() {
     document.getElementById('filtroInicio').value = '';
     document.getElementById('filtroFin').value = '';
-    // Se eliminó la línea que reseteaba filtroEstado
     document.getElementById('filtroTipo').value = 'TODOS';
     document.getElementById('filtroReciclador').value = '';
     aplicarFiltros();
 }
 
-function descargarPDF() {
+// --- NUEVA FUNCIÓN AUXILIAR PARA CONVERTIR IMAGEN A BASE64 ---
+async function cargarImagenComoBase64(url) {
+    try {
+        const response = await fetch(url);
+        const blob = await response.blob();
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+    } catch (e) {
+        console.warn("No se pudo cargar la imagen del logo:", e);
+        return null; // Si falla, devolvemos null y el PDF se genera sin logo (o con texto alt)
+    }
+}
+
+// --- FUNCIÓN DE DESCARGA PDF MEJORADA PAPU ---
+async function descargarPDF() {
     const elemento = document.getElementById('reporteContent');
-    const botones = document.querySelectorAll('button, .navbar, .filters-card'); 
+    const botones = document.querySelectorAll('button, .navbar, .filters-card');
     
     // Ocultar botones
     botones.forEach(b => b.style.display = 'none');
 
-    // Estilos PDF
+    // Guardar estilos originales
     const originalBackground = document.body.style.background;
+    const originalPadding = elemento.style.padding;
+
+    // Estilos temporales para el PDF
     document.body.style.background = '#ffffff';
     elemento.style.background = '#ffffff';
-    elemento.style.padding = '20px'; // Un poco de padding
-    elemento.style.maxWidth = '100%'; 
+    elemento.style.padding = '30px'; 
+    elemento.style.maxWidth = '100%';
+    
+    // Inyectar CSS PRO para impresión (tablas bonitas)
+    const estiloImpresion = document.createElement('style');
+    estiloImpresion.innerHTML = `
+        body { font-family: 'Poppins', Helvetica, sans-serif !important; color: #333; }
+        h1, h2, h3, h4 { color: #2c3e50; }
+        .kpi-card { border: 1px solid #ddd; box-shadow: none !important; background: #fdfdfd !important; page-break-inside: avoid; }
+        .table-responsive { overflow: visible !important; }
+        
+        /* Tabla PRO estilo cebra */
+        table { font-size: 11px; width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background-color: #2ecc71 !important; color: #ffffff !important; padding: 10px; border: 1px solid #27ae60; }
+        td { border: 1px solid #eee; padding: 8px; vertical-align: middle; }
+        tr:nth-child(even) { background-color: #f8f9fa; }
+        
+        .page-title, .page-subtitle { display: none; }
+        .report-header { margin-bottom: 0; }
+        .chart-card { page-break-inside: avoid; border: 1px solid #eee; }
+    `;
+    document.head.appendChild(estiloImpresion);
 
-    // Ajustar gráficas para que quepan
+    // Ajustar gráficas
     const canvasElements = document.querySelectorAll('canvas');
     canvasElements.forEach(c => {
-        c.style.maxWidth = '500px'; 
-        c.style.margin = '0 auto';
+        c.style.maxWidth = '550px'; 
+        c.style.maxHeight = '350px';
+        c.style.margin = '0 auto 20px auto';
     });
 
-    // --- AGREGAR ENCABEZADO DINÁMICO ---
+    // --- CONVERTIR LOGO A BASE64 EN TIEMPO REAL ---
+    let logoImgTag = '';
+    const logoBase64 = await cargarImagenComoBase64(RUTA_LOGO_LOCAL);
+    
+    if (logoBase64) {
+        logoImgTag = `<img src="${logoBase64}" style="width: 70px; height: auto; display: block;">`;
+    } else {
+        logoImgTag = `<div style="font-weight:bold; color:#2ecc71;">LOOPI</div>`;
+    }
+
+    // --- ENCABEZADO PAPU ---
     const headerHTML = `
-        <div id="pdfHeader" style="text-align:center; margin-bottom:20px; padding-bottom:10px; border-bottom:2px solid #2ecc71;">
-            <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-                <img src="../Imagenes/logo_icon.png" style="width:50px; height:50px;"> 
-                <div>
-                    <h2 style="margin:0; color:#333;">Reporte Oficial Loopi</h2>
-                    <p style="margin:0; color:#666; font-size:12px;">Generado el: ${new Date().toLocaleString()}</p>
+        <div id="pdfHeader" style="padding: 20px 0; border-bottom: 4px solid #2ecc71; margin-bottom: 30px; font-family: Helvetica, Arial, sans-serif;">
+            <div style="display:flex; align-items:center; justify-content: space-between;">
+                <div style="display:flex; align-items:center; gap: 20px;">
+                    ${logoImgTag}
+                    <div>
+                        <h1 style="margin: 0; color: #2c3e50; font-size: 28px; font-weight: bold;">Reporte Oficial Loopi</h1>
+                        <p style="margin: 5px 0 0; color: #7f8c8d; font-size: 12px;">Generado el: ${new Date().toLocaleString('es-ES', { dateStyle: 'full', timeStyle: 'short' })}</p>
+                    </div>
+                </div>
+                <div style="text-align:right; font-size:10px; color:#999;">
+                    <p>Documento Confidencial</p>
+                    <p>Sistema Admin</p>
                 </div>
             </div>
         </div>
     `;
-    // Insertamos al principio
+    
     elemento.insertAdjacentHTML('afterbegin', headerHTML);
 
     const opt = {
-        margin:       [0.5, 0.5, 0.5, 0.5], 
+        margin:       [0.4, 0.4],
         filename:     `Reporte_Loopi_${new Date().toISOString().slice(0,10)}.pdf`,
         image:        { type: 'jpeg', quality: 0.98 }, 
-        html2canvas:  { scale: 2, useCORS: true, letterRendering: true, scrollY: 0 },
+        html2canvas:  { 
+            scale: 2, 
+            useCORS: true, 
+            letterRendering: true,
+            scrollY: 0
+        },
         jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' },
         pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
     html2pdf().set(opt).from(elemento).save().then(() => {
-        // Restaurar todo
         botones.forEach(b => b.style.display = '');
         document.body.style.background = originalBackground;
         elemento.style.background = '';
-        elemento.style.padding = '';
+        elemento.style.padding = originalPadding;
         elemento.style.maxWidth = '';
         
-        // Quitar encabezado temporal
+        document.head.removeChild(estiloImpresion);
         const header = document.getElementById("pdfHeader");
         if(header) header.remove();
 
         canvasElements.forEach(c => {
             c.style.maxWidth = '';
+            c.style.maxHeight = '';
             c.style.margin = '';
         });
         
         Swal.fire({
             icon: 'success',
             title: 'Reporte Descargado',
-            text: 'El PDF se ha generado correctamente.',
+            text: '¡Listo el pollo papu! Tu PDF está generado.',
             timer: 2000,
             showConfirmButton: false
         });
