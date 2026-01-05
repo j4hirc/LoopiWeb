@@ -207,15 +207,21 @@ input:focus, select:focus {
     justify-content: center;
     align-items: center;
     cursor: pointer;
-    overflow: hidden;
+    overflow: hidden; 
     position: relative;
     color: #7CB342;
     font-size: 1.8rem;
+    margin: 0 auto; 
 }
+
 .avatar-circle img {
     width: 100%;
     height: 100%;
-    object-fit: cover; 
+    object-fit: cover; /* Esto es clave: recorta la imagen para llenar el círculo sin deformar */
+    display: none; /* Oculta por defecto hasta que se suba */
+    position: absolute; /* Para que tape el icono */
+    top: 0;
+    left: 0;
 }
 
 .upload-text {

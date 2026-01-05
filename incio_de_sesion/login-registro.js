@@ -26,19 +26,30 @@ function setupUIEvents() {
     });
 
     document.getElementById("file-upload")?.addEventListener("change", function () {
-        const file = this.files[0];
-        if (!file) return;
-        window.avatarImageFile = file; // Guardamos el archivo real
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const img = document.getElementById("avatar-preview");
-            if(img) {
-                img.style.display = "block";
-                img.src = e.target.result;
-            }
-        };
-        reader.readAsDataURL(file);
-    });
+    const file = this.files[0];
+    if (!file) return;
+    
+
+    if (!file.type.startsWith('image/')) {
+        Swal.fire("Error", "Por favor sube una imagen válida", "error");
+        return;
+    }
+
+    window.avatarImageFile = file; 
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const img = document.getElementById("avatar-preview");
+        if(img) {
+            img.style.display = "block"; // Mostrar imagen
+            img.src = e.target.result;
+            
+            // Ocultar el icono de cámara (opcional, si la imagen tiene posición absoluta lo tapa)
+            const icon = document.querySelector(".avatar-circle i");
+            if(icon) icon.style.display = "none";
+        }
+    };
+    reader.readAsDataURL(file);
+});
 }
 
 async function cargarParroquias() {
