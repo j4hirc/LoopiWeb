@@ -9,12 +9,13 @@ let todasLasUbicaciones = [];
 let recyclingLayer;
 let rewardLayer;
 
+let listaParroquiasCache = [];
+
 let marcadorMiUbicacion = null;
 let ubicacionActual = null;
 
 let notificacionesCargadas = false;
 
-// Variable global para la foto nueva
 let fotoNuevaFile = null;
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -57,10 +58,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   await cargarPuntosReciclaje();
   await cargarPuntosRecompensa();
   
-  // Cargar Parroquias para el perfil
-  await cargarParroquiasEnPerfil();
 
-  // Configurar subida de foto con compresión
+ cargarParroquiasEnBackground();
+
   const inputPerfilFoto = document.getElementById("inputPerfilFoto");
   if (inputPerfilFoto)
     inputPerfilFoto.addEventListener("change", cargarImagenPerfil);
@@ -75,6 +75,44 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (btnUbicacion) btnUbicacion.onclick = obtenerUbicacionActual;
 
 });
+
+async function cargarParroquiasEnBackground() {
+    try {
+        const res = await fetch(`${API_BASE}/parroquias`);
+        if (res.ok) {
+            listaParroquiasCache = await res.json();
+            const select = document.getElementById('perfilParroquia');
+            if(select && select.options.length <= 1) llenarSelectParroquias();
+        }
+    } catch (e) {
+        console.error("Error cargando parroquias en background", e);
+    }
+}
+
+function llenarSelectParroquias() {
+    const select = document.getElementById('perfilParroquia');
+    if(!select) return;
+    
+    const valorActual = select.value;
+
+    select.innerHTML = '<option value="">Seleccione su parroquia</option>';
+    
+    const fragment = document.createDocumentFragment();
+    listaParroquiasCache.forEach(p => {
+        const option = document.createElement('option');
+        option.value = p.id_parroquia || p.id; 
+        option.text = p.nombre_parroquia || p.nombre;
+        fragment.appendChild(option);
+    });
+    select.appendChild(fragment);
+
+    if(valorActual) {
+        select.value = valorActual;
+    } else if (usuarioLogueado.parroquia) {
+        const idParroquia = usuarioLogueado.parroquia.id_parroquia || usuarioLogueado.parroquia.id;
+        select.value = idParroquia;
+    }
+}
 
 
 function initMap() {
@@ -533,12 +571,10 @@ function abrirModalPerfil() {
   document.getElementById("perfilCorreo").value = usuarioLogueado.correo || "";
   document.getElementById("perfilPassword").value = "";
 
-  const selectParroquia = document.getElementById("perfilParroquia");
-  if (usuarioLogueado.parroquia) {
-      const idParroquia = usuarioLogueado.parroquia.id_parroquia || usuarioLogueado.parroquia.id;
-      selectParroquia.value = idParroquia;
+  if(listaParroquiasCache.length > 0) {
+      llenarSelectParroquias();
   } else {
-      selectParroquia.value = "";
+      cargarParroquiasEnBackground().then(() => llenarSelectParroquias());
   }
 
   // Visualizar foto
