@@ -43,19 +43,15 @@ function pintarHistorial(data = null) {
     const tpl = document.getElementById("tplHistorial");
     grid.innerHTML = "";
 
-    // LÓGICA DE FILTRADO CORREGIDA
     let lista = data || historial;
 
     if (estadoFiltro !== "TODOS") {
         if (estadoFiltro === "CANCELADO") {
-            // Si el filtro es CANCELADO, mostramos tanto CANCELADO como RECHAZADO
             lista = lista.filter(e => e.estado === "CANCELADO" || e.estado === "RECHAZADO");
         } else {
-            // Para FINALIZADO u otros estados específicos
             lista = lista.filter(e => e.estado === estadoFiltro);
         }
     } else {
-        // Si es TODOS, mostramos FINALIZADO, CANCELADO y RECHAZADO (excluyendo pendientes activos si los hubiera)
         lista = lista.filter(e => ["FINALIZADO", "CANCELADO", "RECHAZADO"].includes(e.estado));
     }
 
@@ -70,12 +66,10 @@ function pintarHistorial(data = null) {
         const clone = tpl.content.cloneNode(true);
         const card = clone.querySelector(".history-card");
 
-        // Determinar si es una transacción exitosa o fallida
         const esExitosa = item.estado === "FINALIZADO";
 
         card.classList.add(esExitosa ? "status-finalizado" : "status-cancelado");
         
-        // Texto del badge según el estado exacto
         let textoEstado = "Completada";
         if (item.estado === "CANCELADO") textoEstado = "Cancelada";
         if (item.estado === "RECHAZADO") textoEstado = "Rechazada";
@@ -116,8 +110,6 @@ function abrirDetalle(entrega) {
     let materialesHTML = "";
     if(entrega.detalles && entrega.detalles.length > 0) {
         materialesHTML = entrega.detalles.map(d => {
-            // Nota: Aquí asumo que d.material.puntos_ganados es por unidad de peso.
-            // Si tu API no trae ese dato en 'material', usa un default o ajusta según tu modelo.
             const ptsUnit = (d.material && d.material.puntos_por_kg) ? d.material.puntos_por_kg : 10; 
             const subtotal = ptsUnit * d.cantidad_kg;
             totalPuntos += subtotal;
@@ -133,13 +125,10 @@ function abrirDetalle(entrega) {
         materialesHTML = "<p style='text-align:center; color:#999; font-style:italic;'>Sin materiales registrados</p>";
     }
 
-    // Si no está finalizado, los puntos reales son 0 aunque el cálculo teórico diga otra cosa
     if(entrega.estado !== "FINALIZADO") totalPuntos = 0;
-    // Si la entrega ya trae el total de puntos ganados desde el backend, usamos ese valor
     if(entrega.puntos_ganados > 0) totalPuntos = entrega.puntos_ganados;
 
-    // Color del estado en el modal
-    let colorEstado = '#10B981'; // Verde por defecto
+    let colorEstado = '#10B981'; 
     if (entrega.estado === 'CANCELADO' || entrega.estado === 'RECHAZADO') colorEstado = '#EF4444'; // Rojo
 
     cont.innerHTML = `

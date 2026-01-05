@@ -7,74 +7,83 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../styles.css">
-    <link rel="stylesheet" href="historial_entregas.css">
     
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="historial_entregas.css">
 </head>
 <body>
 
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-logo">
-                <i class="fa-solid fa-clock-rotate-left"></i>
-                <span>Historial</span>
+    <div class="bg-decoration"></div>
+
+    <header class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <a href="../reciclador.html" class="btn-volver">
+                    <i class="fa-solid fa-arrow-left"></i> <span>Volver al Panel</span>
+                </a>
+                <div class="titulo-seccion">
+                    <h1><i class="fa-solid fa-clock-rotate-left"></i> Mis Actividades</h1>
+                    <p>Registro completo de tus recolecciones pasadas.</p>
+                </div>
             </div>
-            <ul class="nav-menu">
-                <li>
-                    <a href="../reciclador.html" class="nav-link">
-                        <i class="fa-solid fa-arrow-left"></i> Volver al Panel
-                    </a>
-                </li>
-            </ul>
+            
+            <div class="header-icon-bg">
+                <i class="fa-solid fa-calendar-check"></i>
+            </div>
         </div>
-    </nav>
+    </header>
 
-    <div class="main-content">
-        <header class="page-header">
-            <h1>Mis Actividades Pasadas</h1>
-            <p>Registro completo de tus recolecciones finalizadas y canceladas.</p>
-        </header>
-
-        <div class="controls-area">
-            <div class="search-box">
-                <i class="fa-solid fa-search"></i>
-                <input type="text" id="buscarHistorial" placeholder="Buscar por cliente, dirección...">
+    <div class="search-wrapper">
+        <div class="controls-box">
+            <div class="search-input-group">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="buscarHistorial" placeholder="Buscar cliente, dirección..." autocomplete="off">
             </div>
+            
+            <div class="divider-vertical"></div>
 
-            <div class="filtros">
+            <div class="filtros-group">
                 <button class="btn-filtro active" data-estado="TODOS">Todo</button>
                 <button class="btn-filtro" data-estado="FINALIZADO">Completadas</button>
                 <button class="btn-filtro" data-estado="CANCELADO">Canceladas</button>
             </div>
         </div>
+    </div>
 
-        <div class="grid-cards" id="gridHistorial">
+    <div class="main-content">
+        <div class="grid-cards grid-container" id="gridHistorial">
             </div>
     </div>
 
     <template id="tplHistorial">
-        <div class="history-card">
-            <div class="card-status-strip"></div> <div class="card-content">
-                <div class="card-header-info">
-                    <span class="date-badge">📅 01 Ene</span>
-                    <span class="status-badge">Finalizado</span>
+        <div class="history-card card-item">
+            <div class="card-status-bar card-status-strip"></div>
+            
+            <div class="card-body">
+                <div class="card-top">
+                    <span class="badge-date date-badge">
+                        <i class="fa-regular fa-calendar"></i> 01 Ene
+                    </span>
+                    <span class="badge-status status-badge">Finalizado</span>
                 </div>
 
                 <div class="user-row">
                     <div class="avatar-circle">
                         <i class="fa-solid fa-user"></i>
                     </div>
-                    <div>
+                    <div class="user-details">
                         <h3 class="txtUsuario">Nombre Usuario</h3>
-                        <p class="txtDireccion">Dirección...</p>
+                        <p class="txtDireccion"><i class="fa-solid fa-location-dot"></i> Dirección...</p>
                     </div>
                 </div>
 
                 <div class="card-footer">
-                    <span class="points-tag">🏆 +0 pts</span>
-                    <button class="btn-ver-detalle">
-                        Ver Detalles <i class="fa-solid fa-chevron-right"></i>
+                    <div class="points-wrapper">
+                        <i class="fa-solid fa-star"></i>
+                        <span class="points-tag"> +0 pts</span>
+                    </div>
+                    <button class="btn-ver-detalle action-btn">
+                        <i class="fa-solid fa-chevron-right"></i>
                     </button>
                 </div>
             </div>
@@ -82,21 +91,43 @@
     </template>
 
     <div class="modal-overlay" id="modalDetalle">
-        <div class="modal-receipt">
-            <div class="receipt-header">
-                <h3>Resumen de Recolección</h3>
-                <button class="btn-close-modal" onclick="cerrarModalDetalle()">×</button>
+        <div class="modal-container receipt-style">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-receipt"></i> Resumen de Recolección</h3>
+                <button class="modal-close btn-close-modal" onclick="cerrarModalDetalle()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
             
-            <div class="receipt-body" id="detalleContenido">
+            <div class="modal-body" id="detalleContenido">
                 </div>
 
-            <div class="receipt-footer">
-                <button class="btn-close-action" onclick="cerrarModalDetalle()">Cerrar</button>
+            <div class="modal-footer">
+                <button class="btn-cancelar btn-close-action" onclick="cerrarModalDetalle()">Cerrar</button>
             </div>
         </div>
     </div>
 
     <script src="historial_entregas.js"></script>
+
+    <script>
+        const grid = document.getElementById('gridHistorial');
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                mutation.addedNodes.forEach((node) => {
+                    if (node.nodeType === 1 && node.classList.contains('history-card')) { 
+                        node.style.opacity = '0';
+                        node.style.transform = 'translateY(20px)';
+                        setTimeout(() => {
+                            node.style.transition = 'all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                            node.style.opacity = '1';
+                            node.style.transform = 'translateY(0)';
+                        }, 50);
+                    }
+                });
+            });
+        });
+        observer.observe(grid, { childList: true });
+    </script>
 </body>
 </html>
