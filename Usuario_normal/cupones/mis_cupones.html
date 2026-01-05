@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mis Cupones | Loopi</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <link rel="stylesheet" href="mis_cupones.css"> 
@@ -14,37 +14,42 @@
 </head>
 <body>
 
-    <nav class="navbar">
-        <div class="nav-container">
-            <a href="../inicio_usuario_normal.html" class="nav-back">
-                <i class="fa-solid fa-arrow-left"></i>
-            </a>
-            <div class="nav-title">
-                <i class="fa-solid fa-wallet"></i> Mis Recompensas
+    <div class="bg-decoration"></div>
+
+    <header class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <a href="../inicio_usuario_normal.html" class="btn-volver">
+                    <i class="fa-solid fa-arrow-left"></i> <span>Volver</span>
+                </a>
+                <div class="titulo-seccion">
+                    <h1><i class="fa-solid fa-wallet"></i> Billetera Eco</h1>
+                    <p>Tus premios listos para canjear.</p>
+                </div>
             </div>
-            <div style="width: 24px;"></div> </div>
-    </nav>
+            
+            <div class="header-decoration-icon">
+                <i class="fa-solid fa-ticket"></i>
+            </div>
+        </div>
+    </header>
 
     <div class="main-container">
         
-        <div class="header-section">
-            <h2>Billetera Eco</h2>
-            <p>Tus premios listos para usar.</p>
-        </div>
-
         <div id="gridCupones" class="grid-cupones">
-            <div class="loading">
-                <i class="fa-solid fa-circle-notch fa-spin"></i> Cargando billetera...
+            <div class="loading-state">
+                <div class="spinner"></div>
+                <p>Cargando billetera...</p>
             </div>
         </div>
 
-        <div id="emptyState" class="empty-state" style="display: none;">
-            <div class="icon-empty">
-                <i class="fa-solid fa-ticket"></i>
+        <div id="emptyState" class="empty-state-card" style="display: none;">
+            <div class="empty-icon-bg">
+                <i class="fa-solid fa-ghost"></i>
             </div>
-            <h3>¡Está muy vacío aquí!</h3>
-            <p>Canjea tus puntos por premios increíbles.</p>
-            <button onclick="window.location.href='../catalogo/catalogo.html'" class="btn-primary">
+            <h3>¡Billetera vacía!</h3>
+            <p>Aún no has canjeado recompensas. ¡Tus puntos esperan!</p>
+            <button onclick="window.location.href='../catalogo/catalogo.html'" class="btn-catalogo ripple-effect">
                 Ir al Catálogo
             </button>
         </div>
@@ -52,5 +57,39 @@
     </div>
 
     <script src="mis_cupones.js"></script>
+
+    <script>
+        const grid = document.getElementById('gridCupones');
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                mutation.addedNodes.forEach((node) => {
+                    if (node.nodeType === 1 && node.classList.contains('cupon-card')) { 
+                        node.style.opacity = '0';
+                        node.style.transform = 'translateY(20px)';
+                        setTimeout(() => {
+                            node.style.transition = 'all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                            node.style.opacity = '1';
+                            node.style.transform = 'translateY(0)';
+                        }, 100);
+                    }
+                });
+            });
+        });
+        observer.observe(grid, { childList: true });
+
+        document.querySelectorAll('.ripple-effect').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                let rect = e.target.getBoundingClientRect();
+                let x = e.clientX - rect.left;
+                let y = e.clientY - rect.top;
+                let ripples = document.createElement('span');
+                ripples.style.left = x + 'px';
+                ripples.style.top = y + 'px';
+                ripples.classList.add('ripple');
+                this.appendChild(ripples);
+                setTimeout(() => ripples.remove(), 600);
+            });
+        });
+    </script>
 </body>
 </html>
