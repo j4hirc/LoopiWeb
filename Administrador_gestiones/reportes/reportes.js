@@ -39,7 +39,6 @@ async function cargarTodo() {
 function aplicarFiltros() {
     const fInicio = document.getElementById('filtroInicio').value;
     const fFin = document.getElementById('filtroFin').value;
-    // Se eliminó la captura de la variable estado
     const tipo = document.getElementById('filtroTipo').value;
     const busqueda = document.getElementById('filtroReciclador').value.toLowerCase();
 
@@ -49,21 +48,22 @@ function aplicarFiltros() {
         const fechaItem = new Date(item.fecha_recoleccion_real || item.fecha_creacion);
         fechaItem.setHours(0, 0, 0, 0);
 
-        // 1. Filtro Fecha
         if (fInicio) {
-            const dInicio = new Date(fInicio);
+            const [y, m, d] = fInicio.split('-');
+            const dInicio = new Date(y, m - 1, d); 
             dInicio.setHours(0, 0, 0, 0);
+            
             if (fechaItem < dInicio) return false;
         }
+
         if (fFin) {
-            const dFin = new Date(fFin);
-            dFin.setHours(23, 59, 59, 999);
+            const [y, m, d] = fFin.split('-');
+            const dFin = new Date(y, m - 1, d);
+            dFin.setHours(23, 59, 59, 999); 
+            
             if (fechaItem > dFin) return false;
         }
 
-        // Se eliminó el bloque de lógica "if (estado !== 'TODOS')"
-
-        // 2. Filtro Tipo
         if (tipo !== "TODOS") {
             if (tipo === "RECICLADOR") {
                 if (!item.reciclador) return false;
@@ -74,7 +74,6 @@ function aplicarFiltros() {
             }
         }
 
-        // 3. Filtro Búsqueda
         if (busqueda) {
             let coincide = false;
             if (item.reciclador) {
