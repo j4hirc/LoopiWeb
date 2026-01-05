@@ -6,7 +6,7 @@ let chartMatInstance = null;
 let chartTopInstance = null;
 let chartTendenciaInstance = null;
 
-
+// RUTA DEL LOGO (Asegúrate que esta ruta sea correcta relativa a tu HTML)
 const RUTA_LOGO_LOCAL = "../../Imagenes/Logo.png"; 
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -320,7 +320,6 @@ function resetearFiltros() {
     aplicarFiltros();
 }
 
-// --- NUEVA FUNCIÓN AUXILIAR PARA CONVERTIR IMAGEN A BASE64 ---
 async function cargarImagenComoBase64(url) {
     try {
         const response = await fetch(url);
@@ -333,42 +332,44 @@ async function cargarImagenComoBase64(url) {
         });
     } catch (e) {
         console.warn("No se pudo cargar la imagen del logo:", e);
-        return null; // Si falla, devolvemos null y el PDF se genera sin logo (o con texto alt)
+        return null;
     }
 }
 
-// --- FUNCIÓN DE DESCARGA PDF MEJORADA PAPU ---
+// --- FUNCIÓN MEJORADA CON FILTROS EN EL HEADER ---
 async function descargarPDF() {
     const elemento = document.getElementById('reporteContent');
     const botones = document.querySelectorAll('button, .navbar, .filters-card');
     
-    // Ocultar botones
+    // Ocultar elementos UI
     botones.forEach(b => b.style.display = 'none');
 
-    // Guardar estilos originales
+    // Capturar valores de los filtros para el encabezado
+    const fInicio = document.getElementById('filtroInicio').value || 'Sin restricción';
+    const fFin = document.getElementById('filtroFin').value || 'Sin restricción';
+    const comboTipo = document.getElementById('filtroTipo');
+    const tipoTexto = comboTipo.options[comboTipo.selectedIndex].text;
+    const busqueda = document.getElementById('filtroReciclador').value || '(Ninguna)';
+
     const originalBackground = document.body.style.background;
     const originalPadding = elemento.style.padding;
 
-    // Estilos temporales para el PDF
     document.body.style.background = '#ffffff';
     elemento.style.background = '#ffffff';
     elemento.style.padding = '30px'; 
     elemento.style.maxWidth = '100%';
     
-    // Inyectar CSS PRO para impresión (tablas bonitas)
+    // Inyectar CSS
     const estiloImpresion = document.createElement('style');
     estiloImpresion.innerHTML = `
         body { font-family: 'Poppins', Helvetica, sans-serif !important; color: #333; }
         h1, h2, h3, h4 { color: #2c3e50; }
         .kpi-card { border: 1px solid #ddd; box-shadow: none !important; background: #fdfdfd !important; page-break-inside: avoid; }
         .table-responsive { overflow: visible !important; }
-        
-        /* Tabla PRO estilo cebra */
         table { font-size: 11px; width: 100%; border-collapse: collapse; margin-top: 10px; }
         th { background-color: #2ecc71 !important; color: #ffffff !important; padding: 10px; border: 1px solid #27ae60; }
         td { border: 1px solid #eee; padding: 8px; vertical-align: middle; }
         tr:nth-child(even) { background-color: #f8f9fa; }
-        
         .page-title, .page-subtitle { display: none; }
         .report-header { margin-bottom: 0; }
         .chart-card { page-break-inside: avoid; border: 1px solid #eee; }
@@ -383,7 +384,6 @@ async function descargarPDF() {
         c.style.margin = '0 auto 20px auto';
     });
 
-    // --- CONVERTIR LOGO A BASE64 EN TIEMPO REAL ---
     let logoImgTag = '';
     const logoBase64 = await cargarImagenComoBase64(RUTA_LOGO_LOCAL);
     
@@ -393,10 +393,9 @@ async function descargarPDF() {
         logoImgTag = `<div style="font-weight:bold; color:#2ecc71;">LOOPI</div>`;
     }
 
-    // --- ENCABEZADO PAPU ---
     const headerHTML = `
         <div id="pdfHeader" style="padding: 20px 0; border-bottom: 4px solid #2ecc71; margin-bottom: 30px; font-family: Helvetica, Arial, sans-serif;">
-            <div style="display:flex; align-items:center; justify-content: space-between;">
+            <div style="display:flex; align-items:center; justify-content: space-between; margin-bottom: 15px;">
                 <div style="display:flex; align-items:center; gap: 20px;">
                     ${logoImgTag}
                     <div>
@@ -408,6 +407,17 @@ async function descargarPDF() {
                     <p>Documento Confidencial</p>
                     <p>Sistema Admin</p>
                 </div>
+            </div>
+
+            <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px; font-size: 11px; color: #166534;">
+                <table style="width:100%; border:none; margin:0;">
+                    <tr style="background:transparent;">
+                        <td style="border:none; padding:4px;"><strong>Desde:</strong> ${fInicio}</td>
+                        <td style="border:none; padding:4px;"><strong>Hasta:</strong> ${fFin}</td>
+                        <td style="border:none; padding:4px;"><strong>Tipo:</strong> ${tipoTexto}</td>
+                        <td style="border:none; padding:4px;"><strong>Búsqueda:</strong> ${busqueda}</td>
+                    </tr>
+                </table>
             </div>
         </div>
     `;
@@ -448,7 +458,7 @@ async function descargarPDF() {
         Swal.fire({
             icon: 'success',
             title: 'Reporte Descargado',
-            text: '¡Listo el pollo papu! Tu PDF está generado.',
+            text: '¡Reporte con filtros incluido, papu!',
             timer: 2000,
             showConfirmButton: false
         });
