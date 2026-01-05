@@ -48,13 +48,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
   usuarioLogueado = JSON.parse(usuarioStr);
 
- 
   initMap();
-  cargarInfoUsuario();
-
+  cargarInfoUsuario(); 
 
   await Promise.all([
-      recargarUsuarioDesdeBackend(),
+      recargarUsuarioDesdeBackend().then(() => cargarInfoUsuario()), 
+      
       cargarNotificaciones(),
       cargarMisFavoritos(),
       cargarFiltrosMateriales(),
@@ -447,40 +446,42 @@ async function recargarUsuarioDesdeBackend() {
 }
 
 function cargarInfoUsuario() {
-  document.getElementById("nombreUsuarioNav").innerText = usuarioLogueado.primer_nombre;
-  document.getElementById("puntosActuales").innerText = usuarioLogueado.puntos_actuales || 0;
+  document.getElementById("nombreUsuarioNav").innerText = usuarioLogueado.primer_nombre;
+  document.getElementById("puntosActuales").innerText = usuarioLogueado.puntos_actuales || 0;
 
-  if (usuarioLogueado.foto && usuarioLogueado.foto.length > 5) {
-      let fotoSrc = usuarioLogueado.foto;
-      if (!fotoSrc.startsWith("http") && !fotoSrc.startsWith("data:")) {
-          fotoSrc = `data:image/png;base64,${usuarioLogueado.foto}`;
-      }
-      document.getElementById("imgPerfilNav").src = fotoSrc;
-  }
 
-  const lblRango = document.getElementById("rangoUsuario");
-  const imgRango = document.getElementById("imgRango");
+  if (usuarioLogueado.foto && usuarioLogueado.foto.length > 5) {
+      let fotoSrc = usuarioLogueado.foto;
+      if (!fotoSrc.startsWith("http") && !fotoSrc.startsWith("data:")) {
+          fotoSrc = `data:image/png;base64,${usuarioLogueado.foto}`;
+      }
+      document.getElementById("imgPerfilNav").src = fotoSrc;
+  }
 
-  if (usuarioLogueado.rango) {
-    lblRango.innerText = usuarioLogueado.rango.nombre_rango;
-    if (
-      usuarioLogueado.rango.imagen &&
-      usuarioLogueado.rango.imagen.length > 10
-    ) {
-      let imgClean = usuarioLogueado.rango.imagen;
-      if (!imgClean.startsWith("http") && !imgClean.startsWith("data:")) {
-        imgClean = `data:image/png;base64,${imgClean}`;
-      }
-      imgRango.src = imgClean;
-      imgRango.style.display = "block";
-    } else {
-      imgRango.style.display = "none";
-      lblRango.innerText = `🌱 ${usuarioLogueado.rango.nombre_rango}`;
-    }
-  } else {
-    lblRango.innerText = "Sin Rango";
-    imgRango.style.display = "none";
-  }
+
+  const lblRango = document.getElementById("rangoUsuario");
+  const imgRango = document.getElementById("imgRango");
+
+  if (usuarioLogueado.rango) {
+    lblRango.innerText = usuarioLogueado.rango.nombre_rango;
+    if (
+      usuarioLogueado.rango.imagen &&
+      usuarioLogueado.rango.imagen.length > 10
+    ) {
+      let imgClean = usuarioLogueado.rango.imagen;
+      if (!imgClean.startsWith("http") && !imgClean.startsWith("data:")) {
+        imgClean = `data:image/png;base64,${imgClean}`;
+      }
+      imgRango.src = imgClean;
+      imgRango.style.display = "block";
+    } else {
+      imgRango.style.display = "none";
+      lblRango.innerText = `🌱 ${usuarioLogueado.rango.nombre_rango}`;
+    }
+  } else {
+    lblRango.innerText = "Sin Rango";
+    imgRango.style.display = "none";
+  }
 }
 
 function logout() {
@@ -958,46 +959,46 @@ function cerrarModalRangos() {
 }
 
 function renderizarCaminoRangos(rangos, totalReal) {
-  const container = document.getElementById("listaRangosContainer");
-  container.innerHTML = "";
+  const container = document.getElementById("listaRangosContainer");
+  container.innerHTML = "";
 
-  const idRangoCalculado = Math.floor(totalReal / 25) + 1;
+  const idRangoCalculado = Math.floor(totalReal / 25) + 1;
 
-  rangos.forEach((rango) => {
-    let claseEstado = "";
-    let iconoEstado = '<i class="fa-solid fa-lock"></i>'; // Futuro
+  rangos.forEach((rango) => {
+    let claseEstado = "";
+    let iconoEstado = '<i class="fa-solid fa-lock"></i>'; // Futuro
 
-    if (rango.id_rango < idRangoCalculado) {
-      claseEstado = "passed"; // Pasado
-      iconoEstado = '<i class="fa-solid fa-check-circle"></i>';
-    } else if (rango.id_rango === idRangoCalculado) {
-      claseEstado = "current"; // Actual
-      iconoEstado = '<i class="fa-solid fa-star"></i>';
-    }
+    if (rango.id_rango < idRangoCalculado) {
+      claseEstado = "passed"; // Pasado
+      iconoEstado = '<i class="fa-solid fa-check-circle"></i>';
+    } else if (rango.id_rango === idRangoCalculado) {
+      claseEstado = "current"; // Actual
+      iconoEstado = '<i class="fa-solid fa-star"></i>';
+    }
 
-    let imgSrc = "https://via.placeholder.com/50?text=?";
-    if (rango.imagen && rango.imagen.length > 20) {
-      let imgClean = rango.imagen;
-      if (!imgClean.startsWith("http") && !imgClean.startsWith("data:")) {
-        imgClean = `data:image/png;base64,${imgClean}`;
-      }
-      imgSrc = imgClean;
-    }
+    let imgSrc = "https://via.placeholder.com/50?text=?";
+    if (rango.imagen && rango.imagen.length > 20) {
+      let imgClean = rango.imagen;
+      if (!imgClean.startsWith("http") && !imgClean.startsWith("data:")) {
+        imgClean = `data:image/png;base64,${imgClean}`;
+      }
+      imgSrc = imgClean;
+    }
 
-    const recoleccionesMeta = rango.id_rango * 25;
+    const recoleccionesMeta = rango.id_rango * 25;
 
-    const card = document.createElement("div");
-    card.className = `rango-card ${claseEstado}`;
-    card.innerHTML = `
-            <img src="${imgSrc}" class="rango-img" alt="${rango.nombre_rango}">
-            <div class="rango-info">
-                <h4>${rango.nombre_rango}</h4>
-                <p>Se alcanza a las ${recoleccionesMeta} entregas</p>
-            </div>
-            <div class="status-icon">
-                ${iconoEstado}
-            </div>
-        `;
-    container.appendChild(card);
-  });
+    const card = document.createElement("div");
+    card.className = `rango-card ${claseEstado}`;
+    card.innerHTML = `
+            <img src="${imgSrc}" class="rango-img" alt="${rango.nombre_rango}">
+            <div class="rango-info">
+                <h4>${rango.nombre_rango}</h4>
+                <p>Se alcanza a las ${recoleccionesMeta} entregas</p>
+            </div>
+            <div class="status-icon">
+                ${iconoEstado}
+            </div>
+        `;
+    container.appendChild(card);
+  });
 }
