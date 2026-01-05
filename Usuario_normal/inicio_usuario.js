@@ -560,7 +560,6 @@ function abrirModalPerfil() {
   const modal = document.getElementById("modalPerfil");
   const prev = document.getElementById("perfilPreview");
 
-  // Limpiamos foto nueva al abrir
   fotoNuevaFile = null;
   if(document.getElementById("inputPerfilFoto")) document.getElementById("inputPerfilFoto").value = "";
 
@@ -577,7 +576,6 @@ function abrirModalPerfil() {
       cargarParroquiasEnBackground().then(() => llenarSelectParroquias());
   }
 
-  // Visualizar foto
   let fotoSrc = "https://via.placeholder.com/100";
   if (usuarioLogueado.foto && usuarioLogueado.foto.length > 5) {
       if (usuarioLogueado.foto.startsWith("http") || usuarioLogueado.foto.startsWith("data:")) {
