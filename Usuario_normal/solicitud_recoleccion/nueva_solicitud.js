@@ -5,13 +5,12 @@ let markerUsuario;
 let markersLayer;
 let allPuntos = []; 
 
-// --- VARIABLES PARA VALIDACIÓN Y RUTAS ---
 let horariosPuntoSeleccionado = []; 
-let routingControl = null; // Variable para controlar el dibujo de la ruta
-// -----------------------------------------
+let routingControl = null; 
+// 
 
 let selectedLocationId = null;
-let fotoEvidenciaFile = null; // Archivo real
+let fotoEvidenciaFile = null; 
 let detallesList = [];
 let materialesGlobales = [];
 
@@ -21,16 +20,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     await cargarMaterialesGlobales(); 
     await cargarDatosIniciales();
   
-    // Configurar subida con compresión
     setupImageUpload();
 
     document.getElementById("btnAddMaterial").addEventListener("click", agregarMaterialALista);
     document.getElementById("btnEnviar").addEventListener("click", enviarSolicitud);
   
-    // Listener para validar horario al cambiar la fecha
     document.getElementById("inputFecha").addEventListener("change", function() {
-        validarHorarioAtencion(); // 1. Checa si está abierto
-        validarFormulario();      // 2. Checa si habilita el botón
+        validarHorarioAtencion(); 
+        validarFormulario();      
     });
 
     document.getElementById("inputCantidad").addEventListener("input", validarFormulario);
@@ -54,10 +51,8 @@ function initMap() {
             const lat = pos.coords.latitude;
             const lng = pos.coords.longitude;
             
-            // Centrar mapa y guardar marcador del usuario para la ruta
             map.setView([lat, lng], 15);
             
-            // Icono distintivo para el usuario (Punto Rojo)
             const userIcon = L.divIcon({
                 className: 'user-pin',
                 html: '<div style="background-color:#e74c3c;width:20px;height:20px;border-radius:50%;border:3px solid white;box-shadow:0 0 10px rgba(0,0,0,0.5);"></div>',
@@ -210,21 +205,17 @@ window.seleccionarPuntoDesdePopup = function (id, nombre, esReciclador) {
 
     if (puntoSeleccionado) {
         
-        // 1. Guardar Horarios para validación
         horariosPuntoSeleccionado = puntoSeleccionado.horarios || [];
 
-        // 2. Extraer datos adicionales
         const direccion = puntoSeleccionado.direccion || "Sin dirección registrada";
         const parroquia = puntoSeleccionado.parroquia ? puntoSeleccionado.parroquia.nombre_parroquia : "";
         const fotoUrl = puntoSeleccionado.foto ? puntoSeleccionado.foto : null;
 
-        // 3. Generar HTML de Horarios
         let horariosHTML = '';
         if (horariosPuntoSeleccionado.length > 0) {
             horariosHTML = '<div style="margin-top:8px; background:#f9f9f9; padding:5px; border-radius:4px;">';
             horariosHTML += '<div style="font-size:0.8em; color:#7f8c8d; font-weight:bold; margin-bottom:3px;">Horarios de Atención:</div>';
             
-            // Ordenar días si es necesario, o mostrarlos tal cual
             horariosPuntoSeleccionado.forEach(h => {
                 const inicio = h.hora_inicio.substring(0,5);
                 const fin = h.hora_fin.substring(0,5);
@@ -239,7 +230,6 @@ window.seleccionarPuntoDesdePopup = function (id, nombre, esReciclador) {
             horariosHTML = '<div style="font-size:0.8em; color:#e74c3c; margin-top:5px;">⚠️ Sin horarios registrados</div>';
         }
 
-        // 4. Generar HTML de la Foto (si existe)
         let fotoHTML = '';
         if (fotoUrl) {
             fotoHTML = `
@@ -249,7 +239,7 @@ window.seleccionarPuntoDesdePopup = function (id, nombre, esReciclador) {
             `;
         }
 
-        // 5. CONSTRUIR EL PANEL COMPLETO
+
         nombreDiv.innerHTML = `
             <div style="display:flex; flex-direction:column; gap:5px;">
                 <div style="font-size:1.1em; font-weight:bold; color:${colorHTML}; display:flex; align-items:center; gap:8px;">
@@ -274,7 +264,6 @@ window.seleccionarPuntoDesdePopup = function (id, nombre, esReciclador) {
         infoDiv.style.display = "block";
         infoDiv.style.borderLeft = `5px solid ${colorHTML}`;
 
-        // 6. Lógica de Materiales
         const matsWrappers = obtenerMaterialesDelPunto(puntoSeleccionado);
         const matsLimpios = matsWrappers.map(m => m.material ? m.material : m).filter(m => m != null);
         llenarSelectMateriales(matsLimpios);
@@ -283,7 +272,6 @@ window.seleccionarPuntoDesdePopup = function (id, nombre, esReciclador) {
             Swal.fire("Aviso", "Este punto no tiene materiales configurados.", "warning");
         }
 
-        // 7. CÁLCULO DE RUTA
         if (markerUsuario) {
             const userLatLng = markerUsuario.getLatLng();
             const destLatLng = L.latLng(puntoSeleccionado.latitud, puntoSeleccionado.longitud);
@@ -460,7 +448,6 @@ window.borrarItem = function (index) {
     validarFormulario();
 };
 
-// --- CONFIGURACIÓN DE SUBIDA DE IMAGEN (COMPRESIÓN) ---
 function setupImageUpload() {
     const input = document.getElementById("inputFoto");
     const preview = document.getElementById("imgPreview");
@@ -478,13 +465,10 @@ function setupImageUpload() {
             }
 
             try {
-                // 1. Comprimir
                 const archivoComprimido = await comprimirImagen(file);
               
-                // 2. Guardar en variable global
                 fotoEvidenciaFile = archivoComprimido;
 
-                // 3. Previsualizar
                 const reader = new FileReader();
                 reader.onload = function (e) {
                     preview.src = e.target.result;
@@ -502,7 +486,6 @@ function setupImageUpload() {
     });
 }
 
-// --- FUNCIÓN DE COMPRESIÓN ---
 async function comprimirImagen(archivo) {
     return new Promise((resolve, reject) => {
         const maxWidth = 800; // Redimensionar si pasa de 800px
@@ -549,14 +532,11 @@ async function comprimirImagen(archivo) {
     });
 }
 
-// =========================================================================
-// VALIDACIÓN DE HORARIO DEFINITIVA (FECHA PASADA + TILDES + HORAS)
-// =========================================================================
+
 function validarHorarioAtencion() {
     const inputFecha = document.getElementById("inputFecha");
     const fechaValor = inputFecha.value;
 
-    // Si falta datos, no bloqueamos todavía
     if (!selectedLocationId || !fechaValor || !horariosPuntoSeleccionado || horariosPuntoSeleccionado.length === 0) {
         return true; 
     }
@@ -564,7 +544,6 @@ function validarHorarioAtencion() {
     const fechaObj = new Date(fechaValor);
     const ahora = new Date();
 
-    // 1. VALIDACIÓN DE TIEMPO: ¿Es una fecha pasada?
     if (fechaObj < ahora) {
         Swal.fire({
             icon: 'error',
@@ -572,11 +551,10 @@ function validarHorarioAtencion() {
             text: 'No puedes programar una recolección en el pasado.',
             confirmButtonColor: '#e74c3c'
         });
-        inputFecha.value = ""; // Borrar fecha inválida
+        inputFecha.value = ""; 
         return false;
     }
 
-    // 2. OBTENER DÍA Y NORMALIZAR TEXTO
     const diasSemana = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
     const diaInput = diasSemana[fechaObj.getDay()];
 
@@ -584,7 +562,6 @@ function validarHorarioAtencion() {
         return texto ? texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim() : "";
     };
 
-    // 3. VALIDAR DÍA DE APERTURA
     const horarioDelDia = horariosPuntoSeleccionado.find(h => 
         normalizar(h.dia_semana) === normalizar(diaInput)
     );
@@ -600,13 +577,12 @@ function validarHorarioAtencion() {
         return false;
     }
 
-    // 4. VALIDAR RANGO DE HORAS (HH:mm)
     const horaInput = fechaValor.split("T")[1].substring(0, 5); // "14:30"
     const horaAbre = horarioDelDia.hora_inicio.substring(0, 5);
     const horaCierra = horarioDelDia.hora_fin.substring(0, 5);
 
     if (horaInput >= horaAbre && horaInput <= horaCierra) {
-        return true; // ¡TODO CORRECTO!
+        return true; 
     } else {
         Swal.fire({
             icon: 'warning',
@@ -642,7 +618,6 @@ function validarFormulario() {
     }
 }
 
-// --- ENVÍO CON FORMDATA ---
 async function enviarSolicitud() {
     const usuarioLocal = localStorage.getItem("usuario");
     if (!usuarioLocal) {
@@ -650,11 +625,9 @@ async function enviarSolicitud() {
     }
     const usuarioObj = JSON.parse(usuarioLocal);
 
-    // Fecha segura: Agregamos segundos para evitar error de LocalDateTime
     const fechaInput = document.getElementById("inputFecha").value;
     const fechaSegura = fechaInput.length === 16 ? fechaInput + ":00" : fechaInput;
 
-    // 1. Objeto JSON
     const datosObj = {
         solicitante: { cedula: usuarioObj.cedula },
         ubicacion: { id_ubicacion_reciclaje: selectedLocationId },
@@ -684,7 +657,6 @@ async function enviarSolicitud() {
             didOpen: () => Swal.showLoading() 
         });
 
-        // 3. Enviar
         const response = await fetch(`${API_BASE}/solicitud_recolecciones`, {
             method: "POST",
             body: formData,

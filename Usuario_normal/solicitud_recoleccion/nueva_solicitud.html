@@ -16,115 +16,129 @@
 
 <body>
 
-    <nav class="navbar">
-        <div class="nav-content">
-            <div class="nav-logo">
-                <i class="fa-solid fa-recycle"></i> Loopi
+    <div class="bg-decoration"></div>
+
+    <header class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <button class="btn-volver" onclick="history.back()">
+                    <i class="fa-solid fa-arrow-left"></i> <span>Cancelar</span>
+                </button>
+                <div class="titulo-seccion">
+                    <h1><i class="fa-solid fa-file-pen"></i> Registrar Entrega</h1>
+                    <p>Confirma ubicación y evidencia.</p>
+                </div>
             </div>
         </div>
-    </nav>
+    </header>
 
     <div class="main-wrapper">
-        
-        <div class="header-actions">
-            <button class="btn-back" onclick="history.back()">
-                <i class="fa-solid fa-arrow-left"></i> Volver
-            </button>
-        </div>
-
         <div class="form-card">
-            <div class="card-header">
-                <h2>Registrar Entrega</h2>
-                <p>Confirma tu ubicación y sube la evidencia.</p>
-            </div>
 
             <div class="form-step">
-                <div class="step-label">
-                    <span class="step-number">1</span> 
-                    Selecciona el Punto
+                <div class="step-indicator">
+                    <div class="step-number">1</div>
+                    <div class="step-line"></div>
                 </div>
-                
-                <div class="filtros-container-mapa">
-                    <div id="filtroMaterialesMap" class="filtros-scroll">
-                        <button class="btn-filtro active" onclick="filtrarPuntosMapa('todos', this)">Todos</button>
-                        </div>
-                </div>
-
-                <div class="map-wrapper">
-                    <div id="mapaSeleccion"></div>
-                </div>
-
-                <div id="infoPunto" class="selected-info">
-                    <div class="info-icon"><i class="fa-solid fa-map-location-dot"></i></div>
-                    <div class="info-text">
-                        <small class="info-label">Punto seleccionado:</small>
-                        <p id="nombrePunto">Ninguno</p>
-                    </div>
-                    <input type="hidden" id="idUbicacionSeleccionada">
-                </div>
-            </div>
-
-            <div class="form-step">
-                <div class="step-label">
-                    <span class="step-number">2</span> 
-                    ¿Cuándo entregaste?
-                </div>
-                <div class="input-icon-wrapper">
-                    <i class="fa-regular fa-calendar input-icon"></i>
-                    <input type="datetime-local" id="inputFecha" class="input-moderno">
-                </div>
-            </div>
-
-            <div class="form-step">
-                <div class="step-label">
-                    <span class="step-number">3</span> 
-                    ¿Qué reciclas?
-                </div>
-                
-                <div class="material-adder">
-                    <div class="select-wrapper">
-                        <select id="selectMaterial" class="input-moderno">
-                            <option value="">Material...</option>
-                        </select>
-                        <i class="fa-solid fa-chevron-down arrow-icon"></i>
-                    </div>
+                <div class="step-content">
+                    <h3 class="step-title">Selecciona el Punto</h3>
                     
-                    <div class="input-group-joined">
-                        <input type="number" id="inputCantidad" class="input-moderno" placeholder="0.0" min="0.1" step="0.1">
-                        <span class="unit">Kg</span>
+                    <div class="filtros-container-mapa">
+                        <div id="filtroMaterialesMap" class="filtros-scroll">
+                            <button class="btn-filtro-map active" onclick="filtrarPuntosMapa('todos', this)">Todos</button>
+                            </div>
                     </div>
 
-                    <button type="button" id="btnAddMaterial" class="btn-add ripple-effect">
-                        <i class="fa-solid fa-plus"></i>
-                    </button>
-                </div>
+                    <div class="map-frame">
+                        <div id="mapaSeleccion"></div>
+                    </div>
 
-                <ul id="listaMaterialesUI" class="lista-materiales">
-                    </ul>
+                    <div id="infoPunto" class="selected-info">
+                        <div class="info-icon"><i class="fa-solid fa-map-pin"></i></div>
+                        <div class="info-details">
+                            <span class="lbl">Punto:</span>
+                            <strong id="nombrePunto">Ninguno seleccionado</strong>
+                        </div>
+                        <input type="hidden" id="idUbicacionSeleccionada">
+                    </div>
+                </div>
             </div>
 
             <div class="form-step">
-                <div class="step-label">
-                    <span class="step-number">4</span> 
-                    Evidencia
+                <div class="step-indicator">
+                    <div class="step-number">2</div>
+                    <div class="step-line"></div>
                 </div>
-                
-                <div class="file-upload-wrapper" id="dropZone">
-                    <input type="file" id="inputFoto" accept="image/*">
-                    <div class="upload-content" id="uploadText">
-                        <div class="icon-circle">
-                            <i class="fa-solid fa-camera"></i>
-                        </div>
-                        <p class="main-text">Toma una foto</p>
-                        <p class="sub-text">o selecciona de la galería</p>
+                <div class="step-content">
+                    <h3 class="step-title">¿Cuándo entregaste?</h3>
+                    <div class="input-group-modern">
+                        <i class="fa-regular fa-calendar input-icon"></i>
+                        <input type="datetime-local" id="inputFecha" class="input-field">
                     </div>
-                    <img id="imgPreview" class="preview-image" alt="Vista previa">
                 </div>
             </div>
 
-            <button id="btnEnviar" class="btn-submit ripple-effect" disabled>
-                Completar Registro
-            </button>
+            <div class="form-step">
+                <div class="step-indicator">
+                    <div class="step-number">3</div>
+                    <div class="step-line"></div>
+                </div>
+                <div class="step-content">
+                    <h3 class="step-title">Materiales Reciclados</h3>
+                    
+                    <div class="material-adder-box">
+                        <div class="adder-inputs">
+                            <div class="select-wrapper">
+                                <select id="selectMaterial" class="input-field">
+                                    <option value="">Seleccionar material...</option>
+                                    </select>
+                                <i class="fa-solid fa-chevron-down arrow-icon"></i>
+                            </div>
+                            
+                            <div class="weight-wrapper">
+                                <input type="number" id="inputCantidad" class="input-field" placeholder="0.0" min="0.1" step="0.1">
+                                <span class="unit-tag">Kg</span>
+                            </div>
+                        </div>
+
+                        <button type="button" id="btnAddMaterial" class="btn-action-add ripple-effect">
+                            <i class="fa-solid fa-plus"></i> Agregar
+                        </button>
+                    </div>
+
+                    <ul id="listaMaterialesUI" class="lista-materiales">
+                        </ul>
+                </div>
+            </div>
+
+            <div class="form-step last-step">
+                <div class="step-indicator">
+                    <div class="step-number">4</div>
+                </div>
+                <div class="step-content">
+                    <h3 class="step-title">Foto de Evidencia</h3>
+                    
+                    <div class="upload-zone" id="dropZone">
+                        <input type="file" id="inputFoto" accept="image/*">
+                        
+                        <div class="upload-placeholder" id="uploadText">
+                            <div class="icon-camera-bg">
+                                <i class="fa-solid fa-camera"></i>
+                            </div>
+                            <p>Toca para tomar foto</p>
+                            <span>o subir de galería</span>
+                        </div>
+                        
+                        <img id="imgPreview" class="preview-img" alt="Vista previa">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-footer">
+                <button id="btnEnviar" class="btn-submit ripple-effect" disabled>
+                    <i class="fa-solid fa-check"></i> Completar Registro
+                </button>
+            </div>
 
         </div>
     </div>
@@ -137,12 +151,24 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Animación de entrada del formulario
+            const card = document.querySelector('.form-card');
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(30px)';
+            setTimeout(() => {
+                card.style.transition = 'all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, 100);
+
+            // Efecto Ripple en botones
             const rippleButtons = document.querySelectorAll('.ripple-effect');
             rippleButtons.forEach(btn => {
                 btn.addEventListener('click', function(e) {
                     if(this.hasAttribute('disabled')) return;
-                    let x = e.clientX - e.target.getBoundingClientRect().left;
-                    let y = e.clientY - e.target.getBoundingClientRect().top;
+                    let rect = e.target.getBoundingClientRect();
+                    let x = e.clientX - rect.left;
+                    let y = e.clientY - rect.top;
                     let ripples = document.createElement('span');
                     ripples.style.left = x + 'px';
                     ripples.style.top = y + 'px';
