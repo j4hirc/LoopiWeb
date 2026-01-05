@@ -166,7 +166,7 @@ body {
     align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02);
 }
 
-/* --- PASO 4: FOTO --- */
+
 .upload-zone {
     border: 2px dashed #cbd5e1; border-radius: 16px; height: 160px;
     position: relative; display: flex; align-items: center; justify-content: center;
