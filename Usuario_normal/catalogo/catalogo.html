@@ -23,12 +23,12 @@
                 <a href="../inicio_usuario_normal.html" class="btn-back">
                     <i class="fa-solid fa-arrow-left"></i>
                 </a>
-                <div class="nav-title">Tienda de Premios</div>
+                <span class="nav-title">Tienda de Premios</span>
             </div>
             
             <div class="points-wallet">
-                <span class="points-label">TU SALDO</span>
-                <div class="points-value">
+                <span class="wallet-label">Tu Saldo</span>
+                <div class="wallet-value">
                     <i class="fa-solid fa-star"></i>
                     <span id="misPuntos">...</span>
                 </div>
@@ -40,14 +40,22 @@
         
         <header class="catalog-hero">
             <div class="hero-text">
-                <h1>Tus esfuerzos valen</h1>
-                <p>Canjea tus puntos por recompensas exclusivas de nuestros aliados.</p>
+                <h1>Recompensas Loopi</h1>
+                <p>Canjea tus puntos por premios exclusivos de nuestros aliados.</p>
             </div>
 
             <div class="search-wrapper">
                 <div class="search-box">
                     <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                    <input type="text" id="buscador" placeholder="¿Qué se te antoja hoy? (Cine, Pizza...)" autocomplete="off">
+                    <input type="text" id="buscador" placeholder="Buscar premios (Cine, Pizza, Bonos...)" autocomplete="off">
+                </div>
+                
+                <div class="category-scroll">
+                    <button class="chip active">Todo</button>
+                    <button class="chip">Comida</button>
+                    <button class="chip">Entretenimiento</button>
+                    <button class="chip">Servicios</button>
+                    <button class="chip">Productos</button>
                 </div>
             </div>
         </header>
@@ -61,7 +69,8 @@
 
     </div>
 
-    <div class="modal-overlay" id="modalCanje"> <div class="modal-container">
+    <div class="modal-overlay" id="modalCanje">
+        <div class="modal-container">
             </div>
     </div>
 
@@ -72,7 +81,7 @@
         const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
                 mutation.addedNodes.forEach((node) => {
-                    if (node.nodeType === 1) { 
+                    if (node.nodeType === 1 && (node.classList.contains('premio-card') || node.tagName === 'DIV')) { 
                         node.style.opacity = '0';
                         node.style.transform = 'translateY(20px)';
                         setTimeout(() => {
