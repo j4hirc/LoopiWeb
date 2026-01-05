@@ -5,59 +5,59 @@
     <title>Mis Entregas | Loopi Reciclador</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link rel="stylesheet" href="../styles.css">
-    <link rel="stylesheet" href="mis_entregas.css">
-
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <link rel="stylesheet" href="mis_entregas.css">
 </head>
 <body>
 
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-logo">
-                <i class="fa-solid fa-truck-fast"></i>
-                <span>Loopi Reciclador</span>
-            </div>
-            <ul class="nav-menu">
-                <li>
-                    <a href="../reciclador.html" class="nav-link">
-                        <i class="fa-solid fa-arrow-left"></i> Volver al Panel
-                    </a>
-                </li>
-            </ul>
-        </div>
-    </nav>
+    <div class="bg-decoration"></div>
 
     <header class="header">
         <div class="header-content">
-            <h1>Gestión de Entregas</h1>
-            <p>Organiza tus recolecciones y valida los puntos.</p>
+            <div class="header-left">
+                <a href="../reciclador.html" class="btn-volver">
+                    <i class="fa-solid fa-arrow-left"></i> <span>Volver al Panel</span>
+                </a>
+                
+                <div class="titulo-seccion">
+                    <h1><i class="fa-solid fa-truck-fast"></i> Gestión de Entregas</h1>
+                    <p>Organiza tus recolecciones y valida los puntos.</p>
+                </div>
+            </div>
+            
+            <div class="header-right-decoration">
+                <i class="fa-solid fa-leaf"></i>
+            </div>
         </div>
     </header>
 
-    <main class="dashboard-container">
-
-        <div class="filtros-container">
-            <button class="btn-filtro active" data-estado="PENDIENTE_RECOLECCION">
-                <i class="fa-regular fa-clock"></i> Pendientes
-            </button>
-            <button class="btn-filtro" data-estado="ACEPTADA">
-                <i class="fa-solid fa-truck"></i> En Curso
-            </button>
-            <button class="btn-filtro" data-estado="FINALIZADO">
-                <i class="fa-solid fa-check-circle"></i> Historial
-            </button>
-        </div>
-
-        <div class="grid-cards" id="gridEntregas">
+    <div class="search-wrapper">
+        <div class="filtros-box">
+            <div class="filtros-container">
+                <button class="btn-filtro active" data-estado="PENDIENTE_RECOLECCION">
+                    <i class="fa-regular fa-clock"></i> Pendientes
+                </button>
+                <button class="btn-filtro" data-estado="ACEPTADA">
+                    <i class="fa-solid fa-truck"></i> En Curso
+                </button>
+                <button class="btn-filtro" data-estado="FINALIZADO">
+                    <i class="fa-solid fa-check-circle"></i> Historial
+                </button>
             </div>
+        </div>
+    </div>
 
+    <main class="dashboard-container">
+        <div class="grid-cards grid-container" id="gridEntregas">
+            </div>
     </main>
 
     <template id="tplEntrega">
-        <div class="entrega-card">
+        <div class="entrega-card card-item">
             <div class="card-status-bar badge-estado"></div>
             
             <div class="entrega-body">
@@ -65,51 +65,73 @@
                     <div class="avatar-placeholder">
                         <i class="fa-solid fa-user"></i>
                     </div>
-                    <div>
+                    <div class="info-text">
                         <h3 class="txtUsuario">Nombre Usuario</h3>
                         <p class="txtDireccion"><i class="fa-solid fa-location-dot"></i> Dirección...</p>
                     </div>
                 </div>
                 
                 <div class="meta-info">
-                    <span class="txtFecha"><i class="fa-regular fa-calendar"></i> 01/01/2025</span>
-                    <span class="txtMaterialesCount">0 materiales</span>
+                    <span class="pill-date txtFecha"><i class="fa-regular fa-calendar"></i> 01/01/2025</span>
+                    <span class="pill-material txtMaterialesCount">0 materiales</span>
                 </div>
             </div>
 
-            <div class="entrega-acciones">
-                <button class="btn-ver" title="Ver detalles">
-                    <i class="fa-solid fa-eye"></i> Detalle
+            <div class="entrega-acciones acciones">
+                <button class="btn-ver action-btn" title="Ver detalles">
+                    <i class="fa-solid fa-eye"></i>
                 </button>
-                <button class="btn-aceptar" title="Aceptar solicitud">
-                    <i class="fa-solid fa-check"></i> Aceptar
+                <button class="btn-aceptar action-btn" title="Aceptar solicitud">
+                    <i class="fa-solid fa-check"></i>
                 </button>
-                <button class="btn-rechazar" title="Rechazar solicitud">
-                    <i class="fa-solid fa-xmark"></i> Rechazar
+                <button class="btn-rechazar action-btn" title="Rechazar solicitud">
+                    <i class="fa-solid fa-xmark"></i>
                 </button>
-                <button class="btn-completar" title="Finalizar entrega">
-                    <i class="fa-solid fa-flag-checkered"></i> Finalizar
+                <button class="btn-completar action-btn" title="Finalizar entrega">
+                    <i class="fa-solid fa-flag-checkered"></i>
                 </button>
             </div>
         </div>
     </template>
 
     <div class="modal-overlay" id="modalDetalle">
-        <div class="modal-detalle">
-            <div class="modal-header-detalle">
+        <div class="modal-container">
+            <div class="modal-header">
                 <h3><i class="fa-solid fa-clipboard-list"></i> Detalle de Solicitud</h3>
-                <button class="btn-cerrar" onclick="cerrarModalDetalle()">✕</button>
+                <button class="modal-close" onclick="cerrarModalDetalle()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
 
-            <div class="modal-body-detalle" id="detalleContenido">
+            <div class="modal-body" id="detalleContenido">
                 </div>
 
-            <div class="modal-footer-detalle">
+            <div class="modal-footer">
                 <button class="btn-cancelar" onclick="cerrarModalDetalle()">Cerrar Ventana</button>
             </div>
         </div>
     </div>
 
     <script src="mis_entregas.js"></script>
+
+    <script>
+        const grid = document.getElementById('gridEntregas');
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                mutation.addedNodes.forEach((node) => {
+                    if (node.nodeType === 1 && node.classList.contains('entrega-card')) { 
+                        node.style.opacity = '0';
+                        node.style.transform = 'translateY(20px)';
+                        setTimeout(() => {
+                            node.style.transition = 'all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                            node.style.opacity = '1';
+                            node.style.transform = 'translateY(0)';
+                        }, 50);
+                    }
+                });
+            });
+        });
+        observer.observe(grid, { childList: true });
+    </script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 :root {
-    /* Paleta Loopi Premium */
+
     --primary: #1a4d3e;       
     --primary-gradient: linear-gradient(135deg, #2D5A4A 0%, #1a4d3e 100%);
     --accent: #6DB85C;        
@@ -12,7 +12,7 @@
     --text-light: #6B7280;
     --danger: #ef4444;
     
-    /* Efectos */
+
     --radius: 20px;
     --shadow-soft: 0 10px 40px -10px rgba(45, 90, 74, 0.15);
     --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
@@ -30,10 +30,10 @@ body {
     min-height: 100vh;
 }
 
-/* SweetAlert Fix */
+
 .swal2-container { z-index: 100000 !important; }
 
-/* Decoración Fondo */
+
 .bg-decoration {
     position: absolute; top: 0; left: 0; width: 100%; height: 350px;
     background: var(--primary-gradient);
@@ -41,7 +41,7 @@ body {
     z-index: -1;
 }
 
-/* --- HEADER --- */
+
 .header {
     padding: 30px 5% 60px;
     color: white;
@@ -59,7 +59,6 @@ body {
 
 .header-left { display: flex; flex-direction: column; gap: 15px; }
 
-/* Botón Volver */
 .btn-volver {
     display: inline-flex; align-items: center; gap: 8px;
     color: rgba(255,255,255,0.9); text-decoration: none;
@@ -76,7 +75,6 @@ body {
 }
 .titulo-seccion p { font-size: 1rem; opacity: 0.9; margin-left: 5px; font-weight: 300; }
 
-/* Botón Agregar */
 .btn-agregar {
     background: white; color: var(--primary); border: none;
     padding: 8px 24px 8px 8px; border-radius: 50px;
@@ -92,7 +90,6 @@ body {
 }
 .btn-agregar:hover { transform: translateY(-4px); box-shadow: 0 15px 30px rgba(0,0,0,0.2); }
 
-/* --- BUSCADOR --- */
 .search-wrapper {
     max-width: 800px; margin: -45px auto 50px; padding: 0 20px;
     position: relative; z-index: 10;
@@ -119,7 +116,6 @@ body {
     background: transparent; font-family: inherit; font-weight: 500;
 }
 
-/* --- GRID DE LOGROS --- */
 .grid-container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -131,7 +127,6 @@ body {
     background: white;
     border-radius: var(--radius);
     overflow: hidden;
-    /* Borde inicial invisible */
     border: 2px solid transparent;
     box-shadow: var(--shadow-card);
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -144,11 +139,9 @@ body {
 .card-logro:hover {
     transform: translateY(-8px);
     box-shadow: var(--shadow-hover);
-    /* Borde verde al pasar el mouse */
     border-color: var(--accent);
 }
 
-/* Imagen Insignia */
 .card-logro img {
     width: 100px; height: 100px;
     object-fit: contain; margin-bottom: 15px;
