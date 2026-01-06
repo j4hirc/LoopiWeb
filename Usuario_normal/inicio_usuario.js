@@ -500,16 +500,7 @@ function verificarSiEsFavoritoBD(idUbicacion) {
 }
 
 async function toggleFavoritoBD(event, iconElement, idUbicacion) {
-  event.stopPropagation(); 
-  
-  const estabaActivo = iconElement.classList.contains("activo");
-  
-  if (estabaActivo) {
-      iconElement.classList.remove("activo");
-  } else {
-      iconElement.classList.add("activo");
-  }
-
+  event.stopPropagation();
   const favoritoExistente = listaFavoritos.find(
     (f) => f.ubicacion && f.ubicacion.id_ubicacion_reciclaje === idUbicacion
   );
@@ -520,23 +511,20 @@ async function toggleFavoritoBD(event, iconElement, idUbicacion) {
         `${API_BASE}/favoritos/${favoritoExistente.id_favorito}`,
         { method: "DELETE" }
       );
-      
       if (res.ok) {
+        iconElement.classList.remove("activo");
         listaFavoritos = listaFavoritos.filter(
           (f) => f.id_favorito !== favoritoExistente.id_favorito
         );
-        
-        const Toast = Swal.mixin({
-            toast: true, position: 'top-end', showConfirmButton: false, timer: 1500,
-            didOpen: (toast) => { toast.addEventListener('mouseenter', Swal.stopTimer); toast.addEventListener('mouseleave', Swal.resumeTimer); }
+        Swal.fire({
+          icon: "info",
+          title: "Eliminado",
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 1500,
         });
-        Toast.fire({ icon: 'info', title: 'Eliminado de favoritos' });
-
-      } else {
-        iconElement.classList.add("activo"); 
-        console.error("Error al eliminar");
       }
-
     } else {
       const payload = {
         usuario: { cedula: usuarioLogueado.cedula },
@@ -547,25 +535,22 @@ async function toggleFavoritoBD(event, iconElement, idUbicacion) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-
       if (res.ok) {
         const nuevoFav = await res.json();
+        iconElement.classList.add("activo");
         listaFavoritos.push(nuevoFav);
-        
-        const Toast = Swal.mixin({
-            toast: true, position: 'top-end', showConfirmButton: false, timer: 1500
+        Swal.fire({
+          icon: "success",
+          title: "Guardado",
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 1500,
         });
-        Toast.fire({ icon: 'success', title: '¡Añadido a favoritos!' });
-
-      } else {
-        iconElement.classList.remove("activo");
-        console.error("Error al guardar");
       }
     }
   } catch (error) {
     console.error(error);
-    if (estabaActivo) iconElement.classList.add("activo");
-    else iconElement.classList.remove("activo");
   }
 }
 
