@@ -5,7 +5,7 @@
     <title>Gestión de Recompensas | Loopi</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
@@ -20,17 +20,17 @@
         <div class="header-content">
             <div class="header-left">
                 <a href="../menu-gestiones.html" class="btn-volver">
-                    <i class="fa-solid fa-arrow-left"></i> <span>Volver</span>
+                    <i class="fa-solid fa-arrow-left"></i> <span>Volver al Menú</span>
                 </a>
                 <div class="titulo-seccion">
-                    <h1><i class="fa-solid fa-gift"></i> Recompensas</h1>
-                    <p>Catálogo de premios y canjes</p>
+                    <h1><i class="fa-solid fa-gift" style="color: var(--accent);"></i> Recompensas</h1>
+                    <p>Gestiona tu catálogo de premios y canjes</p>
                 </div>
             </div>
             
             <button id="btnNuevaRecompensa" class="btn-agregar">
-                <div class="icon-circle"><i class="fa-solid fa-plus"></i></div>
                 <span>Nueva Recompensa</span>
+                <div class="icon-circle"><i class="fa-solid fa-plus"></i></div>
             </button>
         </div>
     </header>
@@ -38,7 +38,7 @@
     <div class="search-wrapper">
         <div class="search-box">
             <i class="fa-solid fa-magnifying-glass search-icon"></i>
-            <input type="text" id="buscarRecompensa" placeholder="Buscar recompensa (ej: Cupón, Entradas...)" autocomplete="off">
+            <input type="text" id="buscarRecompensa" placeholder="Buscar por nombre, descripción..." autocomplete="off">
         </div>
     </div>
 
@@ -67,7 +67,7 @@
 
                     <div class="form-group full-width">
                         <label>Descripción</label>
-                        <textarea id="descripcionRecompensa" class="input-field" rows="2" placeholder="Detalles y condiciones..."></textarea>
+                        <textarea id="descripcionRecompensa" class="input-field" rows="2" placeholder="Detalles, condiciones y restricciones..."></textarea>
                     </div>
 
                     <div class="form-row">
@@ -84,7 +84,6 @@
                                 <select id="auspicianteRecompensa" class="input-field" required>
                                     <option value="">Cargando...</option>
                                 </select>
-                                <i class="fa-solid fa-chevron-down arrow-icon"></i>
                             </div>
                         </div>
                     </div>
@@ -98,7 +97,7 @@
                         <label>Ubicación Geográfica</label>
                         <div class="geo-box">
                             <button type="button" onclick="abrirModalMapa()" class="btn-mapa">
-                                <i class="fa-solid fa-map-location-dot"></i> Seleccionar en Mapa
+                                <i class="fa-solid fa-map-location-dot"></i> Seleccionar Ubicación
                             </button>
                             <div class="coords-text">
                                 <span>Lat: <b id="txtLat">0.0</b></span>
@@ -111,7 +110,9 @@
 
                 <div class="modal-footer">
                     <button type="button" class="btn-cancelar" id="btnCancelar">Cancelar</button>
-                    <button type="submit" class="btn-guardar">Guardar</button>
+                    <button type="submit" class="btn-guardar">
+                        <i class="fa-regular fa-floppy-disk"></i> Guardar Cambios
+                    </button>
                 </div>
             </form>
         </div>
@@ -120,7 +121,7 @@
     <div class="modal-overlay" id="modalMapa" style="z-index: 9999;">
         <div class="modal-container map-modal-size">
             <div class="modal-header">
-                <h2><i class="fa-solid fa-location-dot"></i> Ubicación del Retiro</h2>
+                <h2><i class="fa-solid fa-location-dot" style="color: var(--accent);"></i> Ubicación del Retiro</h2>
                 <button type="button" class="modal-close" onclick="cerrarModalMapa()">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
@@ -132,7 +133,7 @@
 
             <div class="modal-footer">
                 <button type="button" class="btn-cancelar" onclick="cerrarModalMapa()">Cancelar</button>
-                <button type="button" class="btn-guardar" onclick="confirmarCoordenadas()">Confirmar</button>
+                <button type="button" class="btn-guardar" onclick="confirmarCoordenadas()">Confirmar Ubicación</button>
             </div>
         </div>
     </div>
@@ -145,21 +146,19 @@
         const grid = document.getElementById('gridRecompensas');
         const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
-                mutation.addedNodes.forEach((node) => {
+                mutation.addedNodes.forEach((node, index) => {
                     if (node.nodeType === 1 && node.classList.contains('card-recompensa')) { 
                         node.style.opacity = '0';
-                        node.style.transform = 'translateY(20px)';
+                        node.style.transform = 'translateY(30px)';
                         setTimeout(() => {
-                            node.style.transition = 'all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
                             node.style.opacity = '1';
                             node.style.transform = 'translateY(0)';
-                        }, 50);
+                        }, index * 100);
                     }
                 });
             });
         });
         observer.observe(grid, { childList: true });
     </script>
-
 </body>
 </html>
