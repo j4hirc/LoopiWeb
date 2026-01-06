@@ -15,13 +15,41 @@ const selectReciclador = document.getElementById("selectReciclador");
 const containerHorarios = document.getElementById("containerHorarios"); 
 
 let ubicacionesCache = [];
-let map = null;
-let marker;
+
+// VARIABLES PARA MAPAS
+let mainMap = null;       // Mapa del Dashboard
+let mainLayerGroup = null; // Capa de marcadores del Dashboard
+
+let editMap = null;       // Mapa del Modal (Leaflet)
+let editMarker = null;    // Marcador del Modal
+
 let coordenadasSeleccionadas = null;
 let coordenadasTemporales = null;
 let fotoNuevaFile = null;
 
+// --- DEFINICIÓN DE ICONOS ---
+const iconPuntoFijo = L.divIcon({
+  className: "custom-icon",
+  html: `<div style="background-color:#2ecc71; width:35px; height:35px; border-radius:50%; display:flex; justify-content:center; align-items:center; border:2px solid white; box-shadow:0 3px 5px rgba(0,0,0,0.3);">
+            <i class="fa-solid fa-recycle" style="color:white; font-size:18px;"></i>
+         </div>`,
+  iconSize: [35, 35],
+  iconAnchor: [17, 35],
+  popupAnchor: [0, -35]
+});
+
+const iconRecicladorMovil = L.divIcon({
+  className: "custom-icon",
+  html: `<div style="background-color:#3498db; width:35px; height:35px; border-radius:50%; display:flex; justify-content:center; align-items:center; border:2px solid white; box-shadow:0 3px 5px rgba(0,0,0,0.3);">
+            <i class="fa-solid fa-truck" style="color:white; font-size:16px;"></i>
+         </div>`,
+  iconSize: [35, 35],
+  iconAnchor: [17, 35],
+  popupAnchor: [0, -35]
+});
+
 document.addEventListener("DOMContentLoaded", () => {
+    initMainMap(); // Iniciar mapa principal
     cargarParroquias();
     cargarRecicladores();
     cargarMateriales();
@@ -36,25 +64,60 @@ document.addEventListener("DOMContentLoaded", () => {
             u.direccion.toLowerCase().includes(termino)
         );
         renderizarGrid(filtrados);
+        renderizarMapaPrincipal(filtrados); // Filtrar también el mapa
     });
 });
+
+// --- FUNCIÓN NUEVA: INICIAR MAPA DASHBOARD ---
+function initMainMap() {
+    if(document.getElementById('mapaGeneral')) {
+        mainMap = L.map('mapaGeneral').setView([-2.9001, -79.0059], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
+            attribution: '© OpenStreetMap' 
+        }).addTo(mainMap);
+        mainLayerGroup = L.layerGroup().addTo(mainMap);
+    }
+}
+
+// --- FUNCIÓN NUEVA: RENDERIZAR MARCADORES EN MAPA DASHBOARD ---
+function renderizarMapaPrincipal(lista) {
+    if(!mainMap || !mainLayerGroup) return;
+
+    mainLayerGroup.clearLayers(); // Limpiar anteriores
+
+    lista.forEach(u => {
+        if(u.latitud && u.longitud) {
+            // Lógica de Icono: Si tiene reciclador -> Móvil (Azul), Sino -> Fijo (Verde)
+            const iconoUsar = (u.reciclador && u.reciclador.cedula) ? iconRecicladorMovil : iconPuntoFijo;
+            const tipoTexto = (u.reciclador && u.reciclador.cedula) ? "Reciclador Asignado" : "Punto Fijo";
+
+            const marker = L.marker([u.latitud, u.longitud], { icon: iconoUsar });
+            
+            const popupContent = `
+                <div style="text-align:center">
+                    <strong>${u.nombre}</strong><br>
+                    <small style="color:#666">${tipoTexto}</small><br>
+                    <button onclick="cargarDatosEdicion(${u.id_ubicacion_reciclaje})" 
+                        style="margin-top:5px; background:#2D5F4F; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:12px;">
+                        <i class="fa-solid fa-pen"></i> Editar
+                    </button>
+                </div>
+            `;
+            
+            marker.bindPopup(popupContent);
+            marker.addTo(mainLayerGroup);
+        }
+    });
+}
 
 function abrirModal() {
     resetearFormulario();
     document.getElementById("tituloModal").innerText = "Nueva Ubicación";
-    
-    // MEJORA 1: Agregar horario por defecto al abrir
     agregarFilaHorario(null, "08:00", "18:00"); 
-    
     modalOverlay.style.display = "flex";
 }
 
-// --- FUNCIÓN MEJORADA: AGREGAR FILA DE HORARIO ---
-// Ahora acepta valores opcionales para autocompletar
 function agregarFilaHorario(data = null, horaIniDefecto = "", horaFinDefecto = "") {
-    
-    // Si no es edición (data es null) y no se pasan valores por defecto,
-    // intentamos copiar de la fila anterior (MEJORA 2)
     if (!data && (!horaIniDefecto || !horaFinDefecto)) {
         const filas = containerHorarios.querySelectorAll(".horario-row");
         if (filas.length > 0) {
@@ -71,7 +134,6 @@ function agregarFilaHorario(data = null, horaIniDefecto = "", horaFinDefecto = "
     div.style.marginBottom = "10px";
     div.style.alignItems = "center";
 
-    // Prioridad de valores: 1. Datos de BD -> 2. Valores copiados/defecto -> 3. Vacío
     const diaVal = data ? data.dia_semana : "Lunes";
     const iniVal = data ? data.hora_inicio : horaIniDefecto;
     const finVal = data ? data.hora_fin : horaFinDefecto;
@@ -96,7 +158,6 @@ function agregarFilaHorario(data = null, horaIniDefecto = "", horaFinDefecto = "
     containerHorarios.appendChild(div);
 }
 
-// ... (cargarMateriales sigue igual) ...
 async function cargarMateriales() {
     const container = document.getElementById("containerMateriales");
     try {
@@ -124,7 +185,6 @@ async function cargarMateriales() {
     }
 }
 
-// --- MODIFICADO: CARGAR DATOS + HORARIOS ---
 window.cargarDatosEdicion = async function (id) {
     const ubi = ubicacionesCache.find(u => u.id_ubicacion_reciclaje == id);
     if (!ubi) {
@@ -151,7 +211,6 @@ window.cargarDatosEdicion = async function (id) {
         selectReciclador.value = "";
     }
 
-    // Materiales
     if (ubi.materialesAceptados && ubi.materialesAceptados.length > 0) {
         ubi.materialesAceptados.forEach(item => {
             if (item.material) {
@@ -161,12 +220,10 @@ window.cargarDatosEdicion = async function (id) {
         });
     }
 
-    // --- CARGAR HORARIOS ---
-    containerHorarios.innerHTML = ""; // Limpiar
+    containerHorarios.innerHTML = ""; 
     if (ubi.horarios && ubi.horarios.length > 0) {
         ubi.horarios.forEach(h => agregarFilaHorario(h));
     } else {
-        // Si editamos y no tiene horarios, poner uno por defecto vacío o estándar
         agregarFilaHorario(null, "08:00", "18:00");
     }
 
@@ -211,26 +268,28 @@ function resetearFormulario() {
     actualizarTextoCoords(0.0, 0.0);
 }
 
-// ... (actualizarTextoCoords, modalMapa, etc. siguen igual hasta el GUARDAR) ...
 function actualizarTextoCoords(lat, lng) {
     document.getElementById("txtLat").innerText = lat.toFixed(6);
     document.getElementById("txtLng").innerText = lng.toFixed(6);
 }
+
+// --- MODAL DEL MAPA (LEAFLET) ---
 window.abrirModalMapa = function () {
     modalMapa.style.display = "flex";
     setTimeout(() => {
-        iniciarMapa();
-        map.invalidateSize(); 
+        iniciarMapaModal();
+        editMap.invalidateSize(); 
         if (coordenadasSeleccionadas) {
-            colocarMarcador(coordenadasSeleccionadas.lat, coordenadasSeleccionadas.lng);
-            map.setView([coordenadasSeleccionadas.lat, coordenadasSeleccionadas.lng], 15);
+            colocarMarcadorModal(coordenadasSeleccionadas.lat, coordenadasSeleccionadas.lng);
+            editMap.setView([coordenadasSeleccionadas.lat, coordenadasSeleccionadas.lng], 15);
         } else {
-            map.setView([-2.9001, -79.0059], 13);
-            if (marker) map.removeLayer(marker); 
+            editMap.setView([-2.9001, -79.0059], 13);
+            if (editMarker) editMap.removeLayer(editMarker); 
         }
     }, 300);
 }
 window.cerrarModalMapa = function () { modalMapa.style.display = "none"; }
+
 window.confirmarCoordenadas = function () {
     if (coordenadasTemporales) {
         coordenadasSeleccionadas = coordenadasTemporales;
@@ -240,17 +299,20 @@ window.confirmarCoordenadas = function () {
         Swal.fire("Atención", "Por favor, haz clic en el mapa para marcar un punto.", "warning");
     }
 }
-function iniciarMapa() {
-    if (map) return; 
-    map = L.map('mapaLeaflet').setView([-2.9001, -79.0059], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
-    map.on('click', function (e) { colocarMarcador(e.latlng.lat, e.latlng.lng); });
+
+function iniciarMapaModal() {
+    if (editMap) return; 
+    editMap = L.map('mapaLeaflet').setView([-2.9001, -79.0059], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(editMap);
+    editMap.on('click', function (e) { colocarMarcadorModal(e.latlng.lat, e.latlng.lng); });
 }
-function colocarMarcador(lat, lng) {
-    if (marker) map.removeLayer(marker);
-    marker = L.marker([lat, lng]).addTo(map);
+
+function colocarMarcadorModal(lat, lng) {
+    if (editMarker) editMap.removeLayer(editMarker);
+    editMarker = L.marker([lat, lng]).addTo(editMap);
     coordenadasTemporales = { lat: lat, lng: lng };
 }
+
 async function cargarParroquias() {
     try {
         const res = await fetch(API_PARROQUIAS);
@@ -264,6 +326,7 @@ async function cargarParroquias() {
         });
     } catch (e) { console.error(e); }
 }
+
 async function cargarRecicladores() {
     try {
         const res = await fetch(API_RECICLADORES);
@@ -279,35 +342,31 @@ async function cargarRecicladores() {
         } 
     } catch (e) { console.error("Error en el fetch de recicladores:", e); }
 }
+
 async function listarUbicaciones() {
     try {
         const res = await fetch(API_URL);
         const data = await res.json();
         ubicacionesCache = data;
         renderizarGrid(data);
+        renderizarMapaPrincipal(data); // <--- Llenamos el mapa aquí
     } catch (e) { console.error(e); }
 }
 
-// =================================================================
-// GUARDAR UBICACIÓN (VALIDADO)
-// =================================================================
 window.guardarUbicacion = async function () {
-    // 1. Obtener valores
     const idInput = document.getElementById("idUbicacion").value;
-    const id = idInput ? parseInt(idInput) : null; // Asegurar que sea número o null
+    const id = idInput ? parseInt(idInput) : null; 
     
     const nombre = document.getElementById("nombrePunto").value;
     const direccion = document.getElementById("direccion").value;
     const idParroquia = selectParroquia.value;
     const idReciclador = selectReciclador.value;
 
-    // 2. Validaciones Básicas
     if (!nombre || !coordenadasSeleccionadas || !idParroquia) {
         Swal.fire("Incompleto", "Nombre, Parroquia y Mapa son obligatorios.", "warning");
         return;
     }
 
-    // 3. Procesar Horarios
     const listaHorarios = [];
     document.querySelectorAll(".horario-row").forEach(row => {
         const dia = row.querySelector(".dia-select").value;
@@ -315,15 +374,9 @@ window.guardarUbicacion = async function () {
         let fin = row.querySelector(".hora-fin").value;
         
         if (dia && ini && fin) {
-            // Asegurar formato HH:mm:ss para LocalTime en Java
             if(ini.length === 5) ini += ":00";
             if(fin.length === 5) fin += ":00";
-
-            listaHorarios.push({
-                dia_semana: dia,
-                hora_inicio: ini,
-                hora_fin: fin
-            });
+            listaHorarios.push({ dia_semana: dia, hora_inicio: ini, hora_fin: fin });
         }
     });
 
@@ -332,91 +385,56 @@ window.guardarUbicacion = async function () {
         return;
     }
 
-   const checkboxes = document.querySelectorAll('input[name="materiales"]:checked');
-    
+    const checkboxes = document.querySelectorAll('input[name="materiales"]:checked');
     if (checkboxes.length === 0) {
         Swal.fire("Atención", "Debes seleccionar al menos un material aceptado.", "warning");
         return;
     }
 
-    const listaMateriales = Array.from(checkboxes).map(cb => {
-        return { 
-            material: { 
-                id_material: parseInt(cb.value) 
-            } 
-        };
-    });
+    const listaMateriales = Array.from(checkboxes).map(cb => ({ material: { id_material: parseInt(cb.value) } }));
 
-    // 5. Procesar Reciclador (Opcional)
     let objReciclador = null;
     if (idReciclador && idReciclador !== "") {
         objReciclador = { cedula: parseInt(idReciclador) }; 
     }
 
-    // 6. Construir el objeto principal
     const datosObj = {
         nombre: nombre,
         direccion: direccion,
         latitud: coordenadasSeleccionadas.lat,
         longitud: coordenadasSeleccionadas.lng,
-        // Enviamos null en la foto dentro del JSON, el backend ignora esto al editar
-        // y solo usa el archivo Multipart si existe.
         foto: null, 
         parroquia: { id_parroquia: parseInt(idParroquia) },
         reciclador: objReciclador,
-        materialesAceptados: listaMateriales, // Enviamos el array procesado
+        materialesAceptados: listaMateriales, 
         horarios: listaHorarios 
     };
 
-    // --- DEPURACIÓN: MIRA ESTO EN LA CONSOLA DEL NAVEGADOR (F12) ---
-    console.log("JSON a enviar:", JSON.stringify(datosObj));
-    // ---------------------------------------------------------------
-
     const formData = new FormData();
     formData.append("datos", JSON.stringify(datosObj));
+    if (fotoNuevaFile) formData.append("archivo", fotoNuevaFile);
 
-    if (fotoNuevaFile) {
-        formData.append("archivo", fotoNuevaFile);
-    }
-
-    // Definir URL y Método
     const metodo = id ? "PUT" : "POST";
     const url = id ? `${API_URL}/${id}` : API_URL;
 
     try {
         Swal.fire({ title: "Guardando...", didOpen: () => Swal.showLoading() });
-
-        const res = await fetch(url, {
-            method: metodo,
-            body: formData 
-        });
+        const res = await fetch(url, { method: metodo, body: formData });
 
         if (res.ok) {
-            Swal.fire({
-                title: "¡Éxito!",
-                text: "Ubicación guardada correctamente.",
-                icon: "success",
-                timer: 2000,
-                showConfirmButton: false
-            });
+            Swal.fire({ title: "¡Éxito!", text: "Ubicación guardada.", icon: "success", timer: 1500, showConfirmButton: false });
             cerrarModal();
             listarUbicaciones();
         } else {
             const errorText = await res.text();
             console.error("Error backend:", errorText);
-            try {
-                const errorJson = JSON.parse(errorText);
-                Swal.fire("Error", errorJson.mensaje || "Error al guardar", "error");
-            } catch {
-                Swal.fire("Error", "No se pudo guardar. Revisa la consola.", "error");
-            }
+            Swal.fire("Error", "No se pudo guardar.", "error");
         }
     } catch (e) { 
         console.error(e); 
         Swal.fire("Error", "Fallo de conexión.", "error");
     }
 };
-
 
 function renderizarGrid(lista) {
     gridUbicaciones.innerHTML = "";
@@ -452,7 +470,6 @@ function renderizarGrid(lista) {
     });
 }
 
-// ... (Funciones de imagen, GPS y borrar siguen igual, las incluyo por si acaso) ...
 async function procesarImagen(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -488,7 +505,10 @@ window.obtenerUbicacionActual = function() {
     if (!navigator.geolocation) { Swal.fire("Error", "GPS no soportado.", "error"); return; }
     navigator.geolocation.getCurrentPosition(
         (pos) => {
-            if (map) { map.setView([pos.coords.latitude, pos.coords.longitude], 18); colocarMarcador(pos.coords.latitude, pos.coords.longitude); }
+            if (editMap) { 
+                editMap.setView([pos.coords.latitude, pos.coords.longitude], 18); 
+                colocarMarcadorModal(pos.coords.latitude, pos.coords.longitude); 
+            }
         },
         () => Swal.fire("Error", "No se pudo obtener ubicación.", "error")
     );
