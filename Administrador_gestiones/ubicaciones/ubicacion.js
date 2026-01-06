@@ -16,40 +16,38 @@ const containerHorarios = document.getElementById("containerHorarios");
 
 let ubicacionesCache = [];
 
-// VARIABLES PARA MAPAS
-let mainMap = null;       // Mapa del Dashboard
-let mainLayerGroup = null; // Capa de marcadores del Dashboard
-
-let editMap = null;       // Mapa del Modal (Leaflet)
-let editMarker = null;    // Marcador del Modal
+let mainMap = null;       
+let mainLayerGroup = null; 
+let editMap = null;       
+let editMarker = null;    
 
 let coordenadasSeleccionadas = null;
 let coordenadasTemporales = null;
 let fotoNuevaFile = null;
 
-// --- DEFINICIÓN DE ICONOS ---
+// ICONOS
 const iconPuntoFijo = L.divIcon({
   className: "custom-icon",
-  html: `<div style="background-color:#2ecc71; width:35px; height:35px; border-radius:50%; display:flex; justify-content:center; align-items:center; border:2px solid white; box-shadow:0 3px 5px rgba(0,0,0,0.3);">
-            <i class="fa-solid fa-recycle" style="color:white; font-size:18px;"></i>
+  html: `<div style="background-color:#2ecc71; width:30px; height:30px; border-radius:50%; display:flex; justify-content:center; align-items:center; border:2px solid white; box-shadow:0 3px 5px rgba(0,0,0,0.3);">
+            <i class="fa-solid fa-recycle" style="color:white; font-size:16px;"></i>
          </div>`,
-  iconSize: [35, 35],
-  iconAnchor: [17, 35],
-  popupAnchor: [0, -35]
+  iconSize: [30, 30],
+  iconAnchor: [15, 30],
+  popupAnchor: [0, -30]
 });
 
 const iconRecicladorMovil = L.divIcon({
   className: "custom-icon",
-  html: `<div style="background-color:#3498db; width:35px; height:35px; border-radius:50%; display:flex; justify-content:center; align-items:center; border:2px solid white; box-shadow:0 3px 5px rgba(0,0,0,0.3);">
-            <i class="fa-solid fa-truck" style="color:white; font-size:16px;"></i>
+  html: `<div style="background-color:#3498db; width:30px; height:30px; border-radius:50%; display:flex; justify-content:center; align-items:center; border:2px solid white; box-shadow:0 3px 5px rgba(0,0,0,0.3);">
+            <i class="fa-solid fa-truck" style="color:white; font-size:14px;"></i>
          </div>`,
-  iconSize: [35, 35],
-  iconAnchor: [17, 35],
-  popupAnchor: [0, -35]
+  iconSize: [30, 30],
+  iconAnchor: [15, 30],
+  popupAnchor: [0, -30]
 });
 
 document.addEventListener("DOMContentLoaded", () => {
-    initMainMap(); // Iniciar mapa principal
+    initMainMap(); 
     cargarParroquias();
     cargarRecicladores();
     cargarMateriales();
@@ -64,11 +62,10 @@ document.addEventListener("DOMContentLoaded", () => {
             u.direccion.toLowerCase().includes(termino)
         );
         renderizarGrid(filtrados);
-        renderizarMapaPrincipal(filtrados); // Filtrar también el mapa
+        renderizarMapaPrincipal(filtrados); 
     });
 });
 
-// --- FUNCIÓN NUEVA: INICIAR MAPA DASHBOARD ---
 function initMainMap() {
     if(document.getElementById('mapaGeneral')) {
         mainMap = L.map('mapaGeneral').setView([-2.9001, -79.0059], 13);
@@ -79,17 +76,15 @@ function initMainMap() {
     }
 }
 
-// --- FUNCIÓN NUEVA: RENDERIZAR MARCADORES EN MAPA DASHBOARD ---
 function renderizarMapaPrincipal(lista) {
     if(!mainMap || !mainLayerGroup) return;
-
-    mainLayerGroup.clearLayers(); // Limpiar anteriores
+    mainLayerGroup.clearLayers(); 
 
     lista.forEach(u => {
         if(u.latitud && u.longitud) {
-            // Lógica de Icono: Si tiene reciclador -> Móvil (Azul), Sino -> Fijo (Verde)
-            const iconoUsar = (u.reciclador && u.reciclador.cedula) ? iconRecicladorMovil : iconPuntoFijo;
-            const tipoTexto = (u.reciclador && u.reciclador.cedula) ? "Reciclador Asignado" : "Punto Fijo";
+            const esReciclador = (u.reciclador && u.reciclador.cedula);
+            const iconoUsar = esReciclador ? iconRecicladorMovil : iconPuntoFijo;
+            const tipoTexto = esReciclador ? "Reciclador Asignado" : "Punto Fijo";
 
             const marker = L.marker([u.latitud, u.longitud], { icon: iconoUsar });
             
@@ -98,12 +93,11 @@ function renderizarMapaPrincipal(lista) {
                     <strong>${u.nombre}</strong><br>
                     <small style="color:#666">${tipoTexto}</small><br>
                     <button onclick="cargarDatosEdicion(${u.id_ubicacion_reciclaje})" 
-                        style="margin-top:5px; background:#2D5F4F; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:12px;">
+                        style="margin-top:5px; background:#2D5F4F; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:11px;">
                         <i class="fa-solid fa-pen"></i> Editar
                     </button>
                 </div>
             `;
-            
             marker.bindPopup(popupContent);
             marker.addTo(mainLayerGroup);
         }
@@ -130,8 +124,8 @@ function agregarFilaHorario(data = null, horaIniDefecto = "", horaFinDefecto = "
     const div = document.createElement("div");
     div.className = "horario-row";
     div.style.display = "flex";
-    div.style.gap = "10px";
-    div.style.marginBottom = "10px";
+    div.style.gap = "5px";
+    div.style.marginBottom = "5px";
     div.style.alignItems = "center";
 
     const diaVal = data ? data.dia_semana : "Lunes";
@@ -139,7 +133,7 @@ function agregarFilaHorario(data = null, horaIniDefecto = "", horaFinDefecto = "
     const finVal = data ? data.hora_fin : horaFinDefecto;
 
     div.innerHTML = `
-        <select class="input-field dia-select" style="flex: 1;">
+        <select class="input-field dia-select" style="flex: 1; padding: 8px;">
             <option value="Lunes" ${diaVal === 'Lunes' ? 'selected' : ''}>Lunes</option>
             <option value="Martes" ${diaVal === 'Martes' ? 'selected' : ''}>Martes</option>
             <option value="Miércoles" ${diaVal === 'Miércoles' ? 'selected' : ''}>Miércoles</option>
@@ -148,11 +142,11 @@ function agregarFilaHorario(data = null, horaIniDefecto = "", horaFinDefecto = "
             <option value="Sábado" ${diaVal === 'Sábado' ? 'selected' : ''}>Sábado</option>
             <option value="Domingo" ${diaVal === 'Domingo' ? 'selected' : ''}>Domingo</option>
         </select>
-        <input type="time" class="input-field hora-inicio" value="${iniVal}" style="width: 100px;">
-        <span>a</span>
-        <input type="time" class="input-field hora-fin" value="${finVal}" style="width: 100px;">
-        <button type="button" class="btn-delete" style="padding: 5px 10px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer;" onclick="this.parentElement.remove()">
-            <i class="fa-solid fa-trash"></i>
+        <input type="time" class="input-field hora-inicio" value="${iniVal}" style="width: 85px; padding: 8px;">
+        <span>-</span>
+        <input type="time" class="input-field hora-fin" value="${finVal}" style="width: 85px; padding: 8px;">
+        <button type="button" class="btn-delete" style="width: 30px; height: 30px; padding: 0; background: #ffcdd2; color: #c62828; display:flex; align-items:center; justify-content:center;" onclick="this.parentElement.remove()">
+            <i class="fa-solid fa-xmark"></i>
         </button>
     `;
     containerHorarios.appendChild(div);
@@ -175,22 +169,23 @@ async function cargarMateriales() {
             const label = document.createElement("label");
             label.htmlFor = `mat-${mat.id_material}`;
             label.innerText = mat.nombre;
+            label.style.fontWeight = "normal";
+            label.style.textTransform = "none";
+            label.style.marginBottom = "0";
             div.appendChild(checkbox);
             div.appendChild(label);
             container.appendChild(div);
         });
     } catch (e) {
         console.error("Error cargando materiales:", e);
-        container.innerHTML = "<p style='color:red'>Error al cargar materiales</p>";
+        container.innerHTML = "<p style='color:red'>Error</p>";
     }
 }
 
 window.cargarDatosEdicion = async function (id) {
     const ubi = ubicacionesCache.find(u => u.id_ubicacion_reciclaje == id);
-    if (!ubi) {
-        console.error("No se encontró la ubicación con ID:", id);
-        return;
-    }
+    if (!ubi) return;
+    
     resetearFormulario();
     document.getElementById("tituloModal").innerText = "Editar Ubicación";
 
@@ -201,15 +196,9 @@ window.cargarDatosEdicion = async function (id) {
     if (selectParroquia.options.length <= 1) await cargarParroquias();
     if (selectReciclador.options.length <= 1) await cargarRecicladores();
 
-    if (ubi.parroquia) {
-        selectParroquia.value = ubi.parroquia.id_parroquia;
-    }
-
-    if (ubi.reciclador && ubi.reciclador.cedula) {
-        selectReciclador.value = ubi.reciclador.cedula.toString();
-    } else {
-        selectReciclador.value = "";
-    }
+    if (ubi.parroquia) selectParroquia.value = ubi.parroquia.id_parroquia;
+    if (ubi.reciclador && ubi.reciclador.cedula) selectReciclador.value = ubi.reciclador.cedula.toString();
+    else selectReciclador.value = "";
 
     if (ubi.materialesAceptados && ubi.materialesAceptados.length > 0) {
         ubi.materialesAceptados.forEach(item => {
@@ -243,9 +232,7 @@ window.cargarDatosEdicion = async function (id) {
     modalOverlay.style.display = "flex";
 };
 
-function cerrarModal() {
-    modalOverlay.style.display = "none";
-}
+function cerrarModal() { modalOverlay.style.display = "none"; }
 
 function resetearFormulario() {
     document.getElementById("idUbicacion").value = "";
@@ -253,16 +240,12 @@ function resetearFormulario() {
     document.getElementById("direccion").value = "";
     selectParroquia.value = "";
     selectReciclador.value = "";
-    
     fotoNuevaFile = null;
     inputImagen.value = "";
     previewImagen.style.backgroundImage = "none";
-    
     const checkboxes = document.querySelectorAll('input[name="materiales"]');
     checkboxes.forEach(cb => cb.checked = false);
-    
     containerHorarios.innerHTML = "";
-
     coordenadasSeleccionadas = null;
     coordenadasTemporales = null;
     actualizarTextoCoords(0.0, 0.0);
@@ -273,7 +256,7 @@ function actualizarTextoCoords(lat, lng) {
     document.getElementById("txtLng").innerText = lng.toFixed(6);
 }
 
-// --- MODAL DEL MAPA (LEAFLET) ---
+// MAPA MODAL
 window.abrirModalMapa = function () {
     modalMapa.style.display = "flex";
     setTimeout(() => {
@@ -340,7 +323,7 @@ async function cargarRecicladores() {
                 selectReciclador.appendChild(opt);
             });
         } 
-    } catch (e) { console.error("Error en el fetch de recicladores:", e); }
+    } catch (e) { console.error(e); }
 }
 
 async function listarUbicaciones() {
@@ -349,7 +332,7 @@ async function listarUbicaciones() {
         const data = await res.json();
         ubicacionesCache = data;
         renderizarGrid(data);
-        renderizarMapaPrincipal(data); // <--- Llenamos el mapa aquí
+        renderizarMapaPrincipal(data);
     } catch (e) { console.error(e); }
 }
 
@@ -449,21 +432,35 @@ function renderizarGrid(lista) {
         }
 
         let txtReciclador = '<span style="color:#999">Sin Asignar</span>';
-        if (ubi.reciclador) txtReciclador = `<strong>${ubi.reciclador.primer_nombre} ${ubi.reciclador.apellido_paterno}</strong>`;
+        let tipoBadge = '<span class="card-badge" style="background:#2ecc71;">Punto Fijo</span>';
+        
+        if (ubi.reciclador) {
+            txtReciclador = `<strong>${ubi.reciclador.primer_nombre} ${ubi.reciclador.apellido_paterno}</strong>`;
+            tipoBadge = '<span class="card-badge" style="background:#3498db;">Reciclador</span>';
+        }
 
         const card = document.createElement('div');
         card.className = 'card-ubicacion';
         card.innerHTML = `
-            <div class="card-img" style="background-image: url('${imgUrl}')"></div>
+            <div class="card-img" style="background-image: url('${imgUrl}')">
+                ${tipoBadge}
+            </div>
             <div class="card-body">
                 <div class="card-title">${ubi.nombre}</div>
-                <div class="card-sub">${ubi.direccion}</div>
-                <div class="card-coords" style="margin-top:8px; font-size:12px;">👤 ${txtReciclador}</div>
-                <div class="card-coords">📍 ${ubi.latitud?.toFixed(4)}, ${ubi.longitud?.toFixed(4)} <br> 🏙️ ${ubi.parroquia?.nombre_parroquia || ''}</div>
+                <div class="card-sub"><i class="fa-solid fa-map-pin"></i> ${ubi.direccion || 'Sin dirección'}</div>
+                
+                <div class="info-block">
+                    <div>👤 ${txtReciclador}</div>
+                    <div style="margin-top:4px;">🏙️ ${ubi.parroquia?.nombre_parroquia || ''}</div>
+                </div>
             </div>
             <div class="card-actions">
-                <button class="btn-edit" onclick="cargarDatosEdicion(${ubi.id_ubicacion_reciclaje})">Editar</button>
-                <button class="btn-delete" onclick="eliminarUbicacion(${ubi.id_ubicacion_reciclaje})">Eliminar</button>
+                <button class="btn-edit" onclick="cargarDatosEdicion(${ubi.id_ubicacion_reciclaje})">
+                    <i class="fa-solid fa-pen-to-square"></i> Editar
+                </button>
+                <button class="btn-delete" onclick="eliminarUbicacion(${ubi.id_ubicacion_reciclaje})">
+                    <i class="fa-solid fa-trash-can"></i> Eliminar
+                </button>
             </div>
         `;
         gridUbicaciones.appendChild(card);
@@ -498,9 +495,30 @@ async function comprimirImagen(archivo) {
         };
     });
 }
+
 window.eliminarUbicacion = async function (id) {
-    if (confirm("¿Eliminar?")) { await fetch(`${API_URL}/${id}`, { method: "DELETE" }); listarUbicaciones(); }
+    Swal.fire({
+        title: '¿Eliminar ubicación?',
+        text: "No podrás revertir esto.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+                listarUbicaciones();
+                Swal.fire('Eliminado', 'La ubicación ha sido eliminada.', 'success');
+            } catch (e) {
+                Swal.fire('Error', 'No se pudo eliminar.', 'error');
+            }
+        }
+    });
 };
+
 window.obtenerUbicacionActual = function() {
     if (!navigator.geolocation) { Swal.fire("Error", "GPS no soportado.", "error"); return; }
     navigator.geolocation.getCurrentPosition(
