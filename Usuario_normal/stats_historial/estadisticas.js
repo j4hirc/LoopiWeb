@@ -132,10 +132,22 @@ function generarGraficos(lista) {
 
 function llenarTablaHistorial(lista) {
     const tbody = document.getElementById("tbodyHistorial");
+    
+    // Agregamos la columna al encabezado si no existe
+    const theadRow = document.querySelector("#tablaHistorial thead tr");
+    if (theadRow && !theadRow.querySelector(".col-lugar")) {
+        const thLugar = document.createElement("th");
+        thLugar.innerText = "Lugar / Reciclador";
+        thLugar.classList.add("col-lugar");
+        // Insertamos antes de la columna "Materiales" (índice 2)
+        theadRow.insertBefore(thLugar, theadRow.children[2]);
+    }
+
     tbody.innerHTML = "";
 
     if (lista.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">No hay actividad reciente.</td></tr>`;
+        // Ajustamos el colspan porque ahora hay una columna más
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">No hay actividad reciente.</td></tr>`;
         return;
     }
 
@@ -152,7 +164,23 @@ function llenarTablaHistorial(lista) {
         let estadoClass = "pendiente";
         if (sol.estado === "FINALIZADO" || sol.estado === "COMPLETADA") estadoClass = "finalizado";
         else if (sol.estado === "ACEPTADA") estadoClass = "aceptada";
-        else if (sol.estado === "RECHAZADO") estadoClass = "rechazado";
+        else if (sol.estado === "RECHAZADO" || sol.estado === "CANCELADO") estadoClass = "rechazado";
+
+        let lugarInfo = '<span style="color:#999;">Desconocido</span>';
+        
+        if (sol.ubicacion) {
+            lugarInfo = `<div style="display:flex; align-items:center; gap:5px;">
+                            <i class="fa-solid fa-map-pin" style="color:#e74c3c;"></i>
+                            <span>${sol.ubicacion.nombre}</span>
+                         </div>
+                         <small style="color:#777; font-size:0.75rem;">${sol.ubicacion.direccion || ''}</small>`;
+        } else if (sol.reciclador) {
+            lugarInfo = `<div style="display:flex; align-items:center; gap:5px;">
+                            <i class="fa-solid fa-truck-fast" style="color:#3498db;"></i>
+                            <span>${sol.reciclador.primer_nombre} ${sol.reciclador.apellido_paterno}</span>
+                         </div>
+                         <small style="color:#777; font-size:0.75rem;">Recolección a domicilio</small>`;
+        }
 
         let materialesStr = "";
         let pesoTotal = 0;
@@ -168,7 +196,7 @@ function llenarTablaHistorial(lista) {
             <tr>
                 <td>${fecha}</td>
                 <td><span class="badge-status ${estadoClass}">${sol.estado}</span></td>
-                <td>${materialesStr || '<span style="color:#999;font-size:0.8rem;">Sin detalles</span>'}</td>
+                <td>${lugarInfo}</td> <td>${materialesStr || '<span style="color:#999;font-size:0.8rem;">Sin detalles</span>'}</td>
                 <td><strong>${pesoTotal.toFixed(1)} Kg</strong></td>
                 <td style="color: #27ae60; font-weight:bold;">+${sol.puntos_ganados || 0}</td>
             </tr>
