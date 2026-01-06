@@ -111,7 +111,6 @@ async function guardarUsuario() {
 
     if (correoExiste) return Swal.fire('Duplicado', 'Ese CORREO ya está registrado.', 'error');
 
-    // 1. Preparar Roles
     const rolesSeleccionados = [];
     document.querySelectorAll('.rol-checkbox:checked').forEach(chk => {
         const nombreUpper = chk.value.toUpperCase();
@@ -121,7 +120,6 @@ async function guardarUsuario() {
         });
     });
 
-    // 2. Preparar Objeto JSON
     const dataObj = {
         cedula: cedula,
         primer_nombre: inpNombre1.value,
@@ -260,7 +258,6 @@ function cargarEdicion(cedula) {
     inpPuntos.value = user.puntos_actuales; switchEstado.checked = user.estado;
     inpPassword.value = ""; 
 
-    // Visualizar foto
     let imgUrl = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
     if (user.foto && user.foto.length > 5) {
         if (user.foto.startsWith('http') || user.foto.startsWith('data:')) {

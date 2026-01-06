@@ -9,9 +9,7 @@ async function cargarFormularios() {
         const res = await fetch(`${API_BASE}/formularios_reciclador`);
         const data = await res.json();
 
-        // Filtramos solo los que NO han sido procesados (aprobado es null o false, pero queremos los pendientes)
-        // Ojo: Si aprobado es null, está pendiente. Si es false, fue rechazado.
-        // Ajusta según tu lógica de negocio. Generalmente: aprobado === null
+
         const pendientes = data.filter((f) => f.aprobado === null); 
 
         document.getElementById("count-badge").innerText = pendientes.length;
@@ -37,7 +35,6 @@ function renderCards(lista) {
 
     lista.forEach((f) => {
 
-        // 1. AVATAR (URL o Base64)
         let avatarUrl = `https://ui-avatars.com/api/?name=${f.usuario.primer_nombre}+${f.usuario.apellido_paterno}&background=random&color=fff`;
         if (f.usuario.foto && f.usuario.foto.length > 5) {
             if (f.usuario.foto.startsWith("http") || f.usuario.foto.startsWith("data:")) {
@@ -47,7 +44,7 @@ function renderCards(lista) {
             }
         }
 
-        // 2. DESCARGA FOTO PROFESIONAL
+
         let botonDescarga = "";
         if (f.foto_perfil_profesional) {
             sessionStorage.setItem(`doc_${f.id_formulario}`, f.foto_perfil_profesional);
@@ -59,7 +56,6 @@ function renderCards(lista) {
             `;
         }
 
-        // 3. HORARIOS
         let horariosHtml = '<p style="font-size:0.85rem; color:#7f8c8d;">No especificado</p>';
         if (f.horarios && f.horarios.length > 0) {
             horariosHtml = `<ul style="font-size:0.85rem; padding-left:20px; margin:5px 0;">`;
@@ -69,7 +65,6 @@ function renderCards(lista) {
             horariosHtml += `</ul>`;
         }
 
-        // 4. MATERIALES
         let materialesHtml = '<p style="font-size:0.85rem; color:#7f8c8d;">No especificado</p>';
         if (f.materiales && f.materiales.length > 0) {
             materialesHtml = `<div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:5px;">`;
@@ -83,7 +78,6 @@ function renderCards(lista) {
             materialesHtml += `</div>`;
         }
 
-        // 5. EVIDENCIA (URL o Base64)
         let imgEvidenciaHtml = `<p style="color:#e74c3c; font-size:0.9rem;">Sin evidencia cargada</p>`;
 
         if (f.evidencia_experiencia) {
@@ -174,7 +168,6 @@ function verImagenDesdeMemoria(id) {
     }
 }
 
-// --- DESCARGA MEJORADA PARA URLS Y BASE64 ---
 function descargarDocumento(idFormulario) {
     let contenido = sessionStorage.getItem(`doc_${idFormulario}`);
 
@@ -183,13 +176,11 @@ function descargarDocumento(idFormulario) {
         return;
     }
 
-    // CASO 1: Es una URL de Supabase (http...)
     if (contenido.startsWith("http")) {
         window.open(contenido, '_blank');
         return;
     }
 
-    // CASO 2: Es Base64 (Antiguo)
     if (!contenido.startsWith("data:")) {
         if (contenido.charAt(0) === "J") { 
             contenido = `data:application/pdf;base64,${contenido}`;

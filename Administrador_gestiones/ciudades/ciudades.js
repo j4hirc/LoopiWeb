@@ -1,6 +1,5 @@
 const API_URL = 'https://api-loopi.onrender.com/api/ciudades';
 
-// Elementos del DOM
 const gridCiudades = document.getElementById('gridCiudades');
 const searchInput = document.getElementById('buscarCiudad');
 const modalOverlay = document.getElementById('modalOverlay');
@@ -9,7 +8,6 @@ const btnNueva = document.getElementById('btnNuevaCiudad');
 const btnCerrarModal = document.getElementById('btnCerrarModal');
 const btnCancelar = document.getElementById('btnCancelar');
 
-// Cache para búsqueda rápida
 let ciudadesCache = [];
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -21,14 +19,11 @@ document.addEventListener('DOMContentLoaded', () => {
         modalOverlay.style.display = 'flex'; 
     });
 
-    // Cerrar Modal
     if(btnCerrarModal) btnCerrarModal.addEventListener('click', cerrarModal);
     if(btnCancelar) btnCancelar.addEventListener('click', cerrarModal);
 
-    // Guardar (Submit)
     form.addEventListener('submit', guardarCiudad);
 
-    // Buscador en tiempo real
     if(searchInput) {
         searchInput.addEventListener('input', (e) => {
             const termino = e.target.value.toLowerCase();
@@ -40,9 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// --- FUNCIONES CRUD ---
 
-// 1. LISTAR (GET)
 async function listarCiudades() {
     try {
         const response = await fetch(API_URL);
@@ -57,7 +50,6 @@ async function listarCiudades() {
     }
 }
 
-// 2. GUARDAR CON SWEETALERT (POST / PUT)
 async function guardarCiudad(e) {
     e.preventDefault();
 
@@ -76,7 +68,6 @@ async function guardarCiudad(e) {
     const url = id ? `${API_URL}/${id}` : API_URL;
 
     try {
-        // Bloquear botón
         const btnGuardar = form.querySelector('.btn-guardar');
         const txtOriginal = btnGuardar.innerText;
         btnGuardar.disabled = true;
@@ -111,7 +102,6 @@ async function guardarCiudad(e) {
     }
 }
 
-// 3. ELIMINAR CON SWEETALERT (DELETE)
 window.eliminarCiudad = function(id) {
     if (!id) return;
 
@@ -145,7 +135,6 @@ window.eliminarCiudad = function(id) {
     });
 };
 
-// 4. PREPARAR EDICIÓN
 window.cargarEdicion = function(id) {
     const ciudad = ciudadesCache.find(c => c.id_ciudad === id);
     if (!ciudad) return;
@@ -157,7 +146,6 @@ window.cargarEdicion = function(id) {
     modalOverlay.style.display = 'flex';
 };
 
-// --- RENDERIZADO (Visual) ---
 
 function renderizarGrid(ciudades) {
     gridCiudades.innerHTML = '';
@@ -190,7 +178,6 @@ function renderizarGrid(ciudades) {
     });
 }
 
-// --- UTILIDADES MODAL ---
 
 function cerrarModal() {
     modalOverlay.style.display = 'none';
