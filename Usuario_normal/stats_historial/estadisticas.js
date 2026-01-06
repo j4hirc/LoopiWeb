@@ -70,6 +70,8 @@ function generarGraficos(lista) {
     });
 
     const ctxMat = document.getElementById('chartMateriales').getContext('2d');
+    
+    // --- AQUÍ ESTÁ EL CAMBIO PARA LOS PORCENTAJES ---
     new Chart(ctxMat, {
         type: 'doughnut',
         data: {
@@ -84,12 +86,29 @@ function generarGraficos(lista) {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { position: 'bottom' }
+                legend: { position: 'bottom' },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            let value = context.raw;
+                            // Calculamos el total sumando todos los datos del dataset
+                            let total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            // Calculamos el porcentaje
+                            let percentage = ((value / total) * 100).toFixed(1) + "%";
+                            return label + value + " kg (" + percentage + ")";
+                        }
+                    }
+                }
             }
         }
     });
+    // ------------------------------------------------
 
-    const mesesStats = new Array(12).fill(0); // Arreglo de 12 ceros
+    const mesesStats = new Array(12).fill(0); 
     const currentYear = new Date().getFullYear();
 
     lista.forEach(sol => {
@@ -124,7 +143,7 @@ function generarGraficos(lista) {
                 x: { grid: { display: false } }
             },
             plugins: {
-                legend: { display: false } // Ocultamos la leyenda para que se vea más limpio
+                legend: { display: false } 
             }
         }
     });
