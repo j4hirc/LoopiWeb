@@ -49,6 +49,12 @@ async function listarLogros() {
         if (!response.ok) throw new Error('Error al cargar logros');
         const logros = await response.json();
         
+        logros.sort((a, b) => {
+            const puntosA = a.puntos_ganados || a.Puntos_ganados || 0;
+            const puntosB = b.puntos_ganados || b.Puntos_ganados || 0;
+            return puntosA - puntosB;
+        });
+
         logrosCache = logros;
         renderizarGrid(logros);
     } catch (error) {
