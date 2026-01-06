@@ -311,31 +311,32 @@ function renderizarGrid(lista) {
         }
         
         const rolesTxt = (u.roles && u.roles.length) 
-            ? u.roles.map(r => `<span class="chip-rol">${r.rol ? r.rol.nombre : ''}</span>`).join(' ') 
-            : '<span style="color:#999; font-size:0.8rem;">Sin rol</span>';
+            ? u.roles.map(r => r.rol ? r.rol.nombre : '').join(', ') 
+            : 'Sin rol';
 
         const estadoClass = u.estado ? 'activo' : 'inactivo';
         const estadoTexto = u.estado ? 'Activo' : 'Inactivo';
+        const colorEstado = u.estado ? '#2ecc71' : '#e74c3c';
 
         const div = document.createElement('div');
         div.className = 'card-usuario';
-        
         div.innerHTML = `
-            <img src="${img}" class="img-user-card" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'">
-            
-            <h3 class="usuario-nombre">${u.primer_nombre} ${u.apellido_paterno}</h3>
-            <p class="usuario-correo"><i class="fa-solid fa-envelope"></i> ${u.correo}</p>
-            
-            <div class="usuario-info">
-                <span class="usuario-estado ${estadoClass}">● ${estadoTexto}</span>
-                ${rolesTxt}
+            <img src="${img}" class="img-user-card" 
+                 style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin:0 auto 10px;"
+                 onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'">
+            <h3 style="text-align:center;">${u.primer_nombre} ${u.apellido_paterno}</h3>
+            <p style="text-align:center;font-size:0.9rem;color:#666;"><i class="fa-solid fa-envelope"></i> ${u.correo}</p>
+            <div class="usuario-info" style="margin-top:10px;">
+                <span><i class="fa-solid fa-map-pin"></i> ${u.parroquia ? (u.parroquia.nombre_parroquia || u.parroquia.nombre) : 'Sin Parroquia'}</span>
+                <span><i class="fa-solid fa-medal"></i> ${u.rango ? (u.rango.nombre_rango || u.rango.nombre) : 'Sin Rango'}</span>
             </div>
-
-            <div class="usuario-botones">
-                <button class="btn-editar" onclick="cargarEdicion(${u.cedula})" title="Editar Usuario">
-                    <i class="fa-solid fa-pen-to-square"></i>
+            <div style="font-size:12px; color:#555; margin-top:5px; text-align:center;"><strong>Roles:</strong> ${rolesTxt}</div>
+            <div style="text-align:center;margin-top:5px;color:${colorEstado};font-weight:600;">● ${estadoTexto}</div>
+            <div class="usuario-botones" style="display:flex;gap:10px;justify-content:center;margin-top:15px;">
+                <button class="btn-editar" onclick="cargarEdicion(${u.cedula})" title="Editar">
+                    <i class="fa-solid fa-pen"></i>
                 </button>
-                </div>
+            </div>
         `;
         gridUsuarios.appendChild(div);
     });
