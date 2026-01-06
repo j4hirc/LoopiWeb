@@ -200,24 +200,5 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="usuarios.js"></script>
-
-    <script>
-        const grid = document.getElementById('gridUsuarios');
-        const observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                mutation.addedNodes.forEach((node) => {
-                    if (node.nodeType === 1 && node.classList.contains('card-usuario')) { 
-                        node.style.opacity = '0';
-                        node.style.transform = 'translateY(20px)';
-                        setTimeout(() => {
-                            node.style.opacity = '1';
-                            node.style.transform = 'translateY(0)';
-                        }, 50);
-                    }
-                });
-            });
-        });
-        observer.observe(grid, { childList: true });
-    </script>
 </body>
 </html>
