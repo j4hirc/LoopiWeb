@@ -25,7 +25,8 @@ let coordenadasSeleccionadas = null;
 let coordenadasTemporales = null;
 let fotoNuevaFile = null;
 
-// ICONOS
+const DIAS_SEMANA = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+
 const iconPuntoFijo = L.divIcon({
   className: "custom-icon",
   html: `<div style="background-color:#2ecc71; width:30px; height:30px; border-radius:50%; display:flex; justify-content:center; align-items:center; border:2px solid white; box-shadow:0 3px 5px rgba(0,0,0,0.3);">
@@ -111,15 +112,24 @@ function abrirModal() {
     modalOverlay.style.display = "flex";
 }
 
-function agregarFilaHorario(data = null, horaIniDefecto = "", horaFinDefecto = "") {
-    if (!data && (!horaIniDefecto || !horaFinDefecto)) {
-        const filas = containerHorarios.querySelectorAll(".horario-row");
-        if (filas.length > 0) {
-            const ultima = filas[filas.length - 1];
-            horaIniDefecto = ultima.querySelector(".hora-inicio").value;
-            horaFinDefecto = ultima.querySelector(".hora-fin").value;
-        }
+// --- LOGICA INTELIGENTE PARA HORARIOS ---
+function agregarFilaHorario(data = null, horaIniDefecto = "08:00", horaFinDefecto = "18:00") {
+    
+    // Identificar días ya seleccionados
+    const diasSeleccionados = Array.from(document.querySelectorAll(".dia-select")).map(s => s.value);
+    
+    // Buscar el primer día disponible
+    let diaSugerido = DIAS_SEMANA.find(d => !diasSeleccionados.includes(d));
+
+    // Si es edición (viene data), usamos el día de la data. Si no hay data y no hay días libres, error.
+    if (!data && !diaSugerido) {
+        Swal.fire("Horario Completo", "Ya has agregado todos los días de la semana.", "info");
+        return;
     }
+
+    const diaVal = data ? data.dia_semana : diaSugerido;
+    const iniVal = data ? data.hora_inicio : horaIniDefecto;
+    const finVal = data ? data.hora_fin : horaFinDefecto;
 
     const div = document.createElement("div");
     div.className = "horario-row";
@@ -128,19 +138,15 @@ function agregarFilaHorario(data = null, horaIniDefecto = "", horaFinDefecto = "
     div.style.marginBottom = "5px";
     div.style.alignItems = "center";
 
-    const diaVal = data ? data.dia_semana : "Lunes";
-    const iniVal = data ? data.hora_inicio : horaIniDefecto;
-    const finVal = data ? data.hora_fin : horaFinDefecto;
+    // Construir opciones del select
+    let optionsHtml = "";
+    DIAS_SEMANA.forEach(dia => {
+        optionsHtml += `<option value="${dia}" ${dia === diaVal ? 'selected' : ''}>${dia}</option>`;
+    });
 
     div.innerHTML = `
         <select class="input-field dia-select" style="flex: 1; padding: 8px;">
-            <option value="Lunes" ${diaVal === 'Lunes' ? 'selected' : ''}>Lunes</option>
-            <option value="Martes" ${diaVal === 'Martes' ? 'selected' : ''}>Martes</option>
-            <option value="Miércoles" ${diaVal === 'Miércoles' ? 'selected' : ''}>Miércoles</option>
-            <option value="Jueves" ${diaVal === 'Jueves' ? 'selected' : ''}>Jueves</option>
-            <option value="Viernes" ${diaVal === 'Viernes' ? 'selected' : ''}>Viernes</option>
-            <option value="Sábado" ${diaVal === 'Sábado' ? 'selected' : ''}>Sábado</option>
-            <option value="Domingo" ${diaVal === 'Domingo' ? 'selected' : ''}>Domingo</option>
+            ${optionsHtml}
         </select>
         <input type="time" class="input-field hora-inicio" value="${iniVal}" style="width: 85px; padding: 8px;">
         <span>-</span>
@@ -178,10 +184,11 @@ async function cargarMateriales() {
         });
     } catch (e) {
         console.error("Error cargando materiales:", e);
-        container.innerHTML = "<p style='color:red'>Error</p>";
+        container.innerHTML = "<p style='color:red'>Error cargando materiales</p>";
     }
 }
 
+// --- EDICIÓN ---
 window.cargarDatosEdicion = async function (id) {
     const ubi = ubicacionesCache.find(u => u.id_ubicacion_reciclaje == id);
     if (!ubi) return;
@@ -197,6 +204,7 @@ window.cargarDatosEdicion = async function (id) {
     if (selectReciclador.options.length <= 1) await cargarRecicladores();
 
     if (ubi.parroquia) selectParroquia.value = ubi.parroquia.id_parroquia;
+    
     if (ubi.reciclador && ubi.reciclador.cedula) selectReciclador.value = ubi.reciclador.cedula.toString();
     else selectReciclador.value = "";
 
@@ -211,6 +219,10 @@ window.cargarDatosEdicion = async function (id) {
 
     containerHorarios.innerHTML = ""; 
     if (ubi.horarios && ubi.horarios.length > 0) {
+        // Ordenar los horarios por día de la semana para que se vea bonito
+        const ordenDias = { "Lunes": 1, "Martes": 2, "Miércoles": 3, "Jueves": 4, "Viernes": 5, "Sábado": 6, "Domingo": 7 };
+        ubi.horarios.sort((a,b) => ordenDias[a.dia_semana] - ordenDias[b.dia_semana]);
+        
         ubi.horarios.forEach(h => agregarFilaHorario(h));
     } else {
         agregarFilaHorario(null, "08:00", "18:00");
@@ -326,54 +338,86 @@ async function cargarRecicladores() {
     } catch (e) { console.error(e); }
 }
 
+// --- CARGA CON LOADER VISUAL ---
 async function listarUbicaciones() {
     try {
+        // Mostrar spinner en el grid
+        gridUbicaciones.innerHTML = `
+            <div class="loader-container">
+                <div class="spinner"></div>
+                <p>Cargando puntos...</p>
+            </div>`;
+
         const res = await fetch(API_URL);
         const data = await res.json();
         ubicacionesCache = data;
         renderizarGrid(data);
         renderizarMapaPrincipal(data);
-    } catch (e) { console.error(e); }
+    } catch (e) { 
+        console.error(e);
+        gridUbicaciones.innerHTML = `<p style="text-align:center; color:red; width:100%;">Error al conectar con el servidor.</p>`;
+    }
 }
 
+// --- GUARDAR CON VALIDACIONES Y LOADING ---
 window.guardarUbicacion = async function () {
+    const btnGuardar = document.getElementById("btnGuardarUbicacion");
+    
+    // 1. Recolección de datos
     const idInput = document.getElementById("idUbicacion").value;
     const id = idInput ? parseInt(idInput) : null; 
     
-    const nombre = document.getElementById("nombrePunto").value;
-    const direccion = document.getElementById("direccion").value;
+    const nombre = document.getElementById("nombrePunto").value.trim();
+    const direccion = document.getElementById("direccion").value.trim();
     const idParroquia = selectParroquia.value;
     const idReciclador = selectReciclador.value;
 
-    if (!nombre || !coordenadasSeleccionadas || !idParroquia) {
-        Swal.fire("Incompleto", "Nombre, Parroquia y Mapa son obligatorios.", "warning");
-        return;
-    }
+    // --- VALIDACIONES ---
+    if (!nombre) return Swal.fire("Campo requerido", "Ingresa el nombre del punto.", "warning");
+    if (!idParroquia) return Swal.fire("Campo requerido", "Selecciona una parroquia.", "warning");
+    if (!direccion) return Swal.fire("Campo requerido", "Ingresa una dirección.", "warning");
+    if (!coordenadasSeleccionadas) return Swal.fire("Ubicación GPS", "Debes abrir el mapa y marcar el punto exacto.", "warning");
 
+    // Validar Materiales
+    const checkboxes = document.querySelectorAll('input[name="materiales"]:checked');
+    if (checkboxes.length === 0) return Swal.fire("Materiales", "Selecciona al menos un material aceptado.", "warning");
+
+    // Validar Horarios (Duplicados y Lógica)
     const listaHorarios = [];
-    document.querySelectorAll(".horario-row").forEach(row => {
+    const diasVistos = new Set();
+    let errorHorario = null;
+
+    const filasHorario = document.querySelectorAll(".horario-row");
+    if(filasHorario.length === 0) return Swal.fire("Horarios", "Agrega al menos un horario de atención.", "warning");
+
+    filasHorario.forEach(row => {
         const dia = row.querySelector(".dia-select").value;
         let ini = row.querySelector(".hora-inicio").value;
         let fin = row.querySelector(".hora-fin").value;
         
-        if (dia && ini && fin) {
-            if(ini.length === 5) ini += ":00";
-            if(fin.length === 5) fin += ":00";
-            listaHorarios.push({ dia_semana: dia, hora_inicio: ini, hora_fin: fin });
+        if (diasVistos.has(dia)) {
+            errorHorario = `El día ${dia} está repetido. Elimina o cambia la fila.`;
+            return;
         }
+        diasVistos.add(dia);
+
+        if (!ini || !fin) {
+            errorHorario = "Completa todas las horas de inicio y fin.";
+            return;
+        }
+        if (ini >= fin) {
+            errorHorario = `En ${dia}, la hora de cierre debe ser después de la apertura.`;
+            return;
+        }
+
+        if(ini.length === 5) ini += ":00";
+        if(fin.length === 5) fin += ":00";
+        listaHorarios.push({ dia_semana: dia, hora_inicio: ini, hora_fin: fin });
     });
 
-    if(listaHorarios.length === 0) {
-        Swal.fire("Atención", "Agrega al menos un horario de atención.", "warning");
-        return;
-    }
+    if (errorHorario) return Swal.fire("Error en Horarios", errorHorario, "error");
 
-    const checkboxes = document.querySelectorAll('input[name="materiales"]:checked');
-    if (checkboxes.length === 0) {
-        Swal.fire("Atención", "Debes seleccionar al menos un material aceptado.", "warning");
-        return;
-    }
-
+    // 2. Preparar objetos
     const listaMateriales = Array.from(checkboxes).map(cb => ({ material: { id_material: parseInt(cb.value) } }));
 
     let objReciclador = null;
@@ -401,26 +445,51 @@ window.guardarUbicacion = async function () {
     const url = id ? `${API_URL}/${id}` : API_URL;
 
     try {
-        Swal.fire({ title: "Guardando...", didOpen: () => Swal.showLoading() });
+        // --- LOADING STATE ---
+        btnGuardar.disabled = true;
+        btnGuardar.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
+        
+        // Bloqueo de pantalla suave
+        Swal.fire({
+            title: "Procesando...",
+            text: "Guardando la información de la ubicación",
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+
         const res = await fetch(url, { method: metodo, body: formData });
 
         if (res.ok) {
-            Swal.fire({ title: "¡Éxito!", text: "Ubicación guardada.", icon: "success", timer: 1500, showConfirmButton: false });
+            Swal.fire({ 
+                title: "¡Guardado!", 
+                text: "La ubicación se ha registrado correctamente.", 
+                icon: "success", 
+                timer: 1500, 
+                showConfirmButton: false 
+            });
             cerrarModal();
             listarUbicaciones();
         } else {
             const errorText = await res.text();
             console.error("Error backend:", errorText);
-            Swal.fire("Error", "No se pudo guardar.", "error");
+            Swal.fire("Error", "No se pudo guardar. Revisa los datos.", "error");
         }
     } catch (e) { 
         console.error(e); 
-        Swal.fire("Error", "Fallo de conexión.", "error");
+        Swal.fire("Error", "Fallo de conexión con el servidor.", "error");
+    } finally {
+        btnGuardar.disabled = false;
+        btnGuardar.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar';
     }
 };
 
 function renderizarGrid(lista) {
     gridUbicaciones.innerHTML = "";
+    if (lista.length === 0) {
+        gridUbicaciones.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:#888;">No se encontraron ubicaciones.</div>`;
+        return;
+    }
+
     lista.forEach(ubi => {
         let imgUrl = 'https://placehold.co/300x150?text=Sin+Imagen';
         if (ubi.foto && ubi.foto.length > 5) {
@@ -509,6 +578,7 @@ window.eliminarUbicacion = async function (id) {
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
+                Swal.fire({title: "Eliminando...", didOpen: () => Swal.showLoading()});
                 await fetch(`${API_URL}/${id}`, { method: "DELETE" });
                 listarUbicaciones();
                 Swal.fire('Eliminado', 'La ubicación ha sido eliminada.', 'success');
@@ -521,8 +591,12 @@ window.eliminarUbicacion = async function (id) {
 
 window.obtenerUbicacionActual = function() {
     if (!navigator.geolocation) { Swal.fire("Error", "GPS no soportado.", "error"); return; }
+    
+    Swal.fire({ title: "Obteniendo GPS...", didOpen: () => Swal.showLoading() });
+    
     navigator.geolocation.getCurrentPosition(
         (pos) => {
+            Swal.close();
             if (editMap) { 
                 editMap.setView([pos.coords.latitude, pos.coords.longitude], 18); 
                 colocarMarcadorModal(pos.coords.latitude, pos.coords.longitude); 

@@ -46,11 +46,7 @@
     </div>
 
     <div class="grid-container" id="gridUbicaciones">
-        <div class="loader-container">
-            <div class="spinner"></div>
-            <p>Cargando puntos...</p>
         </div>
-    </div>
 
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal-container">
@@ -81,11 +77,11 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Nombre del Punto</label>
+                        <label>Nombre del Punto <span style="color:red">*</span></label>
                         <input type="text" class="input-field" id="nombrePunto" placeholder="Ej: Parque Central">
                     </div>
                     <div class="form-group">
-                        <label>Parroquia</label>
+                        <label>Parroquia <span style="color:red">*</span></label>
                         <select class="input-field" id="parroquia">
                             <option value="">Cargando...</option>
                         </select>
@@ -102,7 +98,7 @@
                 </div>
 
                 <div class="form-group full-width">
-                    <label>Materiales Aceptados</label>
+                    <label>Materiales Aceptados <span style="color:red">*</span></label>
                     <div id="containerMateriales" class="materiales-grid">
                         <p class="loading-text">Cargando materiales...</p>
                     </div>
@@ -111,9 +107,9 @@
                 <div class="form-divider"></div>
                 
                 <div class="header-horarios">
-                    <label>Horarios de Atención</label>
+                    <label>Horarios de Atención <span style="color:red">*</span></label>
                     <button class="btn-small-add" onclick="agregarFilaHorario()">
-                        <i class="fa-solid fa-plus"></i> Agregar
+                        <i class="fa-solid fa-plus"></i> Agregar Día
                     </button>
                 </div>
                 <div id="containerHorarios" class="horarios-container"></div>
@@ -121,11 +117,11 @@
                 <div class="form-divider"></div>
 
                 <div class="form-group full-width">
-                    <label>Dirección</label>
+                    <label>Dirección <span style="color:red">*</span></label>
                     <input type="text" class="input-field" id="direccion" placeholder="Calle principal y secundaria...">
                 </div>
 
-                <label>Ubicación GPS</label>
+                <label>Ubicación GPS <span style="color:red">*</span></label>
                 <div class="geo-row">
                     <div class="coords-display">
                         <div><i class="fa-solid fa-location-dot"></i> Lat: <span id="txtLat">0.0</span></div>
@@ -139,7 +135,7 @@
 
             <div class="modal-footer">
                 <button class="btn-cancelar" onclick="cerrarModal()">Cancelar</button>
-                <button class="btn-guardar" onclick="guardarUbicacion()">
+                <button class="btn-guardar" id="btnGuardarUbicacion" onclick="guardarUbicacion()">
                     <i class="fa-solid fa-floppy-disk"></i> Guardar
                 </button>
             </div>
