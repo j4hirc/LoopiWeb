@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Ubicación | Loopi</title>
-    <link rel="stylesheet" href="ubicacion.css"> <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <link rel="stylesheet" href="ubicacion.css"> 
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -15,8 +17,8 @@
     <header class="header">
         <div class="header-content">
             <div class="header-left">
-                <a href="../menu-gestiones.html" class="btn-volver">
-                    <i class="fa-solid fa-arrow-left"></i> <span>Menú Principal</span>
+                <a href="index.html" class="btn-volver">
+                    <i class="fa-solid fa-arrow-left"></i> <span>Volver</span>
                 </a>
                 <div class="titulo-seccion">
                     <h1>Puntos de Reciclaje</h1>
@@ -96,7 +98,6 @@
                         <select class="input-field" id="selectReciclador">
                             <option value="">Ninguno (Sin asignar)</option>
                         </select>
-                        <i class="fa-solid fa-chevron-down arrow-icon"></i>
                     </div>
                 </div>
 
@@ -127,11 +128,11 @@
                 <label>Ubicación GPS</label>
                 <div class="geo-row">
                     <div class="coords-display">
-                        <div><i class="fa-solid fa-location-arrow"></i> Lat: <span id="txtLat">0.0</span></div>
-                        <div><i class="fa-solid fa-location-arrow"></i> Lng: <span id="txtLng">0.0</span></div>
+                        <div><i class="fa-solid fa-location-dot"></i> Lat: <span id="txtLat">0.0</span></div>
+                        <div><i class="fa-solid fa-location-dot"></i> Lng: <span id="txtLng">0.0</span></div>
                     </div>
                     <button class="btn-mapa" onclick="abrirModalMapa()">
-                        <i class="fa-solid fa-map-location"></i> Marcar en Mapa
+                        <i class="fa-solid fa-map-location-dot"></i> Marcar en Mapa
                     </button>
                 </div>
             </div>
@@ -156,7 +157,7 @@
             
             <div class="modal-map-body">
                 <div class="map-controls">
-                     <button class="btn-gps" onclick="obtenerUbicacionActual()">
+                      <button class="btn-gps" onclick="obtenerUbicacionActual()">
                         <i class="fa-solid fa-crosshairs"></i> Mi Ubicación
                     </button>
                 </div>
