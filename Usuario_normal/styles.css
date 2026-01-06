@@ -330,9 +330,7 @@ select.perfil-input { appearance: none; background-image: url("data:image/svg+xm
 .progress-bar-fill { height: 100%; background: var(--secondary); transition: width 1s; }
 
 
-/* ========================================================== */
-/* MEDIA QUERIES (RESPONSIVE)              */
-/* ========================================================== */
+
 
 /* TABLETS Y MÓVILES GRANDES (< 768px) */
 @media (max-width: 768px) {
@@ -380,6 +378,42 @@ select.perfil-input { appearance: none; background-image: url("data:image/svg+xm
     /* 5. Mapa */
     .mapa-container { height: 280px; }
     .filtros-scroll { padding-bottom: 5px; } /* Scroll horizontal suave */
+}
+
+/* ================= FAVORITOS ANIMACIÓN ================= */
+
+/* Estilo base del corazón en el popup */
+.fav-icon {
+    font-size: 24px; /* Más grande para facilitar el toque */
+    color: #bdc3c7;  /* Gris cuando no es favorito */
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
+    display: inline-block;
+    padding: 5px; /* Área de clic expandida */
+}
+
+.fav-icon:hover {
+    color: #e74c3c;
+    transform: scale(1.1);
+}
+
+.fav-icon.activo {
+    color: #e74c3c; /* Rojo pasión */
+    filter: drop-shadow(0 2px 4px rgba(231, 76, 60, 0.3));
+    animation: heartPop 0.4s ease-out; /* Ejecuta la animación */
+}
+
+@keyframes heartPop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.4); } /* Crece */
+    100% { transform: scale(1); }  /* Vuelve a su sitio */
+}
+
+.fav-label {
+    font-size: 10px;
+    color: #95a5a6;
+    margin-top: -2px;
+    display: block;
 }
 
 /* FIX PARA SWEETALERT */

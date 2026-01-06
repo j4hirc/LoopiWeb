@@ -236,10 +236,13 @@ function renderizarMarcadoresReciclaje(listaPuntos) {
 
       const iconoUsar = esReciclador ? iconRecicladorMovil : iconPuntoFijo;
       const etiquetaTipo = esReciclador ? "Reciclador Móvil" : "Punto de Reciclaje";
-      const colorTitulo = esReciclador ? "#3498db" : "#2ecc71"; // Azul o Verde
+      const colorTitulo = esReciclador ? "#3498db" : "#2ecc71"; 
 
       const idUbicacion = p.id_ubicacion_reciclaje || p.id_ubicacion;
       const esFav = verificarSiEsFavoritoBD(idUbicacion);
+      
+      const claseFav = esFav ? "activo" : "";
+      const tituloFav = esFav ? "Quitar de favoritos" : "Guardar en favoritos";
 
       let materialesHTML = "";
       if (p.materialesAceptados && p.materialesAceptados.length > 0) {
@@ -255,31 +258,27 @@ function renderizarMarcadoresReciclaje(listaPuntos) {
       const marker = L.marker([p.latitud, p.longitud], { icon: iconoUsar });
 
       const popupContent = `
-        <div style="text-align:center; min-width:170px;">
+        <div style="text-align:center; min-width:180px;">
             <div style="font-size:10px; font-weight:bold; color:${colorTitulo}; text-transform:uppercase; margin-bottom:2px;">
                 ${etiquetaTipo}
             </div>
-            <h4 style="margin:0; color:#3A6958;">${p.nombre}</h4>
-            <p style="font-size:11px; color:#555;">${p.direccion}</p>
+            <h4 style="margin:0; color:#3A6958; font-size: 1.1rem;">${p.nombre}</h4>
+            <p style="font-size:11px; color:#555; margin: 4px 0;">${p.direccion}</p>
             ${materialesHTML}
 
-            <button onclick="abrirRuta(${p.latitud}, ${p.longitud})"
-              style="
-                margin-top:8px;
-                background:#2ecc71;
-                color:white;
-                border:none;
-                padding:6px 10px;
-                border-radius:6px;
-                cursor:pointer;
-                font-size:11px;">
-             🧭 Ver ruta
-            </button>
+            <div style="display:flex; align-items:center; justify-content:center; gap: 10px; margin-top:12px;">
+                <button onclick="abrirRuta(${p.latitud}, ${p.longitud})"
+                  style="
+                    background:#2ecc71; color:white; border:none;
+                    padding:8px 12px; border-radius:20px; cursor:pointer;
+                    font-size:11px; display:flex; align-items:center; gap:5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                  <i class="fa-solid fa-location-arrow"></i> Ir
+                </button>
 
-            <div style="margin-top:6px;">
-              <i class="fa-solid fa-heart fav-icon ${esFav ? "activo" : ""}"
-                 onclick="toggleFavoritoBD(event, this, ${idUbicacion})"
-                 style="cursor:pointer;"></i>
+                <div style="display:flex; flex-direction:column; align-items:center;" title="${tituloFav}">
+                    <i class="fa-solid fa-heart fav-icon ${claseFav}"
+                       onclick="toggleFavoritoBD(event, this, ${idUbicacion})"></i>
+                </div>
             </div>
         </div>
       `;
