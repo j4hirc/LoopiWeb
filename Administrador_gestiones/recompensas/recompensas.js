@@ -261,35 +261,45 @@ window.eliminarRecompensa = function(id) {
 
 function renderizarGrid(lista) {
     gridRecompensas.innerHTML = '';
+    
     if (!lista || lista.length === 0) {
-        gridRecompensas.innerHTML = '<p style="text-align:center; width:100%; color: #666;">No hay recompensas registradas.</p>';
+        gridRecompensas.innerHTML = `
+            <div style="grid-column: 1/-1; text-align:center; padding: 40px; color: #94a3b8;">
+                <i class="fa-solid fa-box-open" style="font-size: 3rem; margin-bottom: 10px; display:block;"></i>
+                <p>No se encontraron recompensas.</p>
+            </div>
+        `;
         return;
     }
 
     lista.forEach(item => {
         const nombreAusp = item.auspiciante ? item.auspiciante.nombre : 'Sin Auspiciante';
+        const direccion = item.direccion || 'Ubicación sin especificar';
+        
         const card = document.createElement('div');
         card.className = 'card-recompensa';
         card.innerHTML = `
-            <div style="font-size:30px; margin-bottom:10px; text-align:center;">🎁</div>
-            <h3 style="text-align:center;">${item.nombre}</h3>
-            <div style="text-align:center; margin: 5px 0;">
-                <span style="background:#e8f5e9; color:#2e7d32; padding: 4px 10px; border-radius: 12px; font-weight:bold; font-size:13px;">
-                    ${item.costoPuntos} Puntos
-                </span>
+            <i class="fa-solid fa-gift card-icon-bg"></i>
+
+            <div style="font-size: 3rem; margin-bottom: 5px;">🎁</div>
+
+            <h3 class="card-title">${item.nombre}</h3>
+
+            <span class="card-points">
+                <i class="fa-solid fa-star"></i> ${item.costoPuntos} Puntos
+            </span>
+
+            <div class="card-info">
+                <p><i class="fa-solid fa-handshake"></i> ${nombreAusp}</p>
+                <p><i class="fa-solid fa-location-dot"></i> ${direccion}</p>
             </div>
-            <p style="font-size:13px; text-align:center; margin-top:10px;">
-                <i class="fa-solid fa-handshake"></i> ${nombreAusp}
-            </p>
-            <p style="font-size:12px; color:#555; text-align:center;">
-                <i class="fa-solid fa-location-dot"></i> ${item.direccion || 'Sin dirección'}
-            </p>
+
             <div class="acciones">
-                <button class="btn-editar" onclick="cargarEdicion(${item.id_recompensa})" title="Editar">
-                    <i class="fa-solid fa-pen"></i>
+                <button class="btn-action btn-editar" onclick="cargarEdicion(${item.id_recompensa})" title="Editar">
+                    <i class="fa-solid fa-pen-to-square"></i>
                 </button>
-                <button class="btn-eliminar" onclick="eliminarRecompensa(${item.id_recompensa})" title="Eliminar">
-                    <i class="fa-solid fa-trash"></i>
+                <button class="btn-action btn-eliminar" onclick="eliminarRecompensa(${item.id_recompensa})" title="Eliminar">
+                    <i class="fa-solid fa-trash-can"></i>
                 </button>
             </div>
         `;
