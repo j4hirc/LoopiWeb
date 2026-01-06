@@ -68,7 +68,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   initMapaReciclador();
   
-  // Carga Paralela de Datos
   await Promise.all([
       cargarFiltrosMateriales(), // Cargar botones de filtro
       cargarPuntosReciclajeReciclador(), // Cargar puntos
@@ -150,7 +149,6 @@ async function cargarFiltrosMateriales() {
           const btn = document.createElement("button");
           btn.className = "btn-filtro";
           btn.innerText = mat.nombre;
-          // Asignar evento de filtrado
           btn.onclick = () => filtrarMapa(mat.id_material, btn);
           contenedor.appendChild(btn);
         });
@@ -160,21 +158,16 @@ async function cargarFiltrosMateriales() {
     }
 }
 
-// --- NUEVA FUNCIÓN: LÓGICA DE FILTRADO ---
 window.filtrarMapa = function (idMaterial, btnElement) {
-    // 1. Gestionar clases visuales
     document.querySelectorAll(".btn-filtro").forEach((b) => b.classList.remove("active"));
     btnElement.classList.add("active");
   
-    // 2. Filtrar Datos
     if (idMaterial === "todos") {
       renderizarPuntosReciclador(todasLasUbicaciones);
     } else {
       const filtradas = todasLasUbicaciones.filter((ubicacion) => {
-        // Validación de seguridad
         if (!ubicacion.materialesAceptados || ubicacion.materialesAceptados.length === 0) return false;
         
-        // Buscar si acepta el material seleccionado
         return ubicacion.materialesAceptados.some(
           (um) => um.material && um.material.id_material === idMaterial
         );
@@ -201,7 +194,6 @@ function renderizarPuntosReciclador(lista) {
   lista.forEach((p) => {
     if (!p.latitud || !p.longitud) return;
 
-    // Mostrar materiales en el popup
     let materialesHTML = "";
     if (p.materialesAceptados && p.materialesAceptados.length > 0) {
         materialesHTML = `<div style="margin-top:5px; display:flex; flex-wrap:wrap; gap:3px; justify-content:center;">`;
@@ -352,7 +344,7 @@ async function guardarPerfil() {
         apellido_paterno: pApellido,
         apellido_materno: sApellido,
         correo: correo,
-        foto: usuario.foto, // Mantener vieja si no se cambia
+        foto: usuario.foto,
         estado: true 
     };
 
@@ -459,7 +451,6 @@ async function abrirEstadisticas() {
         
         const todas = await res.json();
         
-        // Filtramos: Solo donde soy el reciclador Y están FINALIZADAS
         const misEntregas = todas.filter(s => 
             s.reciclador && s.reciclador.cedula === usuario.cedula && 
             s.estado === 'FINALIZADO'
@@ -490,18 +481,15 @@ function calcularYMostrarStats(entregas) {
         }
     });
 
-    // Actualizar números
     document.getElementById("statKilos").innerText = totalKg.toFixed(1);
     document.getElementById("statEntregas").innerText = entregas.length;
 
-    // Generar Gráfica
     const ctx = document.getElementById('chartMisMateriales').getContext('2d');
     
     if (chartInstance) {
         chartInstance.destroy(); // Destruir anterior para no sobreponer
     }
 
-    // Si no hay datos, mostrar mensaje o gráfica vacía
     const labels = Object.keys(materialesCount);
     const data = Object.values(materialesCount);
 

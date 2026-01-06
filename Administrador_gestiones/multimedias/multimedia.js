@@ -28,7 +28,6 @@ btnGuardar.onclick = guardar;
 imagenInput.onchange = () => {
     const file = imagenInput.files[0];
     if (file) {
-        // Validar tipo de archivo
         if (!file.type.startsWith('image/')) {
             Swal.fire('Error', 'Solo se permiten archivos de imagen.', 'error');
             imagenInput.value = '';
