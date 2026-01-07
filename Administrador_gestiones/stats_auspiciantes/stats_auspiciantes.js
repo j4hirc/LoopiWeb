@@ -1,21 +1,12 @@
 const API_BASE = 'https://api-loopi.onrender.com/api';
 const gridStats = document.getElementById('gridStats');
 
-// Variables globales
-let canjesRaw = [];
-let chartInstance = null;
-
 document.addEventListener("DOMContentLoaded", async () => {
-    // Configurar listeners de filtros
-    document.getElementById('filtroInicio').addEventListener('change', aplicarFiltros);
-    document.getElementById('filtroFin').addEventListener('change', aplicarFiltros);
-    document.getElementById('filtroNombre').addEventListener('input', aplicarFiltros);
-
     try {
         await cargarEstadisticas();
     } catch (e) {
         console.error(e);
-        gridStats.innerHTML = `<p style="text-align:center; color:red; grid-column:1/-1;">Error al conectar con el servidor.</p>`;
+        gridStats.innerHTML = `<p style="text-align:center; color:red; grid-column:1/-1;">Error al cargar datos.</p>`;
     }
 });
 
@@ -23,59 +14,20 @@ async function cargarEstadisticas() {
     const res = await fetch(`${API_BASE}/qr_canjeos`);
     if (!res.ok) throw new Error("Error API");
     
-    canjesRaw = await res.json();
+    const canjes = await res.json();
     
-    // Aplicar filtros iniciales
-    aplicarFiltros();
-}
-
-function aplicarFiltros() {
-    const fInicio = document.getElementById('filtroInicio').value;
-    const fFin = document.getElementById('filtroFin').value;
-    const fNombre = document.getElementById('filtroNombre').value.toLowerCase().trim();
-
-    const datosFiltrados = canjesRaw.filter(c => {
-        // Validar integridad
-        if (!c.recompensa || !c.recompensa.auspiciante) return false;
-
-        // Filtro Fecha
-        const fechaItem = new Date(c.fecha_generado || c.fecha_usado);
-        fechaItem.setHours(0,0,0,0);
-
-        if (fInicio) {
-            const dInicio = new Date(fInicio);
-            if (fechaItem < dInicio) return false;
-        }
-        if (fFin) {
-            const dFin = new Date(fFin);
-            if (fechaItem > dFin) return false;
-        }
-
-        // Filtro Nombre
-        if (fNombre) {
-            const nombreAusp = c.recompensa.auspiciante.nombre.toLowerCase();
-            if (!nombreAusp.includes(fNombre)) return false;
-        }
-
-        return true;
-    });
-
-    procesarYRenderizar(datosFiltrados);
-}
-
-function procesarYRenderizar(canjes) {
     if (canjes.length === 0) {
-        gridStats.innerHTML = `<p style="text-align:center; grid-column:1/-1; padding:40px; color:#64748b;">No se encontraron resultados con estos filtros.</p>`;
+        gridStats.innerHTML = `<p style="text-align:center; grid-column:1/-1; padding:40px; color:#64748b;">No hay canjes registrados aún.</p>`;
         document.getElementById("totalCanjes").innerText = "0";
         document.getElementById("topAuspiciante").innerText = "-";
-        if (chartInstance) chartInstance.destroy();
         return;
     }
 
-    // Agrupación de datos
     const statsMap = {}; 
 
     canjes.forEach(c => {
+        if (!c.recompensa || !c.recompensa.auspiciante) return;
+
         const ausp = c.recompensa.auspiciante;
         const idAusp = ausp.id_auspiciante;
         const recompensa = c.recompensa;
@@ -102,10 +54,8 @@ function procesarYRenderizar(canjes) {
         statsMap[idAusp].recompensasCount[idRec].count++;
     });
 
-    // Ordenar por total de canjes descendente
     const listaStats = Object.values(statsMap).sort((a, b) => b.totalCanjes - a.totalCanjes);
 
-    // Actualizar KPIs
     document.getElementById("totalCanjes").innerText = canjes.length;
     if (listaStats.length > 0) {
         document.getElementById("topAuspiciante").innerText = listaStats[0].nombre;
@@ -119,11 +69,7 @@ function renderizarGrafico(datos) {
     const ctx = document.getElementById('chartAuspiciantes').getContext('2d');
     const top5 = datos.slice(0, 5);
 
-    if (chartInstance) {
-        chartInstance.destroy();
-    }
-
-    chartInstance = new Chart(ctx, {
+    new Chart(ctx, {
         type: 'bar',
         data: {
             labels: top5.map(d => d.nombre),
@@ -217,66 +163,66 @@ function renderizarTarjetas(lista) {
     });
 }
 
-function resetearFiltros() {
-    document.getElementById('filtroInicio').value = '';
-    document.getElementById('filtroFin').value = '';
-    document.getElementById('filtroNombre').value = '';
-    aplicarFiltros();
-}
-
 function descargarPDF() {
-    const btn = document.querySelector('.btn-download');
+    const btn = document.querySelector('.btn-export');
     const originalText = btn.innerHTML;
     
-    // Feedback visual
+    // 1. Feedback visual de carga
     btn.disabled = true;
     btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Generando...';
-    
-    // Scrollear arriba para evitar cortes raros
-    window.scrollTo(0,0);
 
     const element = document.getElementById('reporteContent');
     const hoy = new Date();
     
-    // Preparar Header y Footer PDF
-    document.querySelector('.pdf-footer').style.display = 'block';
-    document.getElementById('fechaReporte').innerText = hoy.toLocaleDateString();
+    // Formato de fecha legible para el footer
+    const fechaTexto = hoy.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    // Formato de fecha para el archivo
+    const fechaArchivo = hoy.toISOString().slice(0,10); 
+    
+    // Mostrar footer temporalmente
+    const footer = document.querySelector('.pdf-footer');
+    if(footer) footer.style.display = 'block';
+    document.getElementById('fechaReporte').innerText = fechaTexto;
 
     const opt = {
-        margin:       [0.4, 0.4, 0.4, 0.4],
-        filename:     `Reporte_Auspiciantes_${hoy.toISOString().slice(0,10)}.pdf`,
+        margin:       [0.4, 0.4, 0.4, 0.4], // Margen equilibrado
+        filename:     `Reporte_Auspiciantes_${fechaArchivo}.pdf`,
         image:        { type: 'jpeg', quality: 0.98 },
         html2canvas:  { 
-            scale: 2, 
-            useCORS: true, 
+            scale: 2,             // Mejor resolución
+            useCORS: true,        // IMPORTANTE: Para que salgan las imágenes externas
             letterRendering: true,
-            scrollY: 0
+            scrollY: 0            // Asegura imprimir desde arriba
         },
         jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' },
-        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] } // Evita que se corten las tarjetas
     };
 
     html2pdf().set(opt).from(element).save()
         .then(() => {
-            // Restaurar estado
-            document.querySelector('.pdf-footer').style.display = 'none';
+            // Restaurar botón y ocultar footer
+            if(footer) footer.style.display = 'none';
             btn.innerHTML = originalText;
             btn.disabled = false;
             
-            Swal.fire({
-                icon: 'success',
-                title: 'Reporte descargado',
+            // Alerta bonita
+            const Toast = Swal.mixin({
                 toast: true,
                 position: 'top-end',
                 showConfirmButton: false,
-                timer: 3000
+                timer: 3000,
+                timerProgressBar: true
+            });
+            Toast.fire({
+                icon: 'success',
+                title: 'Reporte descargado correctamente'
             });
         })
         .catch(err => {
             console.error('Error PDF:', err);
-            document.querySelector('.pdf-footer').style.display = 'none';
+            if(footer) footer.style.display = 'none';
             btn.innerHTML = originalText;
             btn.disabled = false;
-            Swal.fire('Error', 'No se pudo generar el PDF', 'error');
+            Swal.fire('Error', 'No se pudo generar el PDF.', 'error');
         });
 }
