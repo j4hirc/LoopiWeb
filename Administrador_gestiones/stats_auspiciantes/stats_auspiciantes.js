@@ -126,33 +126,31 @@ function renderizarTarjetas(lista) {
         if(index === 0) trophyClass = "fa-trophy";
         
         card.innerHTML = `
-            <div class="card-header">
-                <div class="logo-box">
+            <div class="card-top">
+                <div class="logo-wrapper">
                     <img src="${imgUrl}" alt="${ausp.nombre}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/747/747543.png'">
                 </div>
-                <div class="brand-info">
+                <div class="brand-details">
                     <h4>${ausp.nombre}</h4>
-                    <span>Ranking #${index + 1}</span>
+                    <span class="rank-badge">Top #${index + 1}</span>
                 </div>
             </div>
 
-            <div class="stats-row">
-                <div class="stat-group">
+            <div class="card-stats">
+                <div class="stat-item">
                     <span>Total Canjes</span>
                     <strong>${ausp.totalCanjes}</strong>
                 </div>
-                <div class="stat-icon">
-                    <i class="fa-solid ${trophyClass} trophy-icon"></i>
-                </div>
+                <i class="fa-solid ${trophyClass} medal-icon"></i>
             </div>
 
-            <div class="best-product">
-                <span class="product-label">Lo más pedido</span>
-                <div class="product-details">
-                    <div class="product-name">
+            <div class="card-footer">
+                <span class="footer-label">Favorito del Público</span>
+                <div class="reward-info">
+                    <div class="reward-name">
                         <i class="fa-solid fa-gift"></i> ${mejorRecompensa.nombre}
                     </div>
-                    <div class="product-count">
+                    <div class="reward-count">
                         x${mejorRecompensa.count}
                     </div>
                 </div>
@@ -166,7 +164,8 @@ function descargarPDF() {
     const element = document.getElementById('reporteContent');
     const fecha = new Date().toLocaleDateString();
     
-    document.querySelector('.pdf-footer').style.display = 'block';
+    const footer = document.querySelector('.pdf-footer');
+    if(footer) footer.style.display = 'block';
     document.getElementById('fechaReporte').innerText = fecha;
 
     const opt = {
@@ -178,6 +177,6 @@ function descargarPDF() {
     };
 
     html2pdf().set(opt).from(element).save().then(() => {
-        document.querySelector('.pdf-footer').style.display = 'none';
+        if(footer) footer.style.display = 'none';
     });
 }
