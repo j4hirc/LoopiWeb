@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Estadísticas de Auspiciantes | Loopi</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <link rel="stylesheet" href="stats_auspiciantes.css">
@@ -16,105 +16,74 @@
 </head>
 <body>
 
-    <div class="app-container">
-        
-        <header class="top-bar no-print">
-            <div class="brand">
-                <a href="../menu-gestiones.html" class="btn-back">
-                    <i class="fa-solid fa-arrow-left"></i>
-                </a>
-                <div class="brand-text">
-                    <h1>Métricas de Auspiciantes</h1>
-                    <p>Rendimiento de marcas y canjes</p>
-                </div>
-            </div>
-            
-            <button onclick="descargarPDF()" class="btn-export">
-                <i class="fa-solid fa-file-pdf"></i> Exportar Reporte
-            </button>
-        </header>
+    <div class="bg-decoration"></div>
 
-        <section class="filters-panel no-print">
-            <div class="filters-header">
-                <h3><i class="fa-solid fa-filter"></i> Filtrar Datos</h3>
-                <button class="btn-reset" onclick="resetearFiltros()">
-                    <i class="fa-solid fa-rotate-left"></i> Limpiar
-                </button>
+    <nav class="navbar no-print">
+        <div class="nav-container">
+            <a href="../menu-gestiones.html" class="btn-volver">
+                <i class="fa-solid fa-arrow-left"></i> Volver
+            </a>
+            <div class="nav-title">
+                <i class="fa-solid fa-chart-pie"></i> Reportes
             </div>
-            <div class="filters-row">
-                <div class="filter-group">
-                    <label>Fecha Inicio</label>
-                    <input type="date" id="filtroInicio" class="input-field">
+            <button onclick="descargarPDF()" class="btn-download">
+                <i class="fa-solid fa-file-pdf"></i> Exportar
+            </button>
+        </div>
+    </nav>
+
+    <div class="main-container" id="reporteContent">
+        
+        <div class="report-header">
+            <div class="header-text">
+                <h1 class="page-title">Métricas de Auspiciantes</h1>
+                <p class="page-subtitle">Rendimiento de marcas y canjes en tiempo real</p>
+            </div>
+        </div>
+
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-icon blue"><i class="fa-solid fa-ticket"></i></div>
+                <div class="kpi-content">
+                    <p>Total Canjes</p>
+                    <h3 id="totalCanjes">0</h3>
                 </div>
-                <div class="filter-group">
-                    <label>Fecha Fin</label>
-                    <input type="date" id="filtroFin" class="input-field">
+            </div>
+            <div class="kpi-card gold">
+                <div class="kpi-icon gold-icon"><i class="fa-solid fa-crown"></i></div>
+                <div class="kpi-content">
+                    <p>Marca Líder</p>
+                    <h3 id="topAuspiciante">...</h3>
                 </div>
-                <div class="filter-group search-group">
-                    <label>Buscar Marca</label>
-                    <div class="input-icon">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="text" id="filtroNombre" class="input-field pl-icon" placeholder="Ej: McDonald's...">
-                    </div>
-                </div>
+            </div>
+        </div>
+        
+        <section class="chart-card">
+            <div class="chart-header">
+                <h4>Participación de Mercado (Top 5)</h4>
+                <i class="fa-solid fa-chart-simple" style="color:var(--text-light)"></i>
+            </div>
+            <div class="canvas-holder">
+                <canvas id="chartAuspiciantes"></canvas>
             </div>
         </section>
 
-        <div id="reporteContent" class="report-wrapper">
-            
-            <div class="pdf-header-only" style="display: none; margin-bottom: 20px;">
-                <h2 style="color:#1a4d3e; margin:0;">Reporte de Auspiciantes - Loopi</h2>
-                <p style="color:#64748b; font-size: 0.9rem;">Generado el: <span id="fechaReporteHeader"></span></p>
-                <hr style="border: 0; border-top: 1px solid #e2e8f0; margin-top: 10px;">
-            </div>
-
-            <div class="kpi-wrapper">
-                <div class="kpi-card">
-                    <div class="kpi-icon icon-ticket"><i class="fa-solid fa-ticket"></i></div>
-                    <div class="kpi-info">
-                        <small>Total Canjes</small>
-                        <span id="totalCanjes">0</span>
-                    </div>
-                </div>
-                <div class="kpi-card highlighted">
-                    <div class="kpi-icon icon-crown"><i class="fa-solid fa-crown"></i></div>
-                    <div class="kpi-info">
-                        <small>Marca Líder</small>
-                        <span id="topAuspiciante">...</span>
-                    </div>
-                </div>
-            </div>
-
-            <main class="main-content">
-                
-                <section class="panel chart-panel">
-                    <div class="panel-head">
-                        <h3><i class="fa-solid fa-chart-pie"></i> Participación de Mercado</h3>
-                        <span class="badge">Top 5</span>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="chartAuspiciantes"></canvas>
-                    </div>
-                </section>
-
-                <div class="section-divider">
-                    <h3>Desglose por Marca</h3>
-                    <div class="line"></div>
-                </div>
-
-                <section id="gridStats" class="stats-grid">
-                    <div class="loading-state">
-                        <div class="loader"></div>
-                        <p>Cargando estadísticas...</p>
-                    </div>
-                </section>
-
-                <div class="pdf-footer" style="display: none;">
-                    <p>Documento confidencial - Generado por Loopi Admin</p>
-                </div>
-
-            </main>
+        <div class="section-header mt-30">
+            <h3 class="section-title">Desglose por Marca</h3>
+            <div class="section-line"></div>
         </div>
+
+        <section id="gridStats" class="grid-cards">
+            <div class="loader-container">
+                <div class="spinner"></div>
+                <p>Analizando datos...</p>
+            </div>
+        </section>
+
+        <div class="pdf-footer" style="display: none;">
+            <p>Reporte generado por Loopi Admin - <span id="fechaReporte"></span></p>
+        </div>
+
     </div>
 
     <script src="stats_auspiciantes.js"></script>

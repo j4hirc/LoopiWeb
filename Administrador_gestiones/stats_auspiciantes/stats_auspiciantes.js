@@ -1,21 +1,12 @@
 const API_BASE = 'https://api-loopi.onrender.com/api';
 const gridStats = document.getElementById('gridStats');
 
-// Variables globales
-let canjesRaw = [];
-let chartInstance = null;
-
 document.addEventListener("DOMContentLoaded", async () => {
-    // Configurar listeners de filtros
-    document.getElementById('filtroInicio').addEventListener('change', aplicarFiltros);
-    document.getElementById('filtroFin').addEventListener('change', aplicarFiltros);
-    document.getElementById('filtroNombre').addEventListener('input', aplicarFiltros);
-
     try {
         await cargarEstadisticas();
     } catch (e) {
         console.error(e);
-        gridStats.innerHTML = `<p style="text-align:center; color:red; grid-column:1/-1;">Error al conectar con el servidor.</p>`;
+        gridStats.innerHTML = `<p style="text-align:center; color:red; grid-column:1/-1;">Error al cargar datos.</p>`;
     }
 });
 
@@ -23,59 +14,20 @@ async function cargarEstadisticas() {
     const res = await fetch(`${API_BASE}/qr_canjeos`);
     if (!res.ok) throw new Error("Error API");
     
-    canjesRaw = await res.json();
+    const canjes = await res.json();
     
-    // Aplicar filtros iniciales (mostrar todo)
-    aplicarFiltros();
-}
-
-function aplicarFiltros() {
-    const fInicio = document.getElementById('filtroInicio').value;
-    const fFin = document.getElementById('filtroFin').value;
-    const fNombre = document.getElementById('filtroNombre').value.toLowerCase().trim();
-
-    const datosFiltrados = canjesRaw.filter(c => {
-        // Validar integridad
-        if (!c.recompensa || !c.recompensa.auspiciante) return false;
-
-        // Filtro Fecha (Usamos fecha_generado)
-        const fechaItem = new Date(c.fecha_generado || c.fecha_usado);
-        fechaItem.setHours(0,0,0,0);
-
-        if (fInicio) {
-            const dInicio = new Date(fInicio);
-            if (fechaItem < dInicio) return false;
-        }
-        if (fFin) {
-            const dFin = new Date(fFin);
-            if (fechaItem > dFin) return false;
-        }
-
-        // Filtro Nombre Auspiciante
-        if (fNombre) {
-            const nombreAusp = c.recompensa.auspiciante.nombre.toLowerCase();
-            if (!nombreAusp.includes(fNombre)) return false;
-        }
-
-        return true;
-    });
-
-    procesarYRenderizar(datosFiltrados);
-}
-
-function procesarYRenderizar(canjes) {
     if (canjes.length === 0) {
-        gridStats.innerHTML = `<p style="text-align:center; grid-column:1/-1; padding:40px; color:#64748b;">No se encontraron resultados con estos filtros.</p>`;
+        gridStats.innerHTML = `<p style="text-align:center; grid-column:1/-1; padding:40px; color:#64748b;">No hay canjes registrados aún.</p>`;
         document.getElementById("totalCanjes").innerText = "0";
         document.getElementById("topAuspiciante").innerText = "-";
-        if (chartInstance) chartInstance.destroy();
         return;
     }
 
-    // Agrupación de datos
     const statsMap = {}; 
 
     canjes.forEach(c => {
+        if (!c.recompensa || !c.recompensa.auspiciante) return;
+
         const ausp = c.recompensa.auspiciante;
         const idAusp = ausp.id_auspiciante;
         const recompensa = c.recompensa;
@@ -102,10 +54,8 @@ function procesarYRenderizar(canjes) {
         statsMap[idAusp].recompensasCount[idRec].count++;
     });
 
-    // Ordenar por total de canjes descendente
     const listaStats = Object.values(statsMap).sort((a, b) => b.totalCanjes - a.totalCanjes);
 
-    // Actualizar KPIs
     document.getElementById("totalCanjes").innerText = canjes.length;
     if (listaStats.length > 0) {
         document.getElementById("topAuspiciante").innerText = listaStats[0].nombre;
@@ -119,11 +69,7 @@ function renderizarGrafico(datos) {
     const ctx = document.getElementById('chartAuspiciantes').getContext('2d');
     const top5 = datos.slice(0, 5);
 
-    if (chartInstance) {
-        chartInstance.destroy();
-    }
-
-    chartInstance = new Chart(ctx, {
+    new Chart(ctx, {
         type: 'bar',
         data: {
             labels: top5.map(d => d.nombre),
@@ -145,11 +91,11 @@ function renderizarGrafico(datos) {
                 y: { 
                     beginAtZero: true, 
                     grid: { color: '#F1F5F9' },
-                    ticks: { precision: 0, font: {family: 'Outfit'} }
+                    ticks: { precision: 0, font: {family: 'Poppins'} }
                 },
                 x: { 
                     grid: { display: false },
-                    ticks: { font: {family: 'Outfit'} }
+                    ticks: { font: {family: 'Poppins'} }
                 }
             }
         }
@@ -217,70 +163,22 @@ function renderizarTarjetas(lista) {
     });
 }
 
-function resetearFiltros() {
-    document.getElementById('filtroInicio').value = '';
-    document.getElementById('filtroFin').value = '';
-    document.getElementById('filtroNombre').value = '';
-    aplicarFiltros();
-}
-
 function descargarPDF() {
-    const btn = document.querySelector('.btn-export');
-    const originalText = btn.innerHTML;
-    
-    // Feedback visual
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Generando...';
-    
-    // Scrollear arriba para evitar cortes raros
-    window.scrollTo(0,0);
-
     const element = document.getElementById('reporteContent');
-    const hoy = new Date();
+    const fecha = new Date().toLocaleDateString();
     
-    // Preparar Header y Footer PDF
     document.querySelector('.pdf-footer').style.display = 'block';
-    document.querySelector('.pdf-header-only').style.display = 'block';
-    document.getElementById('fechaReporte').innerText = hoy.toLocaleDateString();
-    document.getElementById('fechaReporteHeader').innerText = hoy.toLocaleDateString();
+    document.getElementById('fechaReporte').innerText = fecha;
 
     const opt = {
-        margin:       [0.3, 0.3, 0.3, 0.3], // Márgenes más pequeños para aprovechar hoja
-        filename:     `Reporte_Auspiciantes_${hoy.toISOString().slice(0,10)}.pdf`,
+        margin:       [0.5, 0.5, 0.5, 0.5],
+        filename:     `Reporte_Auspiciantes_${fecha.replace(/\//g, '-')}.pdf`,
         image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { 
-            scale: 2, 
-            useCORS: true, 
-            letterRendering: true,
-            scrollY: 0
-        },
-        jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' },
-        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
     };
 
-    html2pdf().set(opt).from(element).save()
-        .then(() => {
-            // Restaurar estado
-            document.querySelector('.pdf-footer').style.display = 'none';
-            document.querySelector('.pdf-header-only').style.display = 'none';
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-            
-            Swal.fire({
-                icon: 'success',
-                title: 'Reporte descargado',
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 3000
-            });
-        })
-        .catch(err => {
-            console.error(err);
-            document.querySelector('.pdf-footer').style.display = 'none';
-            document.querySelector('.pdf-header-only').style.display = 'none';
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-            Swal.fire('Error', 'No se pudo generar el PDF', 'error');
-        });
+    html2pdf().set(opt).from(element).save().then(() => {
+        document.querySelector('.pdf-footer').style.display = 'none';
+    });
 }
