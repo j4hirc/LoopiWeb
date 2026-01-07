@@ -9,14 +9,16 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <link rel="stylesheet" href="stats_auspiciantes.css">
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
 
     <div class="app-container">
         
-        <header class="top-bar">
+        <header class="top-bar no-print">
             <div class="brand">
                 <a href="../menu-gestiones.html" class="btn-back">
                     <i class="fa-solid fa-arrow-left"></i>
@@ -26,6 +28,15 @@
                     <p>Rendimiento de marcas y canjes</p>
                 </div>
             </div>
+            
+            <div class="header-actions">
+                <button onclick="descargarPDF()" class="btn-export">
+                    <i class="fa-solid fa-file-pdf"></i> Exportar PDF
+                </button>
+            </div>
+        </header>
+
+        <div id="reporteContent">
             
             <div class="kpi-wrapper">
                 <div class="kpi-card">
@@ -43,35 +54,39 @@
                     </div>
                 </div>
             </div>
-        </header>
 
-        <main class="main-content">
-            
-            <section class="chart-panel">
-                <div class="panel-header">
-                    <h3><i class="fa-solid fa-chart-pie"></i> Participación de Mercado</h3>
-                    <div class="panel-actions">
-                        <span class="tag">Top 5</span>
+            <main class="main-content">
+                
+                <section class="chart-panel">
+                    <div class="panel-header">
+                        <h3><i class="fa-solid fa-chart-pie"></i> Participación de Mercado</h3>
+                        <div class="panel-actions">
+                            <span class="tag">Top 5</span>
+                        </div>
                     </div>
-                </div>
-                <div class="chart-wrapper">
-                    <canvas id="chartAuspiciantes"></canvas>
-                </div>
-            </section>
+                    <div class="chart-wrapper">
+                        <canvas id="chartAuspiciantes"></canvas>
+                    </div>
+                </section>
 
-            <div class="section-divider">
-                <h3>Desglose por Marca</h3>
-                <div class="line"></div>
+                <div class="section-divider">
+                    <h3>Desglose por Marca</h3>
+                    <div class="line"></div>
+                </div>
+
+                <section id="gridStats" class="stats-grid">
+                    <div class="loading-state">
+                        <div class="loader"></div>
+                        <p>Analizando datos...</p>
+                    </div>
+                </section>
+
+            </main>
+
+            <div class="pdf-footer" style="display: none;">
+                Generado por Loopi Admin - <span id="fechaReporte"></span>
             </div>
-
-            <section id="gridStats" class="stats-grid">
-                <div class="loading-state">
-                    <div class="loader"></div>
-                    <p>Analizando datos...</p>
-                </div>
-            </section>
-
-        </main>
+        </div>
     </div>
 
     <script src="stats_auspiciantes.js"></script>

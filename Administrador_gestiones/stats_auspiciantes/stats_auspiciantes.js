@@ -23,7 +23,6 @@ async function cargarEstadisticas() {
         return;
     }
 
-    // Procesar datos
     const statsMap = {}; 
 
     canjes.forEach(c => {
@@ -57,7 +56,6 @@ async function cargarEstadisticas() {
 
     const listaStats = Object.values(statsMap).sort((a, b) => b.totalCanjes - a.totalCanjes);
 
-    // Actualizar KPIs
     document.getElementById("totalCanjes").innerText = canjes.length;
     if (listaStats.length > 0) {
         document.getElementById("topAuspiciante").innerText = listaStats[0].nombre;
@@ -107,13 +105,11 @@ function renderizarTarjetas(lista) {
     gridStats.innerHTML = "";
 
     lista.forEach((ausp, index) => {
-        // Mejor recompensa
         let mejorRecompensa = { nombre: "Sin datos", count: 0 };
         Object.values(ausp.recompensasCount).forEach(r => {
             if (r.count > mejorRecompensa.count) mejorRecompensa = r;
         });
 
-        // Logo fallback
         let imgUrl = 'https://cdn-icons-png.flaticon.com/512/747/747543.png';
         if (ausp.logo && ausp.logo.length > 5) {
             if (ausp.logo.startsWith("http") || ausp.logo.startsWith("data:")) {
@@ -126,7 +122,6 @@ function renderizarTarjetas(lista) {
         const card = document.createElement('div');
         card.className = 'brand-card';
         
-        // Trofeo según posición
         let trophyClass = "fa-medal";
         if(index === 0) trophyClass = "fa-trophy";
         
@@ -164,5 +159,25 @@ function renderizarTarjetas(lista) {
             </div>
         `;
         gridStats.appendChild(card);
+    });
+}
+
+function descargarPDF() {
+    const element = document.getElementById('reporteContent');
+    const fecha = new Date().toLocaleDateString();
+    
+    document.querySelector('.pdf-footer').style.display = 'block';
+    document.getElementById('fechaReporte').innerText = fecha;
+
+    const opt = {
+        margin:       [0.5, 0.5, 0.5, 0.5],
+        filename:     `Reporte_Auspiciantes_${fecha.replace(/\//g, '-')}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+
+    html2pdf().set(opt).from(element).save().then(() => {
+        document.querySelector('.pdf-footer').style.display = 'none';
     });
 }
