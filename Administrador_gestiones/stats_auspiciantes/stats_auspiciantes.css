@@ -26,7 +26,7 @@ body {
     padding: 20px;
 }
 
-
+/* --- HEADER --- */
 .top-bar {
     display: flex;
     justify-content: space-between;
@@ -76,7 +76,7 @@ body {
     color: var(--text-gray);
 }
 
-
+/* KPIs (Tarjetitas arriba a la derecha) */
 .kpi-wrapper {
     display: flex;
     gap: 15px;
@@ -94,7 +94,7 @@ body {
 }
 
 .kpi-card.highlighted {
-    background: #f0fdf4;
+    background: #f0fdf4; /* Verde muy suave */
     border-color: #bbf7d0;
 }
 
@@ -130,7 +130,7 @@ body {
     color: var(--text-dark);
 }
 
-
+/* --- CONTENIDO PRINCIPAL --- */
 .main-content {
     animation: fadeIn 0.5s ease-out;
 }
@@ -179,7 +179,7 @@ body {
     margin: 0 auto;
 }
 
-
+/* Divisor de Sección */
 .section-divider {
     display: flex;
     align-items: center;
@@ -189,14 +189,14 @@ body {
 .section-divider h3 { font-size: 1.2rem; color: var(--text-dark); white-space: nowrap; }
 .section-divider .line { height: 2px; background: #e2e8f0; width: 100%; border-radius: 2px; }
 
-
+/* Grid de Tarjetas */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 25px;
 }
 
-
+/* Tarjeta de Auspiciante */
 .brand-card {
     background: var(--bg-panel);
     border-radius: var(--radius);
@@ -313,7 +313,7 @@ body {
     font-weight: 600;
 }
 
-
+/* Loading */
 .loading-state {
     grid-column: 1 / -1;
     text-align: center;
@@ -330,7 +330,7 @@ body {
 }
 @keyframes spin { 100% { transform: rotate(360deg); } }
 
-
+/* Responsive */
 @media (max-width: 768px) {
     .top-bar { flex-direction: column; align-items: stretch; }
     .kpi-wrapper { justify-content: space-between; }
