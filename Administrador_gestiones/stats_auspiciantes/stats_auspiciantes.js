@@ -17,7 +17,7 @@ async function cargarEstadisticas() {
     const canjes = await res.json();
     
     if (canjes.length === 0) {
-        gridStats.innerHTML = `<p style="text-align:center; grid-column:1/-1; padding:40px;">No hay canjes registrados aún.</p>`;
+        gridStats.innerHTML = `<p style="text-align:center; grid-column:1/-1; padding:40px; color:#64748b;">No hay canjes registrados aún.</p>`;
         document.getElementById("totalCanjes").innerText = "0";
         document.getElementById("topAuspiciante").innerText = "-";
         return;
@@ -77,8 +77,8 @@ function renderizarGrafico(datos) {
                 label: 'Canjes Realizados',
                 data: top5.map(d => d.totalCanjes),
                 backgroundColor: '#3A6958',
-                borderRadius: 6,
-                barPercentage: 0.6
+                borderRadius: 8,
+                barPercentage: 0.5
             }]
         },
         options: {
@@ -90,11 +90,12 @@ function renderizarGrafico(datos) {
             scales: {
                 y: { 
                     beginAtZero: true, 
-                    grid: { color: '#f1f5f9' },
-                    ticks: { precision: 0 }
+                    grid: { color: '#F1F5F9' },
+                    ticks: { precision: 0, font: {family: 'Poppins'} }
                 },
                 x: { 
-                    grid: { display: false } 
+                    grid: { display: false },
+                    ticks: { font: {family: 'Poppins'} }
                 }
             }
         }
@@ -127,12 +128,12 @@ function renderizarTarjetas(lista) {
         
         card.innerHTML = `
             <div class="card-top">
-                <div class="logo-wrapper">
+                <div class="logo-box">
                     <img src="${imgUrl}" alt="${ausp.nombre}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/747/747543.png'">
                 </div>
-                <div class="brand-details">
+                <div class="brand-info">
                     <h4>${ausp.nombre}</h4>
-                    <span class="rank-badge">Top #${index + 1}</span>
+                    <span class="rank-badge">Ranking #${index + 1}</span>
                 </div>
             </div>
 
@@ -141,7 +142,9 @@ function renderizarTarjetas(lista) {
                     <span>Total Canjes</span>
                     <strong>${ausp.totalCanjes}</strong>
                 </div>
-                <i class="fa-solid ${trophyClass} medal-icon"></i>
+                <div class="stat-icon">
+                    <i class="fa-solid ${trophyClass} medal-icon"></i>
+                </div>
             </div>
 
             <div class="card-footer">
@@ -164,8 +167,7 @@ function descargarPDF() {
     const element = document.getElementById('reporteContent');
     const fecha = new Date().toLocaleDateString();
     
-    const footer = document.querySelector('.pdf-footer');
-    if(footer) footer.style.display = 'block';
+    document.querySelector('.pdf-footer').style.display = 'block';
     document.getElementById('fechaReporte').innerText = fecha;
 
     const opt = {
@@ -177,6 +179,6 @@ function descargarPDF() {
     };
 
     html2pdf().set(opt).from(element).save().then(() => {
-        if(footer) footer.style.display = 'none';
+        document.querySelector('.pdf-footer').style.display = 'none';
     });
 }
