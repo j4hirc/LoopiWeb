@@ -91,11 +91,11 @@ function renderizarGrafico(datos) {
                 y: { 
                     beginAtZero: true, 
                     grid: { color: '#F1F5F9' },
-                    ticks: { precision: 0, font: {family: 'Poppins'} }
+                    ticks: { precision: 0, font: {family: 'Outfit'} }
                 },
                 x: { 
                     grid: { display: false },
-                    ticks: { font: {family: 'Poppins'} }
+                    ticks: { font: {family: 'Outfit'} }
                 }
             }
         }
@@ -163,22 +163,67 @@ function renderizarTarjetas(lista) {
     });
 }
 
+// --- FUNCIÓN DE DESCARGA PDF MEJORADA ---
 function descargarPDF() {
-    const element = document.getElementById('reporteContent');
-    const fecha = new Date().toLocaleDateString();
+    const btn = document.querySelector('.btn-export');
+    const originalText = btn.innerHTML;
     
-    document.querySelector('.pdf-footer').style.display = 'block';
-    document.getElementById('fechaReporte').innerText = fecha;
+    // 1. Feedback visual de carga
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Generando...';
+
+    const element = document.getElementById('reporteContent');
+    const hoy = new Date();
+    
+    // Formato de fecha legible para el footer
+    const fechaTexto = hoy.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    // Formato de fecha para el archivo
+    const fechaArchivo = hoy.toISOString().slice(0,10); 
+    
+    // Mostrar footer temporalmente
+    const footer = document.querySelector('.pdf-footer');
+    if(footer) footer.style.display = 'block';
+    document.getElementById('fechaReporte').innerText = fechaTexto;
 
     const opt = {
-        margin:       [0.5, 0.5, 0.5, 0.5],
-        filename:     `Reporte_Auspiciantes_${fecha.replace(/\//g, '-')}.pdf`,
+        margin:       [0.4, 0.4, 0.4, 0.4], // Margen equilibrado
+        filename:     `Reporte_Auspiciantes_${fechaArchivo}.pdf`,
         image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true },
-        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+        html2canvas:  { 
+            scale: 2,             // Mejor resolución
+            useCORS: true,        // IMPORTANTE: Para que salgan las imágenes externas
+            letterRendering: true,
+            scrollY: 0            // Asegura imprimir desde arriba
+        },
+        jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' },
+        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] } // Evita que se corten las tarjetas
     };
 
-    html2pdf().set(opt).from(element).save().then(() => {
-        document.querySelector('.pdf-footer').style.display = 'none';
-    });
+    html2pdf().set(opt).from(element).save()
+        .then(() => {
+            // Restaurar botón y ocultar footer
+            if(footer) footer.style.display = 'none';
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            
+            // Alerta bonita
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
+            Toast.fire({
+                icon: 'success',
+                title: 'Reporte descargado correctamente'
+            });
+        })
+        .catch(err => {
+            console.error('Error PDF:', err);
+            if(footer) footer.style.display = 'none';
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            Swal.fire('Error', 'No se pudo generar el PDF.', 'error');
+        });
 }
