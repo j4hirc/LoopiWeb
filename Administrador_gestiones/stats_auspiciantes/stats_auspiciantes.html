@@ -5,62 +5,73 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Estadísticas de Auspiciantes | Loopi</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <link rel="stylesheet" href="stats_auspiciantes.css">
-
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
 
-    <div class="bg-decoration"></div>
-
-    <header class="header">
-        <div class="header-content">
-            <div class="header-left">
-                <a href="../menu-gestiones.html" class="btn-volver">
-                    <i class="fa-solid fa-arrow-left"></i> <span>Volver</span>
+    <div class="app-container">
+        
+        <header class="top-bar">
+            <div class="brand">
+                <a href="../menu-gestiones.html" class="btn-back">
+                    <i class="fa-solid fa-arrow-left"></i>
                 </a>
-                <div class="titulo-seccion">
-                    <h1><i class="fa-solid fa-chart-line"></i> Métricas de Auspiciantes</h1>
-                    <p>Análisis de rendimiento y canjes por marca</p>
+                <div class="brand-text">
+                    <h1>Métricas de Auspiciantes</h1>
+                    <p>Rendimiento de marcas y canjes</p>
                 </div>
             </div>
             
-            <div class="header-stats">
-                <div class="mini-stat">
-                    <span id="totalCanjes">0</span>
-                    <small>Canjes Totales</small>
+            <div class="kpi-wrapper">
+                <div class="kpi-card">
+                    <div class="kpi-icon"><i class="fa-solid fa-ticket"></i></div>
+                    <div class="kpi-info">
+                        <small>Total Canjes</small>
+                        <span id="totalCanjes">0</span>
+                    </div>
                 </div>
-                <div class="mini-stat">
-                    <span id="topAuspiciante">...</span>
-                    <small>Marca Top</small>
+                <div class="kpi-card highlighted">
+                    <div class="kpi-icon"><i class="fa-solid fa-crown"></i></div>
+                    <div class="kpi-info">
+                        <small>Marca Líder</small>
+                        <span id="topAuspiciante">...</span>
+                    </div>
                 </div>
             </div>
-        </div>
-    </header>
+        </header>
 
-    <div class="main-container">
-        
-        <section class="chart-section">
-            <div class="chart-header">
-                <h3>Participación de Mercado</h3>
-                <p>Porcentaje de canjes por auspiciante</p>
-            </div>
-            <div class="canvas-container">
-                <canvas id="chartAuspiciantes"></canvas>
-            </div>
-        </section>
+        <main class="main-content">
+            
+            <section class="chart-panel">
+                <div class="panel-header">
+                    <h3><i class="fa-solid fa-chart-pie"></i> Participación de Mercado</h3>
+                    <div class="panel-actions">
+                        <span class="tag">Top 5</span>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="chartAuspiciantes"></canvas>
+                </div>
+            </section>
 
-        <h3 class="section-title">Detalle por Marca y Recompensas</h3>
-        <section id="gridStats" class="grid-container">
-            <div class="loader-container">
-                <div class="spinner"></div>
-                <p>Calculando estadísticas...</p>
+            <div class="section-divider">
+                <h3>Desglose por Marca</h3>
+                <div class="line"></div>
             </div>
-        </section>
 
+            <section id="gridStats" class="stats-grid">
+                <div class="loading-state">
+                    <div class="loader"></div>
+                    <p>Analizando datos...</p>
+                </div>
+            </section>
+
+        </main>
     </div>
 
     <script src="stats_auspiciantes.js"></script>
