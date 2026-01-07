@@ -1,7 +1,7 @@
 const API_BASE = 'https://api-loopi.onrender.com/api';
 const gridStats = document.getElementById('gridStats');
 
-// Variables globales para mantener los datos originales y filtrados
+// Variables globales
 let canjesRaw = [];
 let chartInstance = null;
 
@@ -38,7 +38,7 @@ function aplicarFiltros() {
         // Validar integridad
         if (!c.recompensa || !c.recompensa.auspiciante) return false;
 
-        // Filtro Fecha (Usamos fecha_generado o fecha_usado, prefiero fecha_generado para stats generales)
+        // Filtro Fecha (Usamos fecha_generado)
         const fechaItem = new Date(c.fecha_generado || c.fecha_usado);
         fechaItem.setHours(0,0,0,0);
 
@@ -260,6 +260,7 @@ function descargarPDF() {
 
     html2pdf().set(opt).from(element).save()
         .then(() => {
+            // Restaurar estado
             document.querySelector('.pdf-footer').style.display = 'none';
             document.querySelector('.pdf-header-only').style.display = 'none';
             btn.innerHTML = originalText;
