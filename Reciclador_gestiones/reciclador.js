@@ -537,7 +537,7 @@ function cerrarModalEstadisticas() {
 
 
 
-sync function abrirModalMiPunto() {
+async function abrirModalMiPunto() {
     Swal.fire({ title: "Cargando información...", didOpen: () => Swal.showLoading() });
 
     try {
