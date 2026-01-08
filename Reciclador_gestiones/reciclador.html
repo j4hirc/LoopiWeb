@@ -55,14 +55,6 @@
         <h2 class="section-title">Accesos rápidos</h2>
 
         <div class="grid-cards">
-            <div class="card card-orange" onclick="abrirModalMiPunto()">
-                <div class="card-icon"><i class="fa-solid fa-map-location-dot"></i></div>
-                <div class="card-info">
-                    <h3>Mi Punto</h3>
-                    <p>Gestionar ubicación y horarios</p>
-                </div>
-            </div>
-
             <div class="card card-teal" onclick="location.href='mis_entregas/mis_entregas.html'"
                 style="position: relative;">
                 <span class="badge-notificacion" id="badgeEntregas">0</span>
@@ -116,87 +108,89 @@
         </div>
     </section>
 
-    <div class="modal-overlay-perfil" id="modalMiPunto">
-        <div class="modal-container-perfil" style="max-width: 650px;">
+    <div class="modal-overlay-perfil" id="modalPerfil">
+        <div class="modal-container-perfil">
             <div class="modal-header-perfil">
-                <span class="modal-title-perfil"><i class="fa-solid fa-shop"></i> Gestionar Mi Punto</span>
-                <button class="modal-close-perfil" onclick="cerrarModalMiPunto()">✕</button>
+                <span class="modal-title-perfil">Mi Perfil</span>
+                <button class="modal-close-perfil" onclick="cerrarModalPerfil()">✕</button>
             </div>
-            
             <div class="modal-body-perfil">
-                <input type="hidden" id="idPunto">
-                
-                <div class="profile-img-container" style="width: 100%; height: 150px; border-radius: 12px; margin-bottom: 10px;">
-                    <img id="previewPunto" src="https://via.placeholder.com/400x150?text=Foto+del+Punto" 
-                         style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;">
+                <div class="profile-img-container">
+                    <img id="perfilPreview" src="https://via.placeholder.com/100" class="profile-img-preview">
                 </div>
-                <div style="text-align:center; margin-bottom: 20px;">
-                    <label for="inputFotoPunto" class="perfil-link-foto"><i class="fa-solid fa-camera"></i> Subir Foto</label>
-                    <input type="file" id="inputFotoPunto" accept="image/*" style="display: none;">
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <label for="inputPerfilFoto" class="perfil-link-foto">Cambiar Foto</label>
+                    <input type="file" id="inputPerfilFoto" accept="image/*" style="display: none;">
+                    <input type="hidden" id="perfilFotoBase64">
                 </div>
-
                 <div class="perfil-grid">
-                    <div class="perfil-col">
-                        <label class="perfil-label">Nombre del Punto <span style="color:red">*</span></label>
-                        <input type="text" id="nombrePunto" class="perfil-input" placeholder="Ej: Recicladora El Sol">
-                    </div>
-                    
                     <div class="perfil-row">
                         <div class="perfil-col">
-                            <label class="perfil-label">Parroquia <span style="color:red">*</span></label>
-                            <select id="parroquiaPunto" class="perfil-input">
-                                <option value="">Cargando...</option>
-                            </select>
+                            <label class="perfil-label">Primer Nombre</label>
+                            <input id="perfilPrimerNombre" class="perfil-input">
                         </div>
                         <div class="perfil-col">
-                            <label class="perfil-label">Dirección <span style="color:red">*</span></label>
-                            <input type="text" id="direccionPunto" class="perfil-input" placeholder="Calle principal y secundaria">
+                            <label class="perfil-label">Segundo Nombre</label>
+                            <input id="perfilSegundoNombre" class="perfil-input">
                         </div>
                     </div>
-
-                    <div class="perfil-col">
-                        <label class="perfil-label">Materiales que aceptas <span style="color:red">*</span></label>
-                        <div id="containerMaterialesCheck" class="materiales-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; padding: 10px; background: #f8f9fa; border-radius: 8px; border: 1px solid #ddd;">
-                            <small>Cargando...</small>
+                    <div class="perfil-row">
+                        <div class="perfil-col">
+                            <label class="perfil-label">Apellido Paterno</label>
+                            <input id="perfilApellidoPaterno" class="perfil-input">
+                        </div>
+                        <div class="perfil-col">
+                            <label class="perfil-label">Apellido Materno</label>
+                            <input id="perfilApellidoMaterno" class="perfil-input">
                         </div>
                     </div>
-
                     <div class="perfil-col">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                            <label class="perfil-label">Horarios de Atención <span style="color:red">*</span></label>
-                            <button class="btn-small-add" onclick="agregarFilaHorario()" style="background: #e8f5e9; color: #2ecc71; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">
-                                + Agregar Día
-                            </button>
-                        </div>
-                        <div id="containerHorarios" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                        <label class="perfil-label">Correo</label>
+                        <input id="perfilCorreo" type="email" class="perfil-input">
                     </div>
-
                     <div class="perfil-col">
-                        <label class="perfil-label">Ubicación Exacta <span style="color:red">*</span></label>
-                        <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 5px; background: #e0f2f1; padding: 8px; border-radius: 6px;">
-                            <small style="color: #00695c; font-family: monospace;">
-                                Lat: <span id="txtLatPunto">0.0</span>, Lng: <span id="txtLngPunto">0.0</span>
-                            </small>
-                            <button onclick="obtenerUbicacionActualGPS()" style="margin-left: auto; background: white; border: 1px solid #009688; color: #009688; border-radius: 4px; cursor: pointer; padding: 2px 6px;">
-                                <i class="fa-solid fa-crosshairs"></i> Mi GPS
-                            </button>
-                        </div>
-                        <div id="mapaEdicion" style="width: 100%; height: 250px; border-radius: 8px; border: 1px solid #ddd;"></div>
-                        <small style="color: #666;">* Arrastra el marcador en el mapa para ajustar.</small>
+                        <label class="perfil-label">Nueva Contraseña <small>(opcional)</small></label>
+                        <input id="perfilPassword" type="password" class="perfil-input" placeholder="******">
                     </div>
                 </div>
             </div>
-            
             <div class="modal-footer-perfil">
-                <button class="btn-cancelar-perfil" onclick="cerrarModalMiPunto()">Cancelar</button>
-                <button class="btn-guardar-perfil" id="btnGuardarPunto" onclick="guardarMiPunto()">Guardar Cambios</button>
+                <button class="btn-cancelar-perfil" onclick="cerrarModalPerfil()">Cancelar</button>
+                <button class="btn-guardar-perfil" onclick="guardarPerfil()">Guardar Cambios</button>
             </div>
         </div>
     </div>
 
-    <div class="modal-overlay-perfil" id="modalPerfil"></div> 
-    <div class="modal-overlay-perfil" id="modalEstadisticas"></div>
+    <div class="modal-overlay-perfil" id="modalEstadisticas" style="display: none;">
+        <div class="modal-container-perfil" style="max-width: 90%; width: 600px;">
+            <div class="modal-header-perfil">
+                <span class="modal-title-perfil"><i class="fa-solid fa-chart-line"></i> Mi Impacto</span>
+                <button class="modal-close-perfil" onclick="cerrarModalEstadisticas()">✕</button>
+            </div>
+
+            <div class="modal-body-perfil" style="padding: 20px;">
+                <div style="display: flex; gap: 15px; margin-bottom: 20px; overflow-x: auto;">
+                    <div class="stat-box"
+                        style="flex:1; background:#e8f5e9; padding:15px; border-radius:10px; text-align:center;">
+                        <h3 id="statKilos" style="color:#2ecc71; font-size:1.8rem; margin:0;">0.0</h3>
+                        <small style="color:#555;">Kilos Totales</small>
+                    </div>
+                    <div class="stat-box"
+                        style="flex:1; background:#e3f2fd; padding:15px; border-radius:10px; text-align:center;">
+                        <h3 id="statEntregas" style="color:#3498db; font-size:1.8rem; margin:0;">0</h3>
+                        <small style="color:#555;">Entregas Hechas</small>
+                    </div>
+                </div>
+
+                <h4 style="margin-bottom: 10px; color: #333;">Materiales Recolectados</h4>
+                <div style="position: relative; height: 300px; width: 100%;">
+                    <canvas id="chartMisMateriales"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="reciclador.js"></script>
 </body>
+
 </html>
