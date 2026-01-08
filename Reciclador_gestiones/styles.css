@@ -643,3 +643,51 @@ body {
     border: 1px solid #ddd;
     text-align: center;
 }
+
+/* --- FIX CRÍTICO: ALERTAS SOBRE MODAL --- */
+div:where(.swal2-container) {
+    z-index: 20000 !important;
+}
+
+/* Estilos de las tarjetas */
+.card-orange .card-icon {
+    background: #FFF3E0;
+    color: #FF9800;
+}
+.card-orange:hover {
+    border-color: #FF9800;
+}
+
+.perfil-link-foto {
+    color: #3A6958;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.input-hora-ini, .input-hora-fin {
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    text-align: center;
+}
+
+/* Modal Perfil (Ajustes para que funcione con los nuevos estilos) */
+.modal-overlay-perfil {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5); display: none; 
+    justify-content: center; align-items: center; z-index: 10000;
+}
+.modal-container-perfil {
+    background: white; width: 90%; max-height: 90vh;
+    border-radius: 20px; display: flex; flex-direction: column; overflow: hidden;
+}
+.modal-body-perfil { padding: 20px; overflow-y: auto; }
+.modal-header-perfil { padding: 15px 20px; background: #3A6958; color: white; display: flex; justify-content: space-between; align-items: center; }
+.modal-footer-perfil { padding: 15px 20px; background: #f9f9f9; display: flex; justify-content: flex-end; gap: 10px; }
+.btn-guardar-perfil { background: #3A6958; color: white; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; }
+.btn-cancelar-perfil { background: #ddd; color: #333; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; }
+.perfil-input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; margin-top: 5px; }
+.perfil-col { margin-bottom: 15px; }
+.perfil-row { display: flex; gap: 15px; }
+@media(max-width:600px) { .perfil-row { flex-direction: column; } }

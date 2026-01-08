@@ -137,25 +137,25 @@
 
                 <div class="perfil-grid">
                     <div class="perfil-col">
-                        <label class="perfil-label">Nombre del Punto</label>
+                        <label class="perfil-label">Nombre del Punto <span style="color:red">*</span></label>
                         <input type="text" id="nombrePunto" class="perfil-input" placeholder="Ej: Recicladora El Sol">
                     </div>
                     
                     <div class="perfil-row">
                         <div class="perfil-col">
-                            <label class="perfil-label">Parroquia</label>
+                            <label class="perfil-label">Parroquia <span style="color:red">*</span></label>
                             <select id="parroquiaPunto" class="perfil-input">
                                 <option value="">Cargando...</option>
                             </select>
                         </div>
                         <div class="perfil-col">
-                            <label class="perfil-label">Dirección</label>
+                            <label class="perfil-label">Dirección <span style="color:red">*</span></label>
                             <input type="text" id="direccionPunto" class="perfil-input" placeholder="Calle principal y secundaria">
                         </div>
                     </div>
 
                     <div class="perfil-col">
-                        <label class="perfil-label">Materiales que aceptas</label>
+                        <label class="perfil-label">Materiales que aceptas <span style="color:red">*</span></label>
                         <div id="containerMaterialesCheck" class="materiales-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; padding: 10px; background: #f8f9fa; border-radius: 8px; border: 1px solid #ddd;">
                             <small>Cargando...</small>
                         </div>
@@ -163,7 +163,7 @@
 
                     <div class="perfil-col">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                            <label class="perfil-label">Horarios de Atención</label>
+                            <label class="perfil-label">Horarios de Atención <span style="color:red">*</span></label>
                             <button class="btn-small-add" onclick="agregarFilaHorario()" style="background: #e8f5e9; color: #2ecc71; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">
                                 + Agregar Día
                             </button>
@@ -172,7 +172,7 @@
                     </div>
 
                     <div class="perfil-col">
-                        <label class="perfil-label">Ubicación Exacta</label>
+                        <label class="perfil-label">Ubicación Exacta <span style="color:red">*</span></label>
                         <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 5px; background: #e0f2f1; padding: 8px; border-radius: 6px;">
                             <small style="color: #00695c; font-family: monospace;">
                                 Lat: <span id="txtLatPunto">0.0</span>, Lng: <span id="txtLngPunto">0.0</span>
@@ -182,7 +182,7 @@
                             </button>
                         </div>
                         <div id="mapaEdicion" style="width: 100%; height: 250px; border-radius: 8px; border: 1px solid #ddd;"></div>
-                        <small style="color: #666;">* Toca en el mapa para ajustar la ubicación.</small>
+                        <small style="color: #666;">* Arrastra el marcador en el mapa para ajustar.</small>
                     </div>
                 </div>
             </div>
@@ -194,8 +194,8 @@
         </div>
     </div>
 
-    <div class="modal-overlay-perfil" id="modalPerfil">...</div> 
-    <div class="modal-overlay-perfil" id="modalEstadisticas">...</div>
+    <div class="modal-overlay-perfil" id="modalPerfil"></div> 
+    <div class="modal-overlay-perfil" id="modalEstadisticas"></div>
 
     <script src="reciclador.js"></script>
 </body>
