@@ -619,3 +619,27 @@ body {
     transform: translateY(-5px);
     box-shadow: 0 8px 15px rgba(155, 89, 182, 0.4);
 }
+
+.card-orange .card-icon {
+    background: #FFF3E0;
+    color: #FF9800;
+}
+.card-orange:hover {
+    border-color: #FF9800;
+}
+
+/* Estilos para el contenedor de foto en el modal */
+.perfil-link-foto {
+    color: #3A6958;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+/* Ajustes para inputs de hora pequeños */
+.input-hora-ini, .input-hora-fin {
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    text-align: center;
+}
