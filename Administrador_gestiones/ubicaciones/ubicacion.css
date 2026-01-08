@@ -27,6 +27,11 @@ body {
     min-height: 100vh;
 }
 
+/* FIX PARA QUE SWEETALERT SALGA ENCIMA DEL MODAL */
+div:where(.swal2-container) {
+    z-index: 9999 !important;
+}
+
 /* DECORACIÓN */
 .bg-decoration {
     position: absolute; top: 0; left: 0; width: 100%; height: var(--header-height);
@@ -186,7 +191,14 @@ label { font-size: 0.8rem; font-weight: 600; color: #555; text-transform: upperc
 .map-controls { position: absolute; top: 10px; right: 10px; z-index: 1000; }
 .btn-gps { background: white; padding: 8px 12px; border-radius: 20px; border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.2); cursor: pointer; }
 
-/* Responsive */
+/* Spinner */
+.loader-container { grid-column: 1/-1; text-align: center; padding: 60px; color: #94a3b8; width: 100%; }
+.spinner {
+    width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top: 4px solid var(--accent);
+    border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 15px;
+}
+@keyframes spin { 100% { transform: rotate(360deg); } }
+
 @media (max-width: 768px) {
     .header-content { flex-direction: column; text-align: center; }
     .header-left { align-items: center; }

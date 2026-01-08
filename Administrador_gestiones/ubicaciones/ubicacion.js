@@ -27,6 +27,7 @@ let fotoNuevaFile = null;
 
 const DIAS_SEMANA = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 
+// ICONOS
 const iconPuntoFijo = L.divIcon({
   className: "custom-icon",
   html: `<div style="background-color:#2ecc71; width:30px; height:30px; border-radius:50%; display:flex; justify-content:center; align-items:center; border:2px solid white; box-shadow:0 3px 5px rgba(0,0,0,0.3);">
@@ -121,7 +122,7 @@ function agregarFilaHorario(data = null, horaIniDefecto = "08:00", horaFinDefect
     // Buscar el primer día disponible
     let diaSugerido = DIAS_SEMANA.find(d => !diasSeleccionados.includes(d));
 
-    // Si es edición (viene data), usamos el día de la data. Si no hay data y no hay días libres, error.
+    // Si no hay más días libres y no estamos editando uno existente
     if (!data && !diaSugerido) {
         Swal.fire("Horario Completo", "Ya has agregado todos los días de la semana.", "info");
         return;
@@ -141,7 +142,10 @@ function agregarFilaHorario(data = null, horaIniDefecto = "08:00", horaFinDefect
     // Construir opciones del select
     let optionsHtml = "";
     DIAS_SEMANA.forEach(dia => {
-        optionsHtml += `<option value="${dia}" ${dia === diaVal ? 'selected' : ''}>${dia}</option>`;
+        // Solo mostrar días no seleccionados O el día actual si estamos editando
+        if (!diasSeleccionados.includes(dia) || dia === diaVal) {
+             optionsHtml += `<option value="${dia}" ${dia === diaVal ? 'selected' : ''}>${dia}</option>`;
+        }
     });
 
     div.innerHTML = `
@@ -219,7 +223,7 @@ window.cargarDatosEdicion = async function (id) {
 
     containerHorarios.innerHTML = ""; 
     if (ubi.horarios && ubi.horarios.length > 0) {
-        // Ordenar los horarios por día de la semana para que se vea bonito
+        // Ordenar los horarios por día de la semana
         const ordenDias = { "Lunes": 1, "Martes": 2, "Miércoles": 3, "Jueves": 4, "Viernes": 5, "Sábado": 6, "Domingo": 7 };
         ubi.horarios.sort((a,b) => ordenDias[a.dia_semana] - ordenDias[b.dia_semana]);
         
@@ -382,6 +386,21 @@ window.guardarUbicacion = async function () {
     const checkboxes = document.querySelectorAll('input[name="materiales"]:checked');
     if (checkboxes.length === 0) return Swal.fire("Materiales", "Selecciona al menos un material aceptado.", "warning");
 
+    // VALIDACIÓN IMPORTANTE: RECICLADOR DUPLICADO
+    // Si se seleccionó un reciclador, verificar si ya tiene otra ubicación asignada
+    if (idReciclador) {
+        // Buscamos si existe OTRA ubicación que tenga este mismo reciclador asignado
+        const recicladorOcupado = ubicacionesCache.find(u => 
+            u.reciclador && 
+            u.reciclador.cedula == idReciclador && 
+            u.id_ubicacion_reciclaje !== id // Ignorar si es la misma ubicación que estamos editando
+        );
+
+        if (recicladorOcupado) {
+            return Swal.fire("Reciclador Ocupado", `El reciclador seleccionado ya está asignado al punto: "${recicladorOcupado.nombre}".`, "error");
+        }
+    }
+
     // Validar Horarios (Duplicados y Lógica)
     const listaHorarios = [];
     const diasVistos = new Set();
@@ -478,6 +497,7 @@ window.guardarUbicacion = async function () {
         console.error(e); 
         Swal.fire("Error", "Fallo de conexión con el servidor.", "error");
     } finally {
+        // Restaurar botón
         btnGuardar.disabled = false;
         btnGuardar.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar';
     }
