@@ -537,7 +537,7 @@ function cerrarModalEstadisticas() {
 
 
 
-async function abrirModalMiPunto() {
+sync function abrirModalMiPunto() {
     Swal.fire({ title: "Cargando información...", didOpen: () => Swal.showLoading() });
 
     try {
@@ -547,7 +547,6 @@ async function abrirModalMiPunto() {
         const res = await fetch(`${API_BASE}/ubicacion_reciclajes`);
         if (res.ok) {
             const todas = await res.json();
-            // Filtramos por cédula del usuario logueado
             miPuntoData = todas.find(u => u.reciclador && u.reciclador.cedula === usuario.cedula);
         }
 
@@ -555,11 +554,6 @@ async function abrirModalMiPunto() {
 
         Swal.close();
         document.getElementById("modalMiPunto").style.display = "flex";
-
-        if (mapEdicion) {
-            mapEdicion.remove();
-            mapEdicion = null;
-        }
 
         setTimeout(() => {
             initMapaEdicion(); 
@@ -571,8 +565,13 @@ async function abrirModalMiPunto() {
     }
 }
 
+
 function cerrarModalMiPunto() {
     document.getElementById("modalMiPunto").style.display = "none";
+    if (mapEdicion) {
+        mapEdicion.remove();
+        mapEdicion = null;
+    }
 }
 
 
@@ -587,6 +586,7 @@ function llenarFormularioPunto() {
         document.getElementById("parroquiaPunto").value = ubi.parroquia.id_parroquia;
     }
 
+  
     let fotoSrc = "https://via.placeholder.com/400x150?text=Sube+una+foto";
     if (ubi && ubi.foto && ubi.foto.length > 5) {
         if (ubi.foto.startsWith("http") || ubi.foto.startsWith("data:")) {
@@ -682,29 +682,46 @@ function agregarFilaHorario(data = null, iniDef="08:00", finDef="17:00") {
 function initMapaEdicion() {
     let lat = -2.9001, lng = -79.0059;
     
+    // Si ya tiene datos, usarlos
     if (miPuntoData && miPuntoData.latitud) {
         lat = miPuntoData.latitud;
         lng = miPuntoData.longitud;
+    } else {
+        // Si no, intentar usar la ubicación actual del usuario como punto de partida
+        if(ubicacionActual) {
+            lat = ubicacionActual.lat;
+            lng = ubicacionActual.lng;
+        }
     }
 
-    mapEdicion = L.map('mapaEdicion').setView([lat, lng], 15);
-    
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
-        attribution: '© OpenStreetMap' 
-    }).addTo(mapEdicion);
-    
-    mapEdicion.on('click', function(e) {
-        colocarMarcadorEdicion(e.latlng.lat, e.latlng.lng);
-    });
+    if (!mapEdicion) {
+        mapEdicion = L.map('mapaEdicion').setView([lat, lng], 15);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
+            attribution: '© OpenStreetMap' 
+        }).addTo(mapEdicion);
+        
+        mapEdicion.on('click', function(e) {
+            colocarMarcadorEdicion(e.latlng.lat, e.latlng.lng);
+        });
+    } else {
+        mapEdicion.invalidateSize();
+        mapEdicion.setView([lat, lng], 15);
+    }
     
     colocarMarcadorEdicion(lat, lng);
     
-    setTimeout(() => { mapEdicion.invalidateSize(); }, 100);
+    setTimeout(() => { 
+        if(mapEdicion) mapEdicion.invalidateSize(); 
+    }, 100);
 }
 
 function colocarMarcadorEdicion(lat, lng) {
     if (markerEdicion) mapEdicion.removeLayer(markerEdicion);
     markerEdicion = L.marker([lat, lng], { draggable: true }).addTo(mapEdicion);
+    
+    mapEdicion.panTo([lat, lng]);
+    
     actualizarCoordsTexto(lat, lng);
 
     markerEdicion.on('dragend', function(event) {
