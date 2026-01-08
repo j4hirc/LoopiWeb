@@ -547,29 +547,23 @@ async function abrirModalMiPunto() {
         const res = await fetch(`${API_BASE}/ubicacion_reciclajes`);
         if (res.ok) {
             const todas = await res.json();
+            // Filtramos por cédula del usuario logueado
             miPuntoData = todas.find(u => u.reciclador && u.reciclador.cedula === usuario.cedula);
         }
 
         llenarFormularioPunto();
 
         Swal.close();
-        
-        const modal = document.getElementById("modalMiPunto");
-        modal.style.display = "flex";
+        document.getElementById("modalMiPunto").style.display = "flex";
+
+        if (mapEdicion) {
+            mapEdicion.remove();
+            mapEdicion = null;
+        }
 
         setTimeout(() => {
             initMapaEdicion(); 
-            if(mapEdicion) {
-                mapEdicion.invalidateSize(); 
-                
-                let lat = -2.9001, lng = -79.0059;
-                if (miPuntoData && miPuntoData.latitud) {
-                    lat = miPuntoData.latitud;
-                    lng = miPuntoData.longitud;
-                }
-                mapEdicion.setView([lat, lng], 16);
-            }
-        }, 200);
+        }, 300); 
 
     } catch (e) {
         console.error(e);
@@ -624,13 +618,13 @@ function llenarFormularioPunto() {
         
         ubi.horarios.forEach(h => agregarFilaHorario(h));
     } else {
-        agregarFilaHorario(null, "08:00", "17:00"); // Uno por defecto
+        agregarFilaHorario(null, "08:00", "17:00");
     }
 
     if (ubi) {
         actualizarCoordsTexto(ubi.latitud, ubi.longitud);
     } else {
-        actualizarCoordsTexto(-2.9001, -79.0059); // Default Cuenca
+        actualizarCoordsTexto(-2.9001, -79.0059); 
     }
 }
 
@@ -687,24 +681,25 @@ function agregarFilaHorario(data = null, iniDef="08:00", finDef="17:00") {
 
 function initMapaEdicion() {
     let lat = -2.9001, lng = -79.0059;
+    
     if (miPuntoData && miPuntoData.latitud) {
         lat = miPuntoData.latitud;
         lng = miPuntoData.longitud;
     }
 
-    if (!mapEdicion) {
-        mapEdicion = L.map('mapaEdicion').setView([lat, lng], 15);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(mapEdicion);
-        
-        mapEdicion.on('click', function(e) {
-            colocarMarcadorEdicion(e.latlng.lat, e.latlng.lng);
-        });
-    } else {
-        mapEdicion.invalidateSize(); 
-        mapEdicion.setView([lat, lng], 15);
-    }
+    mapEdicion = L.map('mapaEdicion').setView([lat, lng], 15);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
+        attribution: '© OpenStreetMap' 
+    }).addTo(mapEdicion);
+    
+    mapEdicion.on('click', function(e) {
+        colocarMarcadorEdicion(e.latlng.lat, e.latlng.lng);
+    });
     
     colocarMarcadorEdicion(lat, lng);
+    
+    setTimeout(() => { mapEdicion.invalidateSize(); }, 100);
 }
 
 function colocarMarcadorEdicion(lat, lng) {
