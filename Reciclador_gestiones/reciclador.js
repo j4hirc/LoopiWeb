@@ -553,9 +553,23 @@ async function abrirModalMiPunto() {
         llenarFormularioPunto();
 
         Swal.close();
-        document.getElementById("modalMiPunto").style.display = "flex";
+        
+        const modal = document.getElementById("modalMiPunto");
+        modal.style.display = "flex";
 
-        setTimeout(() => initMapaEdicion(), 300);
+        setTimeout(() => {
+            initMapaEdicion(); 
+            if(mapEdicion) {
+                mapEdicion.invalidateSize(); 
+                
+                let lat = -2.9001, lng = -79.0059;
+                if (miPuntoData && miPuntoData.latitud) {
+                    lat = miPuntoData.latitud;
+                    lng = miPuntoData.longitud;
+                }
+                mapEdicion.setView([lat, lng], 16);
+            }
+        }, 200);
 
     } catch (e) {
         console.error(e);
@@ -686,7 +700,7 @@ function initMapaEdicion() {
             colocarMarcadorEdicion(e.latlng.lat, e.latlng.lng);
         });
     } else {
-        mapEdicion.invalidateSize();
+        mapEdicion.invalidateSize(); 
         mapEdicion.setView([lat, lng], 15);
     }
     
