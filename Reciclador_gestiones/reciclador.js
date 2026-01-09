@@ -747,6 +747,15 @@ async function renderizarMaterialesEdicion() {
     }
 }
 
+function normalizarDia(texto) {
+    if (!texto) return "";
+    return texto.toString()
+        .toUpperCase()                     
+        .normalize("NFD")                  
+        .replace(/[\u0300-\u036f]/g, "")    
+        .trim();  
+}                          
+
 function renderizarHorariosEdicion() {
     const lista = document.getElementById("listaHorarios");
     lista.innerHTML = "";
