@@ -1076,9 +1076,12 @@ window.toggleChat = function() {
         chat.style.display = "flex";
         setTimeout(() => document.getElementById("chatInput").focus(), 100);
         
-        const body = document.getElementById("chatBody");
         if (historialChat.length === 0) {
-            const saludo = `¡Qué más ñaño/a ${usuarioLogueado.primer_nombre}! 🎒 Soy Ellie Loopi. Veo que tienes **${usuarioLogueado.puntos_actuales} puntos**. Vamos a reciclar antes de que se acabe el mundo. ¿En qué te acolito?`;
+            const chatBody = document.getElementById("chatBody");
+            
+            chatBody.innerHTML = ""; 
+
+            const saludo = `¡Qué más ñaño/a ${usuarioLogueado.primer_nombre}! 🎒 Soy **Ellie Loopi**. Estoy aquí para ayudarte a reciclar. ¿Tienes dudas sobre materiales o puntos?`;
             
             agregarMensaje(saludo, "bot");
             historialChat.push({ role: "assistant", content: saludo });
