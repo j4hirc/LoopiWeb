@@ -10,6 +10,8 @@ const CUENCA_BOUNDS = L.latLngBounds(
     [-2.8, -78.85] 
 );
 
+const DIAS_SEMANA = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+
 document.addEventListener("DOMContentLoaded", async () => {
     const usuarioStr = localStorage.getItem("usuario");
     if (!usuarioStr) {
@@ -244,6 +246,18 @@ async function cargarMateriales() {
 }
 
 function agregarFilaHorario(horaInicioDefecto = "", horaFinDefecto = "") {
+    const lista = document.getElementById("containerHorarios");
+    
+    const selectsExistentes = lista.querySelectorAll(".dia-select");
+    const diasUsados = Array.from(selectsExistentes).map(s => s.value);
+
+    const diaSugerido = DIAS_SEMANA.find(d => !diasUsados.includes(d));
+
+    if (!diaSugerido && selectsExistentes.length > 0) {
+        Swal.fire("Semana Completa", "Ya has cubierto los 7 días de la semana.", "info");
+        return; 
+    }
+
     if (!horaInicioDefecto || !horaFinDefecto) {
         const filas = document.querySelectorAll(".horario-row");
         if (filas.length > 0) {
@@ -252,23 +266,45 @@ function agregarFilaHorario(horaInicioDefecto = "", horaFinDefecto = "") {
             const [h, m] = horaInicioDefecto.split(':').map(Number);
             const finH = (h + 2) % 24;
             horaFinDefecto = `${finH.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+        } else {
+             horaInicioDefecto = "08:00";
+             horaFinDefecto = "10:00";
         }
     }
+
+    let optionsHTML = "";
+    DIAS_SEMANA.forEach(d => {
+        const selected = (d === diaSugerido) ? "selected" : "";
+        optionsHTML += `<option value="${d}" ${selected}>${d}</option>`;
+    });
 
     const div = document.createElement("div");
     div.className = "horario-row";
     div.innerHTML = `
-        <select class="input-field dia-select">
-            <option value="Lunes">Lunes</option><option value="Martes">Martes</option><option value="Miércoles">Miércoles</option>
-            <option value="Jueves">Jueves</option><option value="Viernes">Viernes</option><option value="Sábado">Sábado</option><option value="Domingo">Domingo</option>
-        </select>
+        <select class="input-field dia-select">${optionsHTML}</select>
         <input type="time" class="input-field hora-inicio" value="${horaInicioDefecto}">
         <input type="time" class="input-field hora-fin" value="${horaFinDefecto}">
         <i class="fa-solid fa-circle-xmark btn-remove" onclick="this.parentElement.remove()"></i>
     `;
     
+    const selectDia = div.querySelector(".dia-select");
     const inpInicio = div.querySelector(".hora-inicio");
     const inpFin = div.querySelector(".hora-fin");
+
+    selectDia.addEventListener("change", function() {
+        const nuevoDia = this.value;
+        const otrosSelects = document.querySelectorAll(".dia-select");
+        let repetido = false;
+        
+        otrosSelects.forEach(s => {
+            if (s !== this && s.value === nuevoDia) repetido = true;
+        });
+
+        if (repetido) {
+            Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: `El ${nuevoDia} ya está en la lista`, timer: 2000, showConfirmButton: false });
+            this.value = ""; // Resetear selección
+        }
+    });
 
     inpInicio.addEventListener("change", function() {
         if (this.value) {
@@ -286,7 +322,7 @@ function agregarFilaHorario(horaInicioDefecto = "", horaFinDefecto = "") {
         validarDiferenciaHoras(inpInicio, inpFin);
     });
 
-    document.getElementById("containerHorarios").appendChild(div);
+    lista.appendChild(div);
 }
 
 
