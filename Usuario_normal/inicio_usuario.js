@@ -1143,11 +1143,11 @@ async function consultarGroq() {
     DATOS USUARIO: ${usuarioLogueado.primer_nombre} (${puntosUsuario} pts).
     
     ${infoPuntosReciclaje}
-    
     ${infoMateriales}
-    
     ${infoRecompensas}
-    
+    ${infoLogros}
+    ${infoRangos}
+
     INSTRUCCIONES DE RAZONAMIENTO:
     1. BÚSQUEDA DE LUGARES: 
        - Si el usuario dice "Tengo botellas de vidrio", revisa la lista de [INFORMACIÓN DE PUNTOS] y recomienda SOLO los lugares que digan "Vidrio" en su lista de "ACEPTA".
