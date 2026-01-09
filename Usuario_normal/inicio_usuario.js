@@ -1057,10 +1057,8 @@ async function enviarMensaje() {
     const loadingId = agregarMensaje("Pensando... 🤔", "bot", true);
 
     try {
-        // 3. Petición a Gemini (Google AI)
         const respuestaIA = await consultarGemini(texto);
         
-        // 4. Mostrar respuesta
         eliminarMensaje(loadingId);
         agregarMensaje(respuestaIA, "bot");
 
@@ -1075,10 +1073,8 @@ async function enviarMensaje() {
     }
 }
 
-// --- CONEXIÓN CON IA ---
 async function consultarGemini(preguntaUsuario) {
-    // Si no hay API KEY, respuesta simulada (para que pruebes sin configurar)
-    if(GEMINI_API_KEY === "TU_API_KEY_AQUI") {
+    if(GEMINI_API_KEY === "AIzaSyD_9XJiD_fKVgNUMKuYfVN4NIbTCc2dQdI") {
         return "⚠️ Ñaño, falta configurar la API KEY en el código (inicio_usuario.js). Pero sí te entiendo: " + preguntaUsuario;
     }
 
@@ -1105,7 +1101,6 @@ async function consultarGemini(preguntaUsuario) {
     }
 }
 
-// --- UTILIDADES CHAT ---
 function agregarMensaje(texto, tipo, esLoading = false) {
     const chatBody = document.getElementById("chatBody");
     const div = document.createElement("div");
@@ -1118,7 +1113,6 @@ function agregarMensaje(texto, tipo, esLoading = false) {
         div.style.opacity = "0.7";
     }
 
-    // Convertir saltos de línea a <br>
     const textoFormateado = texto.replace(/\n/g, "<br>");
     const hora = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
