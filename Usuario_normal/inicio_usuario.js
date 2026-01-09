@@ -1012,7 +1012,7 @@ async function prepararDatosCompletosIA() {
         if(resMat.ok) {
             const mats = await resMat.json();
             infoMateriales = mats.map(m => 
-                `- ${m.nombre}: Ganas ${m.puntos_por_kg} puntos por cada Kg. (${m.descripcion || ''})`
+                `- ${m.nombre}: Ganas ${m.puntos_por_kg} puntos/kg. (${m.descripcion || ''})`
             ).join('\n');
         }
 
@@ -1031,7 +1031,29 @@ async function prepararDatosCompletosIA() {
         const resUbi = await fetch(`${API_BASE}/ubicacion_reciclajes`);
         if(resUbi.ok) {
             const ubis = await resUbi.json();
-            infoPuntosReciclaje = ubis.slice(0, 10).map(u => `- ${u.nombre} en ${u.direccion}`).join('\n');
+            
+            infoPuntosReciclaje = ubis.map(u => {
+                
+                let listaMateriales = "Todos los materiales";
+                if (u.materialesAceptados && u.materialesAceptados.length > 0) {
+                    const nombres = u.materialesAceptados
+                        .filter(um => um.material) // Validar que no sea null
+                        .map(um => um.material.nombre);
+                    listaMateriales = nombres.join(", ");
+                }
+
+                let listaHorarios = "Horario no especificado";
+                if (u.horarios && u.horarios.length > 0) {
+                    listaHorarios = u.horarios.map(h => 
+                        `${h.dia} (${h.hora_inicio || '00:00'} - ${h.hora_fin || '00:00'})`
+                    ).join(", ");
+                }
+
+                return `- LUGAR: "${u.nombre}" 
+                   DIRECCIÓN: ${u.direccion}
+                   ACEPTA: [${listaMateriales}]
+                   HORARIO: ${listaHorarios}`;
+            }).join('\n\n'); // Doble salto de línea para separar bien cada lugar
         }
 
         const resLog = await fetch(`${API_BASE}/logros`);
@@ -1109,43 +1131,38 @@ async function consultarGroq() {
     const SYSTEM_PROMPT = `
     ERES LOOPIBOT: El asistente virtual experto de la app "Loopi" en Cuenca, Ecuador.
     
-    TU OBJETIVO: Ayudar al usuario a calcular cuántos PUNTOS ganará reciclando y motivarlo a canjear premios.
+    TU OBJETIVO: Ayudar al usuario a reciclar, encontrar lugares ESPECÍFICOS para sus residuos y canjear premios.
     
-    IMPORTANTE: En esta app NO SE PAGA DINERO, solo se ganan PUNTOS para canjear premios. Nunca hables de dólares o precios.
+    IMPORTANTE: NO DINERO. Solo PUNTOS.
     
     TU PERSONALIDAD:
-    - Eres cuencano: Usas palabras como "ñaño", "chévere", "de una", "acolitar", "chuta".
-    - Eres motivador: Si tienen pocos puntos, anímalos a reciclar más.
+    - Eres cuencano (usa "ñaño", "chévere", "de una").
+    - Eres muy útil: Si preguntan por un material, busca qué lugar lo acepta.
     
-    DATOS DEL USUARIO:
-    - Nombre: ${usuarioLogueado.primer_nombre}
-    - Puntos actuales: ${puntosUsuario}
+    DATOS USUARIO: ${usuarioLogueado.primer_nombre} (${puntosUsuario} pts).
     
-    TABLA DE CONVERSIÓN (Material -> Puntos):
+    ${infoPuntosReciclaje}
+    
     ${infoMateriales}
     
-    CATÁLOGO DE PREMIOS (Costo en Puntos):
     ${infoRecompensas}
     
     INSTRUCCIONES DE RAZONAMIENTO:
-    1. SI PREGUNTAN "CUANTO GANO": 
-       - Calcula los PUNTOS multiplicando: (Kilos reportados) x (Puntos por Kg del material).
-       - Ejemplo: "Si traes 10kg de botellas (que dan 5 pts/kg), te ganas 50 puntos de una."
+    1. BÚSQUEDA DE LUGARES: 
+       - Si el usuario dice "Tengo botellas de vidrio", revisa la lista de [INFORMACIÓN DE PUNTOS] y recomienda SOLO los lugares que digan "Vidrio" en su lista de "ACEPTA".
+       - Menciona también el horario si está disponible.
+       
+    2. CÁLCULO DE PUNTOS:
+       - Usa la tabla de materiales para calcular cuánto ganan por Kilo.
+       
+    3. RECOMENDACIONES:
+       - Si el lugar está cerrado (según el horario), adviértele amablemente.
     
-    2. SI PREGUNTAN POR PREMIOS: 
-       - Compara el costo del premio con los puntos del usuario (${puntosUsuario}). 
-       - Si le falta, calcula cuántos kilos de material necesita reciclar para alcanzar esa meta.
-    
-    3. SI PREGUNTAN UBICACIÓN: Recomienda el punto de reciclaje más cercano.
-    
-    FORMATO: 
-       - Sé directo y amigable.
-       - Usa emojis 🌿 ♻️ ⭐.
+    FORMATO: Sé breve, usa emojis 📍♻️.
     `;
 
     const url = "https://api.groq.com/openai/v1/chat/completions";
     
-
     const messagesPayload = [
         { role: "system", content: SYSTEM_PROMPT },
         ...historialChat 
@@ -1159,7 +1176,7 @@ async function consultarGroq() {
         model: "llama-3.3-70b-versatile", 
         messages: messagesPayload,
         temperature: 0.7, 
-        max_tokens: 500   
+        max_tokens: 600   
     };
 
     const response = await fetch(url, {
