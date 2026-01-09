@@ -1011,7 +1011,9 @@ async function prepararDatosCompletosIA() {
         const resMat = await fetch(`${API_BASE}/materiales`);
         if(resMat.ok) {
             const mats = await resMat.json();
-            infoMateriales = mats.map(m => `- ${m.nombre} (${m.puntos_kg} pts/kg): ${m.descripcion || ''}`).join('\n');
+            infoMateriales = mats.map(m => 
+                `- ${m.nombre}: Ganas ${m.puntos_por_kg} puntos por cada Kg. (${m.descripcion || ''})`
+            ).join('\n');
         }
 
         const resRec = await fetch(`${API_BASE}/recompensas`);
@@ -1042,7 +1044,7 @@ async function prepararDatosCompletosIA() {
         console.error("Error preparando cerebro IA:", e);
     }
 }
-// --- LÓGICA DEL CHAT ---
+
 
 window.toggleChat = function() {
     const chat = document.getElementById("chatWindow");
@@ -1073,24 +1075,20 @@ window.enviarMensaje = async function() {
 
     if (!texto) return;
 
-    // 1. Mostrar mensaje usuario y guardar en historial
     agregarMensaje(texto, "user");
     historialChat.push({ role: "user", content: texto });
 
     input.value = "";
     input.disabled = true;
 
-    // 2. Estado "Escribiendo..."
     const loadingId = agregarMensaje("Pensando... 🧠", "bot", true);
 
     try {
-        // 3. Consultar a la IA con todo el historial
         const respuesta = await consultarGroq();
         
         eliminarMensaje(loadingId);
         agregarMensaje(respuesta, "bot");
         
-        // 4. Guardar respuesta del bot en historial
         historialChat.push({ role: "assistant", content: respuesta });
 
     } catch (error) {
@@ -1111,43 +1109,38 @@ async function consultarGroq() {
     const SYSTEM_PROMPT = `
     ERES LOOPIBOT: El asistente virtual experto de la app "Loopi" en Cuenca, Ecuador.
     
-    TU OBJETIVO: Ayudar al usuario a reciclar más, subir de rango y canjear premios.
+    TU OBJETIVO: Ayudar al usuario a calcular cuántos PUNTOS ganará reciclando y motivarlo a canjear premios.
+    
+    IMPORTANTE: En esta app NO SE PAGA DINERO, solo se ganan PUNTOS para canjear premios. Nunca hables de dólares o precios.
     
     TU PERSONALIDAD:
-    - Eres cuencano: Usas palabras como "ñaño", "chévere", "de una", "acolitar", "chuta" (pero sin exagerar).
-    - Eres inteligente: No solo das datos, **haces cálculos**.
-    - Eres proactivo: Si el usuario no tiene puntos, anímalo a reciclar.
+    - Eres cuencano: Usas palabras como "ñaño", "chévere", "de una", "acolitar", "chuta".
+    - Eres motivador: Si tienen pocos puntos, anímalos a reciclar más.
     
-    DATOS DEL USUARIO (Contexto actual):
+    DATOS DEL USUARIO:
     - Nombre: ${usuarioLogueado.primer_nombre}
     - Puntos actuales: ${puntosUsuario}
-    - Rango: ${usuarioLogueado.rango ? usuarioLogueado.rango.nombre_rango : 'Principiante'}
     
-    INFORMACIÓN DISPONIBLE (Úsala para responder):
-    
-    [MATERIALES Y PRECIOS]
+    TABLA DE CONVERSIÓN (Material -> Puntos):
     ${infoMateriales}
     
-    [CATÁLOGO DE RECOMPENSAS]
+    CATÁLOGO DE PREMIOS (Costo en Puntos):
     ${infoRecompensas}
     
-    [PUNTOS DE RECICLAJE]
-    ${infoPuntosReciclaje}
-    
-    [LOGROS]
-    ${infoLogros}
-    
     INSTRUCCIONES DE RAZONAMIENTO:
-    1. SI PREGUNTAN POR PREMIOS: Compara el costo del premio con los puntos del usuario (${puntosUsuario}). 
-       - Si le alcanza: Dile "¡De una! Te alcanza para X, Y o Z".
-       - Si NO le alcanza: Dile "Te faltan X puntos. Eso equivale mas o menos a reciclar Y kilos de botellas". (Calcula esto basado en el valor de los materiales).
+    1. SI PREGUNTAN "CUANTO GANO": 
+       - Calcula los PUNTOS multiplicando: (Kilos reportados) x (Puntos por Kg del material).
+       - Ejemplo: "Si traes 10kg de botellas (que dan 5 pts/kg), te ganas 50 puntos de una."
     
-    2. SI PREGUNTAN UBICACIÓN: Recomienda el punto de reciclaje más cercano a su ubicación actual si la sabes, o menciona los destacados.
+    2. SI PREGUNTAN POR PREMIOS: 
+       - Compara el costo del premio con los puntos del usuario (${puntosUsuario}). 
+       - Si le falta, calcula cuántos kilos de material necesita reciclar para alcanzar esa meta.
     
-    3. FORMATO: 
-       - Eres libre de extenderte si la explicación lo requiere, pero intenta ser directo.
-       - Usa emojis 🌿 ♻️ 🎁.
-       - Usa formato Markdown (**negritas**) para resaltar puntos o nombres importantes.
+    3. SI PREGUNTAN UBICACIÓN: Recomienda el punto de reciclaje más cercano.
+    
+    FORMATO: 
+       - Sé directo y amigable.
+       - Usa emojis 🌿 ♻️ ⭐.
     `;
 
     const url = "https://api.groq.com/openai/v1/chat/completions";
