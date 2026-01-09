@@ -25,6 +25,7 @@ let infoRecompensas = "Cargando recompensas...";
 let infoRangos = "Cargando rangos...";
 let infoPuntosReciclaje = "Cargando puntos cercanos...";
 let infoLogros = "Cargando logros...";
+let historialChat = [];
 
 const CUENCA_BOUNDS = L.latLngBounds(
     [-2.99, -79.15], 
@@ -1041,6 +1042,8 @@ async function prepararDatosCompletosIA() {
         console.error("Error preparando cerebro IA:", e);
     }
 }
+// --- LÓGICA DEL CHAT ---
+
 window.toggleChat = function() {
     const chat = document.getElementById("chatWindow");
     if (chat.style.display === "flex") {
@@ -1050,8 +1053,12 @@ window.toggleChat = function() {
         setTimeout(() => document.getElementById("chatInput").focus(), 100);
         
         const body = document.getElementById("chatBody");
-        if (body.children.length === 0) {
-            agregarMensaje(`¡Hola ${usuarioLogueado.primer_nombre}! 👋 Soy LoopiBot. Tienes ${usuarioLogueado.puntos_actuales} puntos. ¿En qué te ayudo?`, "bot");
+        // Solo saluda si el historial está vacío
+        if (historialChat.length === 0) {
+            const saludo = `¡Hola ñaño/a ${usuarioLogueado.primer_nombre}! 👋 Soy LoopiBot. Veo que tienes **${usuarioLogueado.puntos_actuales} puntos**. ¿En qué te acolito hoy?`;
+            agregarMensaje(saludo, "bot");
+            // Guardamos el saludo en la memoria del bot
+            historialChat.push({ role: "assistant", content: saludo });
         }
     }
 };
@@ -1066,71 +1073,100 @@ window.enviarMensaje = async function() {
 
     if (!texto) return;
 
+    // 1. Mostrar mensaje usuario y guardar en historial
     agregarMensaje(texto, "user");
+    historialChat.push({ role: "user", content: texto });
+
     input.value = "";
     input.disabled = true;
 
-    const loadingId = agregarMensaje("Analizando... 🧠", "bot", true);
+    // 2. Estado "Escribiendo..."
+    const loadingId = agregarMensaje("Pensando... 🧠", "bot", true);
 
     try {
-        const respuesta = await consultarGroq(texto);
+        // 3. Consultar a la IA con todo el historial
+        const respuesta = await consultarGroq();
+        
         eliminarMensaje(loadingId);
         agregarMensaje(respuesta, "bot");
+        
+        // 4. Guardar respuesta del bot en historial
+        historialChat.push({ role: "assistant", content: respuesta });
+
     } catch (error) {
         console.error("Error Groq:", error);
         eliminarMensaje(loadingId);
-        agregarMensaje("Chuta ñaño, error de conexión (" + error.message + ").", "bot");
+        agregarMensaje("Chuta, se me fue el internet ñaño (" + error.message + "). Intenta de nuevo.", "bot");
+        historialChat.pop();
     } finally {
         input.disabled = false;
         input.focus();
     }
 };
 
-// --- CEREBRO DINÁMICO ---
-async function consultarGroq(pregunta) {
+async function consultarGroq() {
     
-    // Armamos el PROMPT MAESTRO con toda la info fresca
+    const puntosUsuario = usuarioLogueado.puntos_actuales || 0;
+    
     const SYSTEM_PROMPT = `
-    ERES LOOPIBOT: El asistente oficial de la app de reciclaje "Loopi" en Cuenca, Ecuador.
-    TU PERSONALIDAD: Ecuatoriano amable ("ñaño", "chévere", "de una"). Responde corto, útil y motivador.
-
-    --- DATOS DEL USUARIO ACTUAL ---
-    Nombre: ${usuarioLogueado.primer_nombre} ${usuarioLogueado.apellido_paterno}
-    Puntos: ${usuarioLogueado.puntos_actuales}
-    Rango Actual: ${usuarioLogueado.rango ? usuarioLogueado.rango.nombre_rango : 'Nuevo'}
-    Correo: ${usuarioLogueado.correo}
-
-    --- BASE DE DATOS DE MATERIALES ---
+    ERES LOOPIBOT: El asistente virtual experto de la app "Loopi" en Cuenca, Ecuador.
+    
+    TU OBJETIVO: Ayudar al usuario a reciclar más, subir de rango y canjear premios.
+    
+    TU PERSONALIDAD:
+    - Eres cuencano: Usas palabras como "ñaño", "chévere", "de una", "acolitar", "chuta" (pero sin exagerar).
+    - Eres inteligente: No solo das datos, **haces cálculos**.
+    - Eres proactivo: Si el usuario no tiene puntos, anímalo a reciclar.
+    
+    DATOS DEL USUARIO (Contexto actual):
+    - Nombre: ${usuarioLogueado.primer_nombre}
+    - Puntos actuales: ${puntosUsuario}
+    - Rango: ${usuarioLogueado.rango ? usuarioLogueado.rango.nombre_rango : 'Principiante'}
+    
+    INFORMACIÓN DISPONIBLE (Úsala para responder):
+    
+    [MATERIALES Y PRECIOS]
     ${infoMateriales}
-
-    --- BASE DE DATOS DE RECOMPENSAS ---
+    
+    [CATÁLOGO DE RECOMPENSAS]
     ${infoRecompensas}
-
-    --- SISTEMA DE LOGROS Y MEDALLAS ---
-    ${infoLogros}
-
-    --- SISTEMA DE RANGOS ---
-    ${infoRangos}
-
-    --- PUNTOS DE RECICLAJE DESTACADOS ---
+    
+    [PUNTOS DE RECICLAJE]
     ${infoPuntosReciclaje}
-
-    --- REGLAS DE RESPUESTA ---
-    1. Si preguntan "¿Qué puedo canjear?", revisa sus puntos (${usuarioLogueado.puntos_actuales}) y sugiere SOLO lo que les alcanza.
-    2. Si preguntan sobre LOGROS, diles qué medallas existen y cuántos puntos ganan.
-    3. Si preguntan "¿Cómo reciclo?", diles: Lavar, Secar y Aplastar.
-    4. Sé breve. Máximo 3 oraciones.
+    
+    [LOGROS]
+    ${infoLogros}
+    
+    INSTRUCCIONES DE RAZONAMIENTO:
+    1. SI PREGUNTAN POR PREMIOS: Compara el costo del premio con los puntos del usuario (${puntosUsuario}). 
+       - Si le alcanza: Dile "¡De una! Te alcanza para X, Y o Z".
+       - Si NO le alcanza: Dile "Te faltan X puntos. Eso equivale mas o menos a reciclar Y kilos de botellas". (Calcula esto basado en el valor de los materiales).
+    
+    2. SI PREGUNTAN UBICACIÓN: Recomienda el punto de reciclaje más cercano a su ubicación actual si la sabes, o menciona los destacados.
+    
+    3. FORMATO: 
+       - Eres libre de extenderte si la explicación lo requiere, pero intenta ser directo.
+       - Usa emojis 🌿 ♻️ 🎁.
+       - Usa formato Markdown (**negritas**) para resaltar puntos o nombres importantes.
     `;
 
     const url = "https://api.groq.com/openai/v1/chat/completions";
     
+
+    const messagesPayload = [
+        { role: "system", content: SYSTEM_PROMPT },
+        ...historialChat 
+    ];
+
+    if (messagesPayload.length > 15) {
+        messagesPayload.splice(1, messagesPayload.length - 11);
+    }
+
     const payload = {
-        model: "llama-3.3-70b-versatile",
-        messages: [
-            { role: "system", content: SYSTEM_PROMPT },
-            { role: "user", content: pregunta }
-        ],
-        temperature: 0.5 
+        model: "llama-3.3-70b-versatile", 
+        messages: messagesPayload,
+        temperature: 0.7, 
+        max_tokens: 500   
     };
 
     const response = await fetch(url, {
@@ -1162,7 +1198,7 @@ function agregarMensaje(texto, tipo, esLoading = false) {
 
     const textoHtml = texto
         .replace(/\n/g, "<br>")
-        .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>"); // Negritas markdown
+        .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>"); 
 
     const hora = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
