@@ -1162,7 +1162,7 @@ async function consultarGroq() {
     3. RECOMENDACIONES:
        - Si el lugar está cerrado (según el horario), adviértele amablemente.
     
-    FORMATO: Sé breve, usa emojis 📍♻️.
+    FORMATO: Usa emojis 🎒 🌿 🏹 (arco opcional) ♻️. Sé breve.
     `;
 
     const url = "https://api.groq.com/openai/v1/chat/completions";
