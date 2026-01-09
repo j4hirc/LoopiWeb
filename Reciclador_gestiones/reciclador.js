@@ -752,23 +752,18 @@ function renderizarHorariosEdicion() {
     lista.innerHTML = "";
 
     const horarios = miPuntoData.horarios || [];
-
-    if (horarios.length === 0) {
+    
+    if(horarios.length === 0) {
         agregarFilaHorario();
     } else {
-        const ordenDias = { 
-            "Lunes": 1, "Martes": 2, "Miércoles": 3, "Jueves": 4, "Viernes": 5, "Sabado": 6, "Domingo": 7 
-        };
-
-        horarios.sort((a, b) => {
-            const da = normalizarDia(a.dia_semana);
-            const db = normalizarDia(b.dia_semana);
-            return (ordenDias[da] || 99) - (ordenDias[db] || 99);
-        });
+        const ordenDias = { "Lunes": 1, "Martes": 2, "Miércoles": 3, "Jueves": 4, "Viernes": 5, "Sábado": 6, "Domingo": 7, "LUNES": 1, "MARTES": 2, "MIERCOLES": 3, "JUEVES": 4, "VIERNES": 5, "SABADO": 6, "DOMINGO": 7 };
+        
+        horarios.sort((a, b) => (ordenDias[a.dia_semana] || 99) - (ordenDias[b.dia_semana] || 99));
 
         horarios.forEach(h => {
-            const inicio = h.hora_inicio || h.hora_apertura || "";
-            const cierre = h.hora_fin || h.hora_cierre || "";
+            const inicio = h.hora_apertura || h.horaApertura || h.hora_inicio || h.horaInicio || "";
+            const cierre = h.hora_cierre || h.horaCierre || h.hora_fin || h.horaFin || "";
+            
             agregarFilaHorario(h.dia_semana, inicio, cierre);
         });
     }
@@ -778,15 +773,14 @@ function agregarFilaHorario(dia = "", inicio = "", fin = "") {
     const lista = document.getElementById("listaHorarios");
     const div = document.createElement("div");
     div.className = "horario-row";
-
-    const diaNormalizado = normalizarDia(dia);
-
-    const diasSemana = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sabado", "Domingo"];
+    
+    const diaUpper = dia ? dia.toUpperCase() : "";
+    
+    const diasSemana = ["LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO", "DOMINGO"];
     let options = `<option value="">Seleccione día</option>`;
-
+    
     diasSemana.forEach(d => {
-        // Comparamos el día de la lista (d) con el día normalizado de la BD
-        const selected = (d === diaNormalizado) ? "selected" : "";
+        const selected = (d === diaUpper || d === dia) ? "selected" : "";
         options += `<option value="${d}" ${selected}>${d}</option>`;
     });
 
