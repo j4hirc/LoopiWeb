@@ -1033,7 +1033,9 @@ async function prepararDatosCompletosIA() {
     } catch(e) {
         console.error("Error preparando cerebro IA:", e);
     }
-}window.toggleChat = function() {
+}
+
+window.toggleChat = function() {
     const chat = document.getElementById("chatWindow");
     if (chat.style.display === "flex") {
         chat.style.display = "none";
@@ -1078,24 +1080,30 @@ window.enviarMensaje = async function() {
     }
 };
 
+// --- CEREBRO DINÁMICO ---
 async function consultarGroq(pregunta) {
     
+    // Armamos el PROMPT MAESTRO con toda la info fresca
     const SYSTEM_PROMPT = `
     ERES LOOPIBOT: El asistente oficial de la app de reciclaje "Loopi" en Cuenca, Ecuador.
     TU PERSONALIDAD: Ecuatoriano amable ("ñaño", "chévere", "de una"). Responde corto, útil y motivador.
 
-
+    --- DATOS DEL USUARIO ACTUAL ---
     Nombre: ${usuarioLogueado.primer_nombre} ${usuarioLogueado.apellido_paterno}
     Puntos: ${usuarioLogueado.puntos_actuales}
     Rango Actual: ${usuarioLogueado.rango ? usuarioLogueado.rango.nombre_rango : 'Nuevo'}
     Correo: ${usuarioLogueado.correo}
 
+    --- BASE DE DATOS DE MATERIALES ---
     ${infoMateriales}
 
+    --- BASE DE DATOS DE RECOMPENSAS ---
     ${infoRecompensas}
 
+    --- SISTEMA DE RANGOS ---
     ${infoRangos}
 
+    --- PUNTOS DE RECICLAJE DESTACADOS ---
     ${infoPuntosReciclaje}
 
     --- REGLAS DE RESPUESTA ---
