@@ -585,8 +585,8 @@ div:where(.swal2-container) { z-index: 20000 !important; }
     position: fixed;
     bottom: 30px;
     right: 30px;
-    width: 75px; 
-    height: 75px;
+    width: 85px; 
+    height: 85px;
     background: var(--primary);
     color: white;
     border-radius: 50%;
@@ -604,8 +604,8 @@ div:where(.swal2-container) { z-index: 20000 !important; }
 }
 
 .fab-img {
-    width: 75px;  
-    height: 75px; 
+    width: 85px;  
+    height: 85px; 
     border-radius: 50%;
     object-fit: cover;
     display: block;
