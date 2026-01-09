@@ -809,15 +809,13 @@ function agregarFilaHorario(dia = "", inicio = "", fin = "") {
     const div = document.createElement("div");
     div.className = "horario-row";
 
-    // 1. Transformamos el día que viene de la BD a "Bonito"
-    // "MIERCOLES" -> "Miércoles"
+  
     const diaBonito = formatearDiaBonito(dia);
 
     const diasSemana = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
     let options = `<option value="">Seleccione día</option>`;
 
     diasSemana.forEach(d => {
-        // 2. Comparamos el día de la lista con el día bonito de la BD
         const selected = (d === diaBonito) ? "selected" : "";
         options += `<option value="${d}" ${selected}>${d}</option>`;
     });
