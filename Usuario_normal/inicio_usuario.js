@@ -1057,8 +1057,14 @@ window.enviarMensaje = async function() {
 };
 
 async function consultarGeminiRobusto(pregunta) {
-    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`;
-    
+    // LISTA DE MODELOS VÁLIDOS (En orden de prioridad)
+    // Todos usan 'v1beta' porque ahí es donde viven los modelos gratuitos actuales.
+    const intentos = [
+        { modelo: "gemini-1.5-flash", version: "v1beta" },     // El más rápido y nuevo
+        { modelo: "gemini-1.5-flash-latest", version: "v1beta" }, // Alias alternativo
+        { modelo: "gemini-1.0-pro", version: "v1beta" }        // El clásico confiable
+    ];
+
     const payload = {
         contents: [{ 
             parts: [{ 
@@ -1067,25 +1073,34 @@ async function consultarGeminiRobusto(pregunta) {
         }]
     };
 
-    const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-    });
+    // Probamos uno por uno
+    for (const intento of intentos) {
+        try {
+            console.log(`📡 Probando conexión con: ${intento.modelo} (${intento.version})...`);
+            
+            const url = `https://generativelanguage.googleapis.com/${intento.version}/models/${intento.modelo}:generateContent?key=${GEMINI_API_KEY}`;
+            
+            const response = await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
 
-    if (!response.ok) {
-        const errorData = await response.json();
-        console.error("ERROR GOOGLE DETALLADO:", errorData);
-        throw new Error(`Google Error: ${errorData.error.message || response.status}`);
+            if (response.ok) {
+                const data = await response.json();
+                if (data.candidates && data.candidates.length > 0) {
+                    return data.candidates[0].content.parts[0].text;
+                }
+            } else {
+                console.warn(`❌ Falló ${intento.modelo}: ${response.status} ${response.statusText}`);
+            }
+        } catch (e) {
+            console.warn(`⚠️ Error de red con ${intento.modelo}`, e);
+        }
     }
 
-    const data = await response.json();
-    
-    if (data.candidates && data.candidates.length > 0 && data.candidates[0].content) {
-        return data.candidates[0].content.parts[0].text;
-    }
-    
-    return "Lo siento, no pude procesar eso. Intenta de nuevo.";
+    // Si llega aquí, fallaron todos
+    throw new Error("No se pudo conectar con ningún modelo de IA. Verifica tu internet o la API Key.");
 }
 
 function agregarMensaje(texto, tipo, esLoading = false) {
