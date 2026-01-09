@@ -817,7 +817,7 @@ function agregarFilaHorario(dia = null, inicio = "08:00", fin = "18:00") {
         const diaLibre = diasSemana.find(d => !diasUsados.includes(normalizarDia(d)));
         if (!diaLibre) {
             Swal.fire("Semana Completa", "Ya has agregado todos los días de la semana.", "info");
-            return; 
+            return; // No agrega nada si ya están los 7
         }
         diaSugerido = diaLibre;
     }
@@ -832,8 +832,7 @@ function agregarFilaHorario(dia = null, inicio = "08:00", fin = "18:00") {
     diasSemana.forEach(d => {
         const opcNormalizada = normalizarDia(d);
         const selected = (opcNormalizada === diaNormalizado) ? "selected" : "";
-        
-  
+
         options += `<option value="${d}" ${selected}>${d}</option>`;
     });
 
