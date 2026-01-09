@@ -672,7 +672,11 @@ function initMapaEdicion(lat, lng) {
         markerEdicion = null;
     }
 
-    mapaEdicion = L.map(container).setView([lat, lng], 15);
+    mapaEdicion = L.map(container, {
+        maxBounds: CUENCA_BOUNDS,      
+        maxBoundsViscosity: 1.0,      
+        minZoom: 12
+    }).setView([lat, lng], 15);
     
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: "© OpenStreetMap"
