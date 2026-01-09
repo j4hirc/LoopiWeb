@@ -992,3 +992,147 @@ function renderizarCaminoRangos(rangos, totalReal) {
     container.appendChild(card);
   });
 }
+
+/* =========================================
+   LOOPI BOT - INTELIGENCIA ARTIFICIAL
+   ========================================= */
+
+// 1. CONFIGURACIÓN
+const GEMINI_API_KEY = "AIzaSyD_9XJiD_fKVgNUMKuYfVN4NIbTCc2dQdI"; // <--- ¡PON TU API KEY AQUÍ!
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+// 2. CEREBRO DE LOOPI (Contexto para la IA)
+// Aquí le enseñamos a la IA todo sobre la app
+const LOOPI_DATA = `
+ERES LOOPIBOT: Un asistente virtual experto en reciclaje para la app "Loopi" en Cuenca, Ecuador.
+TU PERSONALIDAD: Amable, motivador, usas jerga ecuatoriana suave ("ñaño", "chévere", "de una"). Respuestas cortas (máx 3 frases).
+
+DATOS DE LA APP:
+- Objetivo: Conectar recicladores con ciudadanos y gestionar residuos.
+- Rangos de Usuario: Bronce (0-25 entregas), Plata (26-50), Oro (51-100), Diamante(100+).
+- Puntos: Ganas puntos por cada kg entregado.
+- Materiales que aceptamos: Plástico (Botellas PET), Cartón, Vidrio, Papel, Pilas.
+- Recompensas: Cupones de descuento en Supermaxi, KFC, Farmacias, Entradas al cine.
+- Cómo reciclar:
+  1. Lava y seca los envases.
+  2. Aplástalos para ahorrar espacio.
+  3. Abre la app y pide un reciclador o ve a un punto fijo.
+- Ubicación: Funcionamos principalmente en Cuenca, Azuay.
+
+SI TE PREGUNTAN ALGO FUERA DEL TEMA: Di amablemente que solo sabes de reciclaje y Loopi.
+`;
+
+
+
+function toggleChat() {
+    const chat = document.getElementById("chatWindow");
+    if(chat.style.display === "flex") {
+        chat.style.display = "none";
+    } else {
+        chat.style.display = "flex";
+        setTimeout(() => document.getElementById("chatInput").focus(), 100);
+        const body = document.getElementById("chatBody");
+        if(body.children.length === 0) {
+            agregarMensaje("¡Hola ñaño! 👋 Soy LoopiBot. Pregúntame sobre cómo ganar puntos o dónde reciclar.", "bot");
+        }
+    }
+}
+
+function checkEnter(e) {
+    if(e.key === "Enter") enviarMensaje();
+}
+
+async function enviarMensaje() {
+    const input = document.getElementById("chatInput");
+    const btn = document.getElementById("btnSend");
+    const texto = input.value.trim();
+    
+    if(!texto) return;
+
+    agregarMensaje(texto, "user");
+    input.value = "";
+    input.disabled = true;
+    btn.disabled = true;
+
+    const loadingId = agregarMensaje("Pensando... 🤔", "bot", true);
+
+    try {
+        // 3. Petición a Gemini (Google AI)
+        const respuestaIA = await consultarGemini(texto);
+        
+        // 4. Mostrar respuesta
+        eliminarMensaje(loadingId);
+        agregarMensaje(respuestaIA, "bot");
+
+    } catch (error) {
+        console.error(error);
+        eliminarMensaje(loadingId);
+        agregarMensaje("Chuta, me quedé sin señal ñaño. Intenta luego.", "bot");
+    } finally {
+        input.disabled = false;
+        btn.disabled = false;
+        input.focus();
+    }
+}
+
+// --- CONEXIÓN CON IA ---
+async function consultarGemini(preguntaUsuario) {
+    // Si no hay API KEY, respuesta simulada (para que pruebes sin configurar)
+    if(GEMINI_API_KEY === "TU_API_KEY_AQUI") {
+        return "⚠️ Ñaño, falta configurar la API KEY en el código (inicio_usuario.js). Pero sí te entiendo: " + preguntaUsuario;
+    }
+
+    const payload = {
+        contents: [{
+            parts: [{
+                text: LOOPI_DATA + "\n\nPregunta del usuario: " + preguntaUsuario
+            }]
+        }]
+    };
+
+    const response = await fetch(GEMINI_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+    
+    if (data.candidates && data.candidates.length > 0) {
+        return data.candidates[0].content.parts[0].text;
+    } else {
+        throw new Error("Sin respuesta de la IA");
+    }
+}
+
+// --- UTILIDADES CHAT ---
+function agregarMensaje(texto, tipo, esLoading = false) {
+    const chatBody = document.getElementById("chatBody");
+    const div = document.createElement("div");
+    div.className = `msg ${tipo}`;
+    
+    const id = "msg-" + Date.now();
+    if(esLoading) {
+        div.id = id;
+        div.style.fontStyle = "italic";
+        div.style.opacity = "0.7";
+    }
+
+    // Convertir saltos de línea a <br>
+    const textoFormateado = texto.replace(/\n/g, "<br>");
+    const hora = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+    div.innerHTML = `
+        <p>${textoFormateado}</p>
+        ${!esLoading ? `<span class="time">${hora}</span>` : ''}
+    `;
+
+    chatBody.appendChild(div);
+    chatBody.scrollTop = chatBody.scrollHeight; // Auto-scroll
+    return id;
+}
+
+function eliminarMensaje(id) {
+    const el = document.getElementById(id);
+    if(el) el.remove();
+}
