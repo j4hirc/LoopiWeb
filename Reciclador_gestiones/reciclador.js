@@ -578,12 +578,18 @@ async function abrirModalMiPunto() {
 
     Swal.fire({ title: "Cargando detalles...", didOpen: () => Swal.showLoading() });
 
+    if (mapaEdicion) {
+        mapaEdicion.remove();
+        mapaEdicion = null;
+        markerEdicion = null;
+    }
+    
     fotoPuntoFile = null;
 
     try {
         const idUbicacion = miPuntoData.id_ubicacion_reciclaje;
         const res = await fetch(`${API_BASE}/ubicacion_reciclajes/${idUbicacion}`);
-        
+
         if (res.ok) {
             miPuntoData = await res.json();
         }
@@ -597,22 +603,24 @@ async function abrirModalMiPunto() {
     document.getElementById("txtPuntoDireccion").value = miPuntoData.direccion || "";
     document.getElementById("txtLatitud").value = miPuntoData.latitud || "";
     document.getElementById("txtLongitud").value = miPuntoData.longitud || "";
-    
+
     if (miPuntoData.parroquia) {
-        const idParroquia = miPuntoData.parroquia.id_parroquia || miPuntoData.parroquia.id;
+        const idParroquia = (typeof miPuntoData.parroquia === 'object') ?
+            (miPuntoData.parroquia.id_parroquia || miPuntoData.parroquia.id) :
+            miPuntoData.parroquia;
+
         document.getElementById("txtPuntoParroquia").value = idParroquia || "";
     }
 
-    // --- FOTO ---
     const imgPreview = document.getElementById("previewPuntoFoto");
-    if(miPuntoData.foto) {
+    if (miPuntoData.foto) {
         let urlFoto = miPuntoData.foto;
         imgPreview.src = urlFoto;
         imgPreview.style.display = "block";
     } else {
         imgPreview.style.display = "none";
     }
-    
+
     await renderizarMaterialesEdicion();
     renderizarHorariosEdicion();
 
@@ -621,15 +629,15 @@ async function abrirModalMiPunto() {
 
     setTimeout(() => {
         initMapaEdicion(miPuntoData.latitud, miPuntoData.longitud);
-    }, 300);
-    
+    }, 400);
+
     const inputFoto = document.getElementById("filePuntoFoto");
     const nuevoInput = inputFoto.cloneNode(true);
     inputFoto.parentNode.replaceChild(nuevoInput, inputFoto);
-    
+
     nuevoInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
-        if(file){
+        if (file) {
             fotoPuntoFile = file;
             const reader = new FileReader();
             reader.onload = (ev) => {
@@ -651,28 +659,37 @@ function cerrarModalMiPunto() {
 }
 
 function initMapaEdicion(lat, lng) {
-    if(!lat || !lng) { lat = -2.9001; lng = -79.0059; }
-
-    const container = document.getElementById("mapaEdicionContainer");
-    if(!container) return;
-
-    if (!mapaEdicion) {
-        mapaEdicion = L.map(container).setView([lat, lng], 15);
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            attribution: "© OpenStreetMap"
-        }).addTo(mapaEdicion);
-
-        mapaEdicion.on('click', function(e) {
-            actualizarPosicionMarker(e.latlng);
-        });
-    } else {
-        // Si ya existe, nos aseguramos que se vea bien
-        setTimeout(() => { mapaEdicion.invalidateSize(); }, 100);
-        mapaEdicion.setView([lat, lng], 15);
+    if (!lat || !lng) {
+        lat = -2.9001;
+        lng = -79.0059;
     }
 
-    // Colocar o mover marcador
+    const container = document.getElementById("mapaEdicionContainer");
+    if (!container) return;
+
+    if (mapaEdicion) {
+        mapaEdicion.remove();
+        mapaEdicion = null;
+        markerEdicion = null;
+    }
+
+    mapaEdicion = L.map(container).setView([lat, lng], 15);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap"
+    }).addTo(mapaEdicion);
+
+    mapaEdicion.on('click', function(e) {
+        actualizarPosicionMarker(e.latlng);
+    });
+
     actualizarPosicionMarker({ lat: lat, lng: lng });
+
+    setTimeout(() => {
+        if(mapaEdicion) {
+            mapaEdicion.invalidateSize();
+            mapaEdicion.panTo([lat, lng]);
+        }
+    }, 200);
 }
 
 async function renderizarMaterialesEdicion() {
@@ -859,10 +876,15 @@ async function guardarCambiosPunto() {
 }
 
 function actualizarPosicionMarker(latlng) {
+    if (!mapaEdicion) return;
+
     if (markerEdicion) {
         markerEdicion.setLatLng(latlng);
     } else {
-        markerEdicion = L.marker(latlng, { draggable: true }).addTo(mapaEdicion);
+        markerEdicion = L.marker(latlng, {
+            draggable: true
+        }).addTo(mapaEdicion);
+        
         markerEdicion.on('dragend', function(e) {
             const pos = e.target.getLatLng();
             document.getElementById("txtLatitud").value = pos.lat.toFixed(6);
@@ -872,7 +894,6 @@ function actualizarPosicionMarker(latlng) {
     document.getElementById("txtLatitud").value = parseFloat(latlng.lat).toFixed(6);
     document.getElementById("txtLongitud").value = parseFloat(latlng.lng).toFixed(6);
 }
-
 async function cargarListadoParroquias() {
     const select = document.getElementById("txtPuntoParroquia");
     select.innerHTML = '<option value="">Cargando...</option>';
