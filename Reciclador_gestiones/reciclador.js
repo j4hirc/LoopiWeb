@@ -778,14 +778,15 @@ function agregarFilaHorario(dia = "", inicio = "", fin = "") {
     const lista = document.getElementById("listaHorarios");
     const div = document.createElement("div");
     div.className = "horario-row";
-    
-    const diaUpper = dia ? dia.toUpperCase() : "";
-    
+
+    const diaNormalizado = normalizarDia(dia);
+
     const diasSemana = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sabado", "Domingo"];
     let options = `<option value="">Seleccione día</option>`;
-    
+
     diasSemana.forEach(d => {
-        const selected = (d === diaUpper || d === dia) ? "selected" : "";
+        // Comparamos el día de la lista (d) con el día normalizado de la BD
+        const selected = (d === diaNormalizado) ? "selected" : "";
         options += `<option value="${d}" ${selected}>${d}</option>`;
     });
 
