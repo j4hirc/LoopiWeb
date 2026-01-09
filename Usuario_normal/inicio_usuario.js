@@ -994,29 +994,21 @@ function renderizarCaminoRangos(rangos, totalReal) {
   });
 }
 
-
-
-
 const GEMINI_API_KEY = "AIzaSyDwesq_y6S0L7SdNCuXjdwOZlrDeS6_puU";
 
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
-// CEREBRO DE LOOPI (Contexto)
 const LOOPI_DATA = `
-ERES LOOPIBOT: Un asistente virtual experto en reciclaje para la app "Loopi" en Cuenca, Ecuador.
-TU PERSONALIDAD: Amable, motivador, usas jerga ecuatoriana suave ("ñaño", "chévere", "de una"). Respuestas cortas (máx 3 frases).
-DATOS DE LA APP:
-- Objetivo: Conectar recicladores con ciudadanos y gestionar residuos.
-- Rangos de Usuario: Semilla (0-25 entregas), Brote (26-50), Árbol Joven (51-100), Bosque (100+).
-- Puntos: Ganas puntos por cada kg entregado.
-- Materiales: Plástico (Botellas PET), Cartón, Vidrio, Papel, Pilas.
-- Recompensas: Cupones de descuento en Supermaxi, KFC, Farmacias.
-- Cómo reciclar: Lava, seca y aplasta los envases. Pide un reciclador en la app.
-SI TE PREGUNTAN ALGO FUERA DEL TEMA: Di amablemente que solo sabes de reciclaje y Loopi.
+ERES LOOPIBOT: Un asistente virtual experto en reciclaje para la app "Loopi".
+TU ESTILO: Amable, ecuatoriano ("ñaño", "chévere"), respuestas cortas.
+INFO APP:
+- Rangos: Semilla, Brote, Árbol Joven, Bosque.
+- Puntos: Ganas por kg reciclado.
+- Materiales: Plástico PET, Cartón, Vidrio, Papel, Pilas.
+- Recompensas: Cupones en Supermaxi, KFC, Farmacias.
+- Reciclaje: Lavar, secar y aplastar.
 `;
 
-
-function toggleChat() {
+window.toggleChat = function() {
     const chat = document.getElementById("chatWindow");
     if (chat.style.display === "flex") {
         chat.style.display = "none";
@@ -1026,89 +1018,76 @@ function toggleChat() {
         
         const body = document.getElementById("chatBody");
         if (body.children.length === 0) {
-            agregarMensaje("¡Hola ñaño! 👋 Soy LoopiBot. Pregúntame sobre puntos, materiales o cómo reciclar.", "bot");
+            agregarMensaje("¡Hola ñaño! 👋 Soy LoopiBot. Pregúntame sobre reciclaje.", "bot");
         }
     }
-}
+};
 
-function checkEnter(e) {
-    if (e.key === "Enter") enviarMensaje();
-}
+window.checkEnter = function(e) {
+    if (e.key === "Enter") window.enviarMensaje();
+};
 
-async function enviarMensaje() {
+window.enviarMensaje = async function() {
     const input = document.getElementById("chatInput");
     const btn = document.getElementById("btnSend");
     const texto = input.value.trim();
 
     if (!texto) return;
 
-    // 1. Mensaje Usuario
     agregarMensaje(texto, "user");
     input.value = "";
     input.disabled = true;
     btn.disabled = true;
 
-    // 2. Loading
     const loadingId = agregarMensaje("Pensando... 🤔", "bot", true);
 
     try {
-        // 3. Petición Directa a Gemini
-        const respuestaIA = await consultarGemini(texto);
-        
+        const respuestaIA = await consultarGeminiRobusto(texto);
         eliminarMensaje(loadingId);
         agregarMensaje(respuestaIA, "bot");
-
     } catch (error) {
         console.error("Error IA:", error);
         eliminarMensaje(loadingId);
-        // Mostramos el error en el chat para que sepas qué pasa
-        agregarMensaje(`⚠️ Error de conexión: ${error.message}. Intenta recargar la página.`, "bot");
+        agregarMensaje("Chuta ñaño, no tengo conexión. Revisa tu internet.", "bot");
     } finally {
         input.disabled = false;
         btn.disabled = false;
         input.focus();
     }
-}
+};
 
-async function consultarGemini(preguntaUsuario) {
+// --- FUNCIÓN INTELIGENTE QUE PRUEBA VARIOS MODELOS ---
+async function consultarGeminiRobusto(pregunta) {
+    // Lista de modelos a probar en orden
+    const modelos = ["gemini-1.5-flash", "gemini-pro", "gemini-1.0-pro"];
+    
     const payload = {
-        contents: [{
-            parts: [{
-                text: LOOPI_DATA + "\n\nUsuario dice: " + preguntaUsuario
-            }]
-        }]
+        contents: [{ parts: [{ text: LOOPI_DATA + "\n\nUsuario: " + pregunta }] }]
     };
 
-    try {
-        const response = await fetch(GEMINI_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        });
-
-        // SI HAY ERROR, LEEMOS EL MENSAJE DE GOOGLE
-        if (!response.ok) {
-            const errorBody = await response.json();
-            console.error("Error Google API:", errorBody);
+    for (const modelo of modelos) {
+        try {
+            console.log(`Probando modelo: ${modelo}...`);
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${GEMINI_API_KEY}`;
             
-            // Mensajes amigables según el error
-            if (response.status === 404) return "Error 404: El modelo de IA no está disponible en este momento.";
-            if (response.status === 400) return "Error 400: Hubo un problema con la pregunta.";
-            
-            throw new Error(`API respondió: ${response.status}`);
-        }
+            const response = await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
 
-        const data = await response.json();
-        
-        if (data.candidates && data.candidates.length > 0 && data.candidates[0].content) {
-            return data.candidates[0].content.parts[0].text;
-        } else {
-            return "Lo siento ñaño, no tengo una respuesta para eso.";
+            if (response.ok) {
+                const data = await response.json();
+                if (data.candidates && data.candidates.length > 0) {
+                    return data.candidates[0].content.parts[0].text;
+                }
+            }
+        } catch (e) {
+            console.warn(`Falló ${modelo}`, e);
         }
-
-    } catch (error) {
-        throw error;
     }
+    
+    return "Lo siento ñaño, los servidores de Google están ocupados. Intenta en un ratito.";
 }
 
 function agregarMensaje(texto, tipo, esLoading = false) {
@@ -1123,18 +1102,10 @@ function agregarMensaje(texto, tipo, esLoading = false) {
         div.style.opacity = "0.7";
     }
 
-    // Convertir markdown básico a HTML
-    let textoHtml = texto
-        .replace(/\n/g, "<br>")
-        .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>"); // Negritas
-
+    const textoFormat = texto.replace(/\n/g, "<br>").replace(/\*\*(.*?)\*\*/g, "<b>$1</b>");
     const hora = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    div.innerHTML = `
-        <p>${textoHtml}</p>
-        ${!esLoading ? `<span class="time">${hora}</span>` : ''}
-    `;
-
+    div.innerHTML = `<p>${textoFormat}</p>${!esLoading ? `<span class="time">${hora}</span>` : ''}`;
     chatBody.appendChild(div);
     chatBody.scrollTop = chatBody.scrollHeight;
     return id;
