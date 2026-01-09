@@ -18,6 +18,12 @@ let notificacionesCargadas = false;
 
 let fotoNuevaFile = null;
 
+const CUENCA_BOUNDS = L.latLngBounds(
+    [-2.99, -79.15], 
+    [-2.8, -78.85] 
+);
+
+
 document.addEventListener("DOMContentLoaded", async () => {
   const btnLogout = document.getElementById("btnLogout");
   if (btnLogout) {
@@ -119,7 +125,11 @@ function initMap() {
   const lat = -2.9001;
   const lng = -79.0059;
 
-  map = L.map("mapaUsuario").setView([lat, lng], 13);
+  map = L.map("mapaUsuario", {
+        maxBounds: CUENCA_BOUNDS,
+        maxBoundsViscosity: 1.0
+    }).setView([lat, lng], 13);
+
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "© OpenStreetMap contributors",

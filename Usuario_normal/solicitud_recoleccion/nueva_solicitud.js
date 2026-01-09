@@ -59,7 +59,6 @@ function initMap() {
             const lat = pos.coords.latitude;
             const lng = pos.coords.longitude;
             
-            // Verificar si está dentro de Cuenca antes de centrar
             if (CUENCA_BOUNDS.contains([lat, lng])) {
                 map.setView([lat, lng], 15);
             } else {
