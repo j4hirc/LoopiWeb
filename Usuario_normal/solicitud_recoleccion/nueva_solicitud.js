@@ -225,7 +225,7 @@ window.seleccionarPuntoDesdePopup = function (id, nombre, esReciclador) {
         horariosPuntoSeleccionado = puntoSeleccionado.horarios || [];
 
         const direccion = puntoSeleccionado.direccion || "Sin dirección registrada";
-        const parroquia = puntoSeleccionado.parroquia ? puntoSeleccionado.parroquia.nombre_parroquia : "";
+        const parroquia = puntoSeleccionado.parroquia ? (puntoSeleccionado.parroquia.nombre_parroquia || puntoSeleccionado.parroquia.nombre || "") : "";
         const fotoUrl = puntoSeleccionado.foto ? puntoSeleccionado.foto : null;
 
         let horariosHTML = '';
@@ -234,8 +234,11 @@ window.seleccionarPuntoDesdePopup = function (id, nombre, esReciclador) {
             horariosHTML += '<div style="font-size:0.8em; color:#7f8c8d; font-weight:bold; margin-bottom:3px;">Horarios de Atención:</div>';
             
             horariosPuntoSeleccionado.forEach(h => {
-                const inicio = h.hora_inicio.substring(0,5);
-                const fin = h.hora_fin.substring(0,5);
+                const hIni = h.hora_inicio || h.horaApertura || h.hora_apertura;
+                const hFin = h.hora_fin || h.horaCierre || h.hora_cierre;
+                const inicio = hIni ? hIni.substring(0,5) : "--:--";
+                const fin = hFin ? hFin.substring(0,5) : "--:--";
+                
                 horariosHTML += `
                     <div style="font-size:0.8em; color:#34495e; display:flex; justify-content:space-between;">
                         <span>${h.dia_semana}:</span>
@@ -255,7 +258,6 @@ window.seleccionarPuntoDesdePopup = function (id, nombre, esReciclador) {
                 </div>
             `;
         }
-
 
         nombreDiv.innerHTML = `
             <div style="display:flex; flex-direction:column; gap:5px;">
@@ -289,20 +291,24 @@ window.seleccionarPuntoDesdePopup = function (id, nombre, esReciclador) {
             Swal.fire("Aviso", "Este punto no tiene materiales configurados.", "warning");
         }
 
+        // --- RUTA ---
         if (markerUsuario) {
             const userLatLng = markerUsuario.getLatLng();
             const destLatLng = L.latLng(puntoSeleccionado.latitud, puntoSeleccionado.longitud);
 
             if (routingControl) map.removeControl(routingControl);
 
+            // CONFIGURACION DE RUTA SIN MARCADORES EXTRAÑOS
             routingControl = L.Routing.control({
                 waypoints: [userLatLng, destLatLng],
                 routeWhileDragging: false,
                 draggableWaypoints: false,
                 addWaypoints: false,
-                show: false,
-                lineOptions: { styles: [{color: colorHTML, opacity: 0.7, weight: 6}] },
-                createMarker: function() { return null; }
+                show: false, // Ocultar panel de instrucciones
+                lineOptions: { 
+                    styles: [{color: colorHTML, opacity: 0.8, weight: 5}] 
+                },
+                createMarker: function() { return null; } // NO crear marcadores A y B (ya tenemos los nuestros)
             }).addTo(map);
 
             routingControl.on('routesfound', function(e) {
