@@ -25,6 +25,11 @@ let coordenadasSeleccionadas = null;
 let coordenadasTemporales = null;
 let fotoNuevaFile = null;
 
+const CUENCA_BOUNDS = L.latLngBounds(
+    [-2.99, -79.15], 
+    [-2.8, -78.85] 
+);
+
 const DIAS_SEMANA = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 
 // ICONOS
@@ -70,7 +75,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function initMainMap() {
     if(document.getElementById('mapaGeneral')) {
-        mainMap = L.map('mapaGeneral').setView([-2.9001, -79.0059], 13);
+        mainMap = L.map('mapaGeneral', {
+            maxBounds: CUENCA_BOUNDS,
+            maxBoundsViscosity: 1.0,
+            minZoom: 12
+        }).setView([-2.9001, -79.0059], 13);
+
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
             attribution: '© OpenStreetMap' 
         }).addTo(mainMap);
