@@ -18,6 +18,7 @@ let notificacionesCargadas = false;
 
 let fotoNuevaFile = null;
 
+const GEMINI_API_KEY = "AIzaSyDwesq_y6S0L7SdNCuXjdwOZlrDeS6_puU";
 
 const CUENCA_BOUNDS = L.latLngBounds(
     [-2.99, -79.15], 
@@ -994,11 +995,11 @@ function renderizarCaminoRangos(rangos, totalReal) {
   });
 }
 
-const GEMINI_API_KEY = "AIzaSyDwesq_y6S0L7SdNCuXjdwOZlrDeS6_puU";
+
 
 
 const LOOPI_DATA = `
-ERES LOOPIBOT: Un asistente virtual experto en reciclaje para la app "Loopi".
+ERES LOOPIBOT: Un asistente virtual experto en reciclaje para la app "Loopi" en Cuenca, Ecuador.
 TU ESTILO: Amable, ecuatoriano ("ñaño", "chévere"), respuestas cortas.
 INFO APP:
 - Rangos: Semilla, Brote, Árbol Joven, Bosque.
@@ -1007,6 +1008,7 @@ INFO APP:
 - Recompensas: Cupones en Supermaxi, KFC, Farmacias.
 - Reciclaje: Lavar, secar y aplastar.
 `;
+
 
 window.toggleChat = function() {
     const chat = document.getElementById("chatWindow");
@@ -1029,7 +1031,6 @@ window.checkEnter = function(e) {
 
 window.enviarMensaje = async function() {
     const input = document.getElementById("chatInput");
-    const btn = document.getElementById("btnSend");
     const texto = input.value.trim();
 
     if (!texto) return;
@@ -1037,7 +1038,6 @@ window.enviarMensaje = async function() {
     agregarMensaje(texto, "user");
     input.value = "";
     input.disabled = true;
-    btn.disabled = true;
 
     const loadingId = agregarMensaje("Pensando... 🤔", "bot", true);
 
@@ -1048,46 +1048,39 @@ window.enviarMensaje = async function() {
     } catch (error) {
         console.error("Error IA:", error);
         eliminarMensaje(loadingId);
-        agregarMensaje("Chuta ñaño, no tengo conexión. Revisa tu internet.", "bot");
+        // Si falla, mensaje amigable
+        agregarMensaje("Chuta ñaño, no pude conectar. Asegúrate de haber habilitado la API en Google Cloud.", "bot");
     } finally {
         input.disabled = false;
-        btn.disabled = false;
         input.focus();
     }
 };
 
-// --- FUNCIÓN INTELIGENTE QUE PRUEBA VARIOS MODELOS ---
 async function consultarGeminiRobusto(pregunta) {
-    // Lista de modelos a probar en orden
-    const modelos = ["gemini-1.5-flash", "gemini-pro", "gemini-1.0-pro"];
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
     
     const payload = {
         contents: [{ parts: [{ text: LOOPI_DATA + "\n\nUsuario: " + pregunta }] }]
     };
 
-    for (const modelo of modelos) {
-        try {
-            console.log(`Probando modelo: ${modelo}...`);
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${GEMINI_API_KEY}`;
-            
-            const response = await fetch(url, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
+    const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    });
 
-            if (response.ok) {
-                const data = await response.json();
-                if (data.candidates && data.candidates.length > 0) {
-                    return data.candidates[0].content.parts[0].text;
-                }
-            }
-        } catch (e) {
-            console.warn(`Falló ${modelo}`, e);
-        }
+    if (!response.ok) {
+        // Si da 404, es casi seguro que falta habilitar la API en la consola de Google
+        if (response.status === 404) throw new Error("API no habilitada o modelo no encontrado");
+        throw new Error(`Error ${response.status}`);
+    }
+
+    const data = await response.json();
+    if (data.candidates && data.candidates.length > 0) {
+        return data.candidates[0].content.parts[0].text;
     }
     
-    return "Lo siento ñaño, los servidores de Google están ocupados. Intenta en un ratito.";
+    return "No entendí, ñaño. ¿Repites?";
 }
 
 function agregarMensaje(texto, tipo, esLoading = false) {
