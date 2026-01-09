@@ -6,7 +6,7 @@ let recyclingLayer;
 let todasLasUbicaciones = [];
 let marcadorMiUbicacion = null;
 let ubicacionActual = null;
-
+let miPuntoData = null;
 let fotoNuevaFile = null;
 
 const CUENCA_BOUNDS = L.latLngBounds(
@@ -75,6 +75,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   ]);
 
   setInterval(cargarNotificacionesReciclador, 15000);
+
+  await identificarMiPunto();
 });
 
 async function refrescarDatosUsuario() {
@@ -527,4 +529,279 @@ function calcularYMostrarStats(entregas) {
 
 function cerrarModalEstadisticas() {
     document.getElementById("modalEstadisticas").style.display = "none";
+}
+
+
+
+
+
+
+async function identificarMiPunto() {
+    try {
+        const res = await fetch(`${API_BASE}/ubicacion_reciclajes`);
+        if (res.ok) {
+            const todos = await res.json();
+            miPuntoData = todos.find(p => p.reciclador && p.reciclador.cedula === usuario.cedula);
+        }
+    } catch (e) {
+        console.error("Error buscando mi punto:", e);
+    }
+}
+
+async function abrirModalMiPunto() {
+    if (!miPuntoData) {
+        Swal.fire("Aviso", "No tienes un punto de reciclaje asignado para editar. Contacta al administrador.", "info");
+        return;
+    }
+
+    Swal.showLoading();
+    
+    document.getElementById("txtPuntoNombre").value = miPuntoData.nombre || "";
+    document.getElementById("txtPuntoParroquia").value = miPuntoData.parroquia || "";
+    document.getElementById("txtPuntoDireccion").value = miPuntoData.direccion || "";
+    document.getElementById("txtLatitud").value = miPuntoData.latitud || "";
+    document.getElementById("txtLongitud").value = miPuntoData.longitud || "";
+    
+    // Foto Preview
+    const imgPreview = document.getElementById("previewPuntoFoto");
+    if(miPuntoData.foto) {
+        imgPreview.src = miPuntoData.foto.startsWith("http") ? miPuntoData.foto : `${API_BASE.replace('/api','')}${miPuntoData.foto}`;
+        imgPreview.style.display = "block";
+    } else {
+        imgPreview.style.display = "none";
+    }
+    
+    await renderizarMaterialesEdicion();
+
+    renderizarHorariosEdicion();
+
+    Swal.close();
+    document.getElementById("modalMiPunto").style.display = "flex";
+
+    setTimeout(() => {
+        initMapaEdicion(miPuntoData.latitud, miPuntoData.longitud);
+    }, 300);
+    
+    document.getElementById("filePuntoFoto").addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if(file){
+            fotoPuntoFile = file;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                imgPreview.src = ev.target.result;
+                imgPreview.style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+}
+
+function cerrarModalMiPunto() {
+    document.getElementById("modalMiPunto").style.display = "none";
+    if (mapaEdicion) {
+        mapaEdicion.remove(); // Limpiar instancia de mapa para evitar conflictos al reabrir
+        mapaEdicion = null;
+    }
+}
+
+function initMapaEdicion(lat, lng) {
+    if(!lat || !lng) { lat = -2.9001; lng = -79.0059; }
+
+    const container = document.getElementById("mapaEdicionContainer");
+    if(!container) return;
+
+    mapaEdicion = L.map(container).setView([lat, lng], 15);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap"
+    }).addTo(mapaEdicion);
+
+    markerEdicion = L.marker([lat, lng], { draggable: true }).addTo(mapaEdicion);
+
+    markerEdicion.on('dragend', function(e) {
+        const pos = e.target.getLatLng();
+        document.getElementById("txtLatitud").value = pos.lat.toFixed(6);
+        document.getElementById("txtLongitud").value = pos.lng.toFixed(6);
+    });
+    
+    mapaEdicion.on('click', function(e) {
+        markerEdicion.setLatLng(e.latlng);
+        document.getElementById("txtLatitud").value = e.latlng.lat.toFixed(6);
+        document.getElementById("txtLongitud").value = e.latlng.lng.toFixed(6);
+    });
+}
+
+async function renderizarMaterialesEdicion() {
+    const container = document.getElementById("containerMaterialesCheck");
+    container.innerHTML = "Cargando...";
+
+    try {
+        const res = await fetch(`${API_BASE}/materiales`);
+        const todosMateriales = await res.json();
+        
+        container.innerHTML = "";
+        
+        const idsMisMateriales = new Set();
+        if(miPuntoData.materialesAceptados) {
+            miPuntoData.materialesAceptados.forEach(um => {
+                if(um.material) idsMisMateriales.add(um.material.id_material);
+            });
+        }
+
+        todosMateriales.forEach(mat => {
+            const checked = idsMisMateriales.has(mat.id_material) ? "checked" : "";
+            
+            const div = document.createElement("div");
+            div.className = "material-check-item";
+            div.innerHTML = `
+                <input type="checkbox" id="mat_${mat.id_material}" value="${mat.id_material}" ${checked}>
+                <label for="mat_${mat.id_material}">${mat.nombre}</label>
+            `;
+            container.appendChild(div);
+        });
+    } catch (e) {
+        container.innerHTML = "Error cargando materiales.";
+    }
+}
+
+function renderizarHorariosEdicion() {
+    const lista = document.getElementById("listaHorarios");
+    lista.innerHTML = "";
+
+    const horarios = miPuntoData.horarios || [];
+    
+    if(horarios.length === 0) {
+        agregarFilaHorario();
+    } else {
+        horarios.forEach(h => {
+            agregarFilaHorario(h.dia_semana, h.hora_apertura, h.hora_cierre);
+        });
+    }
+}
+
+function agregarFilaHorario(dia = "", inicio = "", fin = "") {
+    const lista = document.getElementById("listaHorarios");
+    const div = document.createElement("div");
+    div.className = "horario-row";
+    
+    const diasSemana = ["LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO", "DOMINGO"];
+    let options = `<option value="">Seleccione día</option>`;
+    
+    diasSemana.forEach(d => {
+        const selected = (d === dia) ? "selected" : "";
+        options += `<option value="${d}" ${selected}>${d}</option>`;
+    });
+
+    div.innerHTML = `
+        <select class="input-dia">${options}</select>
+        <input type="time" class="input-inicio" value="${inicio}">
+        <span>a</span>
+        <input type="time" class="input-fin" value="${fin}">
+        <button class="btn-del-horario" onclick="this.parentElement.remove()">
+            <i class="fa-solid fa-trash"></i>
+        </button>
+    `;
+    lista.appendChild(div);
+}
+
+async function guardarCambiosPunto() {
+    const filasHorario = document.querySelectorAll(".horario-row");
+    if(filasHorario.length === 0) {
+        return Swal.fire("Error", "Debe registrar al menos un horario de atención.", "warning");
+    }
+
+    const listaHorariosEnvio = [];
+    const diasUsados = new Set();
+    let errorHorario = null;
+
+    filasHorario.forEach((fila, index) => {
+        const dia = fila.querySelector(".input-dia").value;
+        const inicio = fila.querySelector(".input-inicio").value;
+        const fin = fila.querySelector(".input-fin").value;
+
+        if(!dia || !inicio || !fin) {
+            errorHorario = "Complete todos los campos de los horarios.";
+            return;
+        }
+
+        if(diasUsados.has(dia)) {
+            errorHorario = `El día ${dia} está repetido. Unifique los horarios en una sola franja o corrija.`;
+            return;
+        }
+        
+        diasUsados.add(dia);
+        
+        listaHorariosEnvio.push({
+            dia_semana: dia,
+            hora_apertura: inicio,
+            hora_cierre: fin
+        });
+    });
+
+    if(errorHorario) {
+        return Swal.fire("Error en Horarios", errorHorario, "warning");
+    }
+
+    const checks = document.querySelectorAll("#containerMaterialesCheck input[type='checkbox']:checked");
+    if(checks.length === 0) {
+        return Swal.fire("Atención", "Selecciona al menos un material que aceptas.", "warning");
+    }
+    
+    const materialesEnvio = Array.from(checks).map(c => ({
+        material: { id_material: parseInt(c.value) }
+    }));
+
+    const nombre = document.getElementById("txtPuntoNombre").value.trim();
+    const parroquia = document.getElementById("txtPuntoParroquia").value.trim();
+    const direccion = document.getElementById("txtPuntoDireccion").value.trim();
+    const lat = document.getElementById("txtLatitud").value;
+    const lng = document.getElementById("txtLongitud").value;
+
+    if(!nombre || !parroquia || !direccion) {
+        return Swal.fire("Campos vacíos", "Nombre, Parroquia y Dirección son obligatorios", "warning");
+    }
+
+    const objetoUpdate = {
+        id_ubicacion_reciclaje: miPuntoData.id_ubicacion_reciclaje,
+        nombre: nombre,
+        parroquia: parroquia,
+        direccion: direccion,
+        latitud: parseFloat(lat),
+        longitud: parseFloat(lng),
+        // Importante: Enviar el reciclador para no perder la referencia (aunque el backend lo controla)
+        reciclador: { cedula: usuario.cedula }, 
+        horarios: listaHorariosEnvio,
+        materialesAceptados: materialesEnvio
+    };
+
+    const formData = new FormData();
+    formData.append("datos", JSON.stringify(objetoUpdate));
+    
+    if(fotoPuntoFile) {
+        formData.append("archivo", fotoPuntoFile);
+    }
+
+    try {
+        Swal.fire({ title: "Guardando...", didOpen: () => Swal.showLoading() });
+
+        const res = await fetch(`${API_BASE}/ubicacion_reciclajes/${miPuntoData.id_ubicacion_reciclaje}`, {
+            method: "PUT",
+            body: formData
+        });
+
+        if (res.ok) {
+            const dataNueva = await res.json();
+            miPuntoData = dataNueva; 
+            cerrarModalMiPunto();
+            Swal.fire("Éxito", "Tu punto de reciclaje ha sido actualizado.", "success");
+            
+            cargarPuntosReciclajeReciclador(); 
+        } else {
+            const err = await res.text();
+            Swal.fire("Error", "No se pudo actualizar: " + err, "error");
+        }
+    } catch (e) {
+        console.error(e);
+        Swal.fire("Error de Red", "Intenta más tarde.", "error");
+    }
 }

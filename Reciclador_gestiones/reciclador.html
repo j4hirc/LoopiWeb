@@ -190,6 +190,82 @@
         </div>
     </div>
 
+    <div class="card card-orange" onclick="abrirModalMiPunto()">
+    <div class="card-icon"><i class="fa-solid fa-recycle"></i></div>
+    <div class="card-info">
+        <h3>Mi Punto</h3>
+        <p>Editar ubicación y horarios</p>
+    </div>
+</div>
+
+<div class="modal-overlay-perfil" id="modalMiPunto" style="display: none;">
+    <div class="modal-container-perfil" style="max-width: 800px; width: 95%;">
+        <div class="modal-header-perfil">
+            <span class="modal-title-perfil"><i class="fa-solid fa-shop"></i> Gestionar Mi Punto</span>
+            <button class="modal-close-perfil" onclick="cerrarModalMiPunto()">✕</button>
+        </div>
+        
+        <div class="modal-body-perfil">
+            <form id="formMiPunto" onsubmit="return false;">
+                
+                <h4 class="section-subtitle">Datos Generales</h4>
+                <div class="perfil-grid">
+                    <div class="perfil-col">
+                        <label class="perfil-label">Nombre del Punto</label>
+                        <input id="txtPuntoNombre" class="perfil-input" required placeholder="Ej: Recicladora El Centro">
+                    </div>
+                    <div class="perfil-row">
+                        <div class="perfil-col">
+                            <label class="perfil-label">Parroquia</label>
+                            <input id="txtPuntoParroquia" class="perfil-input" required>
+                        </div>
+                        <div class="perfil-col">
+                            <label class="perfil-label">Dirección Escrita</label>
+                            <input id="txtPuntoDireccion" class="perfil-input" required>
+                        </div>
+                    </div>
+                    <div class="perfil-col">
+                        <label class="perfil-label">Foto del Lugar</label>
+                        <input type="file" id="filePuntoFoto" accept="image/*" class="perfil-input">
+                        <img id="previewPuntoFoto" src="" style="height: 100px; object-fit: contain; margin-top:5px; display:none;">
+                    </div>
+                </div>
+
+                <hr class="divider">
+
+                <h4 class="section-subtitle">Ubicación Exacta (Arrastra el marcador)</h4>
+                <div id="mapaEdicionContainer" style="height: 300px; width: 100%; border-radius: 12px; margin-bottom: 15px;"></div>
+                <div style="display:flex; gap:10px;">
+                    <input id="txtLatitud" class="perfil-input" readonly placeholder="Latitud">
+                    <input id="txtLongitud" class="perfil-input" readonly placeholder="Longitud">
+                </div>
+
+                <hr class="divider">
+
+                <h4 class="section-subtitle">Materiales que aceptas</h4>
+                <div id="containerMaterialesCheck" class="materiales-grid">
+                    <p>Cargando materiales...</p>
+                </div>
+
+                <hr class="divider">
+
+                <h4 class="section-subtitle">Horarios de Atención <small>(Mínimo 1, días únicos)</small></h4>
+                <div id="listaHorarios">
+                    </div>
+                <button class="btn-add-horario" onclick="agregarFilaHorario()">
+                    <i class="fa-solid fa-plus"></i> Agregar Día
+                </button>
+
+            </form>
+        </div>
+        
+        <div class="modal-footer-perfil">
+            <button class="btn-cancelar-perfil" onclick="cerrarModalMiPunto()">Cancelar</button>
+            <button class="btn-guardar-perfil" onclick="guardarCambiosPunto()">Guardar Cambios</button>
+        </div>
+    </div>
+</div>
+
     <script src="reciclador.js"></script>
 </body>
 
