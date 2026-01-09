@@ -14,6 +14,11 @@ let fotoEvidenciaFile = null;
 let detallesList = [];
 let materialesGlobales = [];
 
+const CUENCA_BOUNDS = L.latLngBounds(
+    [-2.99, -79.15], 
+    [-2.8, -78.85] 
+);
+
 document.addEventListener("DOMContentLoaded", async () => {
 
     initMap();
@@ -37,7 +42,10 @@ function initMap() {
     const latCuenca = -2.9001;
     const lngCuenca = -79.0059;
 
-    map = L.map("mapaSeleccion").setView([latCuenca, lngCuenca], 14);
+    map = L.map("mapaSeleccion", {
+        maxBounds: CUENCA_BOUNDS,
+        maxBoundsViscosity: 1.0
+    }).setView([latCuenca, lngCuenca], 14);
 
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
