@@ -994,9 +994,12 @@ function renderizarCaminoRangos(rangos, totalReal) {
   });
 }
 
-const GEMINI_API_KEY = "AIzaSyDxwjFcMMwQJMBCFH-cvXAEKrftbJ701m8";
 
-// CEREBRO DE LOOPI (Contexto para la IA)
+
+
+const GEMINI_API_KEY = "AIzaSyDwesq_y6S0L7SdNCuXjdwOZlrDeS6_puU";
+
+
 const LOOPI_DATA = `
 ERES LOOPIBOT: Un asistente virtual experto en reciclaje para la app "Loopi" en Cuenca, Ecuador.
 TU PERSONALIDAD: Amable, motivador, usas jerga ecuatoriana suave ("ñaño", "chévere", "de una"). Respuestas cortas (máx 3 frases).
@@ -1022,7 +1025,6 @@ function toggleChat() {
         chat.style.display = "flex";
         setTimeout(() => document.getElementById("chatInput").focus(), 100);
         
-        // Mensaje de bienvenida si el chat está vacío
         const body = document.getElementById("chatBody");
         if (body.children.length === 0) {
             agregarMensaje("¡Hola ñaño! 👋 Soy LoopiBot. Pregúntame sobre cómo ganar puntos o dónde reciclar.", "bot");
@@ -1041,13 +1043,11 @@ async function enviarMensaje() {
 
     if (!texto) return;
 
-    // 1. Mostrar mensaje del usuario
     agregarMensaje(texto, "user");
     input.value = "";
     input.disabled = true;
     btn.disabled = true;
 
-    // 2. Mostrar estado "Pensando..."
     const loadingId = agregarMensaje("Pensando... 🤔", "bot", true);
 
     try {
@@ -1071,23 +1071,24 @@ async function enviarMensaje() {
 
 // --- FUNCIÓN DE IA ROBUSTA (PRUEBA VARIOS MODELOS SI FALLA) ---
 async function consultarGeminiRobusto(pregunta) {
-    // Lista de modelos a probar en orden de preferencia
-    const modelos = [
-        "gemini-1.5-flash",
-        "gemini-1.5-pro",
-        "gemini-1.0-pro",
-        "gemini-pro"
+    const intentos = [
+        // Intento 1: Versión ESTABLE (v1) con gemini-pro (Más segura)
+        { modelo: "gemini-pro", version: "v1" },
+        // Intento 2: Versión BETA con flash (Más rápida)
+        { modelo: "gemini-1.5-flash", version: "v1beta" },
+        // Intento 3: Versión BETA con pro
+        { modelo: "gemini-pro", version: "v1beta" }
     ];
 
     const payload = {
         contents: [{ parts: [{ text: LOOPI_DATA + "\n\nPregunta del usuario: " + pregunta }] }]
     };
 
-    // Intentar con cada modelo hasta que uno funcione
-    for (const modelo of modelos) {
+    for (const intento of intentos) {
         try {
-            console.log(`Intentando conectar con modelo: ${modelo}...`);
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${GEMINI_API_KEY}`;
+            console.log(`Probando ${intento.modelo} (${intento.version})...`);
+            
+            const url = `https://generativelanguage.googleapis.com/${intento.version}/models/${intento.modelo}:generateContent?key=${GEMINI_API_KEY}`;
             
             const response = await fetch(url, {
                 method: "POST",
@@ -1101,14 +1102,14 @@ async function consultarGeminiRobusto(pregunta) {
                     return data.candidates[0].content.parts[0].text;
                 }
             } else {
-                console.warn(`Fallo modelo ${modelo}: ${response.status}`);
+                console.warn(`Fallo ${intento.modelo}: ${response.status}`);
             }
         } catch (e) {
-            console.warn(`Error de red con modelo ${modelo}`, e);
+            console.warn(`Error red ${intento.modelo}`, e);
         }
     }
 
-    throw new Error("Ningún modelo de IA respondió correctamente.");
+    throw new Error("Lo siento, la IA no está disponible. Revisa tu API Key.");
 }
 
 // --- UTILIDADES DEL CHAT ---
