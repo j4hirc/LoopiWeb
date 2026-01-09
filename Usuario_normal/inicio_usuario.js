@@ -18,6 +18,7 @@ let notificacionesCargadas = false;
 
 let fotoNuevaFile = null;
 
+
 const CUENCA_BOUNDS = L.latLngBounds(
     [-2.99, -79.15], 
     [-2.8, -78.85] 
@@ -585,7 +586,7 @@ function abrirModalPerfil() {
       cargarParroquiasEnBackground().then(() => llenarSelectParroquias());
   }
 
-  let fotoSrc = "https://via.placeholder.com/100";
+  let fotoSrc = "https://placehold.co/100";
   if (usuarioLogueado.foto && usuarioLogueado.foto.length > 5) {
       if (usuarioLogueado.foto.startsWith("http") || usuarioLogueado.foto.startsWith("data:")) {
           fotoSrc = usuarioLogueado.foto;
@@ -994,14 +995,18 @@ function renderizarCaminoRangos(rangos, totalReal) {
 }
 
 const GEMINI_API_KEY = "AIzaSyDxwjFcMMwQJMBCFH-cvXAEKrftbJ701m8";
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent?key=${GEMINI_API_KEY}`;
+
+// CAMBIO IMPORTANTE: Usamos 'gemini-1.5-flash' que es más rápido y estable para cuentas gratis
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+// 2. CEREBRO DE LOOPI (Contexto para la IA)
 const LOOPI_DATA = `
 ERES LOOPIBOT: Un asistente virtual experto en reciclaje para la app "Loopi" en Cuenca, Ecuador.
 TU PERSONALIDAD: Amable, motivador, usas jerga ecuatoriana suave ("ñaño", "chévere", "de una"). Respuestas cortas (máx 3 frases).
 
 DATOS DE LA APP:
 - Objetivo: Conectar recicladores con ciudadanos y gestionar residuos.
-- Rangos de Usuario: Bronce (0-25 entregas), Plata (26-50), Oro (51-100), Diamante (100+).
+- Rangos de Usuario: Semilla (0-25 entregas), Brote (26-50), Árbol Joven (51-100), Bosque (100+).
 - Puntos: Ganas puntos por cada kg entregado.
 - Materiales que aceptamos: Plástico (Botellas PET), Cartón, Vidrio, Papel, Pilas.
 - Recompensas: Cupones de descuento en Supermaxi, KFC, Farmacias, Entradas al cine.
@@ -1013,7 +1018,6 @@ DATOS DE LA APP:
 
 SI TE PREGUNTAN ALGO FUERA DEL TEMA: Di amablemente que solo sabes de reciclaje y Loopi.
 `;
-
 
 function toggleChat() {
     const chat = document.getElementById("chatWindow");
@@ -1056,7 +1060,8 @@ async function enviarMensaje() {
     } catch (error) {
         console.error(error);
         eliminarMensaje(loadingId);
-        agregarMensaje("Chuta, me quedé sin señal ñaño. Intenta luego.", "bot");
+        // Mensaje de error amigable
+        agregarMensaje("Chuta ñaño, hubo un error de conexión. Intenta de nuevo en un ratito.", "bot");
     } finally {
         input.disabled = false;
         btn.disabled = false;
@@ -1065,8 +1070,6 @@ async function enviarMensaje() {
 }
 
 async function consultarGemini(preguntaUsuario) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`;
-
     const payload = {
         contents: [{
             parts: [{
@@ -1076,13 +1079,15 @@ async function consultarGemini(preguntaUsuario) {
     };
 
     try {
-        const response = await fetch(url, {
+        // Usamos la variable global GEMINI_URL que definimos arriba
+        const response = await fetch(GEMINI_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
         });
 
         if (!response.ok) {
+            // Si falla, intentamos lanzar el error para que lo capture el catch
             throw new Error(`Error API: ${response.status} - ${response.statusText}`);
         }
 
@@ -1091,8 +1096,7 @@ async function consultarGemini(preguntaUsuario) {
         if (data.candidates && data.candidates.length > 0 && data.candidates[0].content) {
             return data.candidates[0].content.parts[0].text;
         } else {
-            // A veces la IA bloquea la respuesta por seguridad, devolvemos un mensaje genérico
-            return "Lo siento ñaño, no puedo responder a eso por políticas de seguridad. Pregúntame sobre reciclaje.";
+            return "Lo siento ñaño, no entendí bien eso. ¿Puedes preguntar de otra forma?";
         }
     } catch (error) {
         console.error("Detalle del error:", error);
@@ -1121,7 +1125,7 @@ function agregarMensaje(texto, tipo, esLoading = false) {
     `;
 
     chatBody.appendChild(div);
-    chatBody.scrollTop = chatBody.scrollHeight; // Auto-scroll
+    chatBody.scrollTop = chatBody.scrollHeight;
     return id;
 }
 
