@@ -26,6 +26,7 @@ let infoRangos = "Cargando rangos...";
 let infoPuntosReciclaje = "Cargando puntos cercanos...";
 let infoLogros = "Cargando logros...";
 let historialChat = [];
+let infoMisLogros = "Aún no reviso tus medallas..."; 
 
 const CUENCA_BOUNDS = L.latLngBounds(
     [-2.99, -79.15], 
@@ -998,58 +999,64 @@ function renderizarCaminoRangos(rangos, totalReal) {
 
 async function prepararDatosCompletosIA() {
     try {
-        const resMat = await fetch(`${API_BASE}/materiales`);
+        const cedula = usuarioLogueado.cedula;
+
+        const [resMat, resRec, resRan, resUbi, resLogros, resMisLogros] = await Promise.all([
+            fetch(`${API_BASE}/materiales`),
+            fetch(`${API_BASE}/recompensas`),
+            fetch(`${API_BASE}/rangos`),
+            fetch(`${API_BASE}/ubicacion_reciclajes`),
+            fetch(`${API_BASE}/logros`),                  // Catálogo completo
+            fetch(`${API_BASE}/usuarios/${cedula}/logros`) // Lo que tiene el usuario
+        ]);
+
         if(resMat.ok) {
             const mats = await resMat.json();
-            infoMateriales = mats.map(m => 
-                `- ${m.nombre}: ${m.puntos_por_kg} puntos por Kilo. (Detalle: ${m.descripcion || 'Ninguno'})`
-            ).join('\n');
+            infoMateriales = mats.map(m => `- ${m.nombre}: ${m.puntos_por_kg} pts/kg.`).join('\n');
         }
 
-        const resRec = await fetch(`${API_BASE}/recompensas`);
         if(resRec.ok) {
             const recs = await resRec.json();
-            infoRecompensas = recs.map(r => 
-                `- PREMIO: "${r.nombre}" | CUESTA: ${r.costoPuntos} puntos | INFO: ${r.descripcion || 'Genial para ti'}`
-            ).join('\n');
+            infoRecompensas = recs.map(r => `- ${r.nombre} (Cuesta ${r.costoPuntos} pts)`).join('\n');
         }
 
-        const resRan = await fetch(`${API_BASE}/rangos`);
         if(resRan.ok) {
             const rangos = await resRan.json();
-            infoRangos = rangos.map(r => 
-                `- NIVEL ${r.id_rango}: "${r.nombre_rango}" (Se alcanza reciclando)`
-            ).join('\n');
+            infoRangos = rangos.map(r => `- Rango ${r.id_rango}: ${r.nombre_rango}`).join('\n');
         }
 
-        const resUbi = await fetch(`${API_BASE}/ubicacion_reciclajes`);
         if(resUbi.ok) {
             const ubis = await resUbi.json();
             infoPuntosReciclaje = ubis.map(u => {
-                let listaMateriales = "Todos los materiales";
-                if (u.materialesAceptados && u.materialesAceptados.length > 0) {
-                    const nombres = u.materialesAceptados
-                        .filter(um => um.material)
-                        .map(um => um.material.nombre);
-                    listaMateriales = nombres.join(", ");
-                }
-                // Horarios
-                let listaHorarios = "Horario no especificado";
-                if (u.horarios && u.horarios.length > 0) {
-                    listaHorarios = u.horarios.map(h => 
-                        `${h.dia} (${h.hora_inicio || '00:00'} - ${h.hora_fin || '00:00'})`
-                    ).join(", ");
-                }
-                return `📍 LUGAR: "${u.nombre}"\n   - Dirección: ${u.direccion}\n   - Acepta: ${listaMateriales}\n   - Horario: ${listaHorarios}`;
+                let mats = u.materialesAceptados?.map(m => m.material.nombre).join(", ") || "Todos";
+                let horario = u.horarios?.map(h => `${h.dia} (${h.hora_inicio}-${h.hora_fin})`).join(", ") || "No especificado";
+                return `📍 "${u.nombre}" (${u.direccion}). Acepta: ${mats}. Horario: ${horario}`;
             }).join('\n\n');
         }
 
-        const resLog = await fetch(`${API_BASE}/logros`);
-        if(resLog.ok) {
-            const logros = await resLog.json();
-            infoLogros = logros.map(l => 
-                `- MEDALLA: "${l.nombre}" | PREMIO EXTRA: ${l.puntos_ganados} pts | MISIÓN: ${l.descripcion}`
+        if (resLogros.ok) {
+            const todos = await resLogros.json();
+            
+            let misIds = new Set();
+            let misNombres = [];
+            
+            if (resMisLogros.ok) {
+                const mios = await resMisLogros.json();
+                mios.forEach(l => {
+                    misIds.add(l.id_logro);
+                    misNombres.push(l.nombre);
+                });
+            }
+
+            infoLogros = todos.map(l => 
+                `- Medalla: "${l.nombre}" (Premio: ${l.puntos_ganados} pts). Misión: ${l.descripcion}`
             ).join('\n');
+
+            if (misNombres.length > 0) {
+                infoMisLogros = `🏆 EL USUARIO TIENE ESTOS LOGROS DESBLOQUEADOS: ${misNombres.join(", ")}.`;
+            } else {
+                infoMisLogros = "El usuario aún NO tiene logros desbloqueados. ¡Motívalo!";
+            }
         }
 
     } catch(e) {
@@ -1118,63 +1125,59 @@ window.enviarMensaje = async function() {
 
 async function consultarGroq() {
     
-    // 1. DATOS BÁSICOS
     const puntosUsuario = usuarioLogueado.puntos_actuales || 0;
-    const nombreUsuario = usuarioLogueado.primer_nombre;
+    const rangoActual = usuarioLogueado.rango ? usuarioLogueado.rango.nombre_rango : "Reciclador Nuevo";
     
-    // 2. OBTENER RANGO ACTUAL
-    const rangoActual = usuarioLogueado.rango 
-        ? usuarioLogueado.rango.nombre_rango 
-        : "Reciclador Inicial";
-
-    let misMedallas = "Aún no tienes medallas, ¡pero pronto tendrás muchas!";
-    if (usuarioLogueado.logros && usuarioLogueado.logros.length > 0) {
-        const nombresLogros = usuarioLogueado.logros.map(l => l.nombre).join(", ");
-        misMedallas = `¡Ya tienes estas medallas!: ${nombresLogros}`;
-    }
-
-    // 4. EL CEREBRO DE ELLIE (Prompt mejorado)
     const SYSTEM_PROMPT = `
-    ERES ELLIE LOOPI: La asistente virtual más dulce, femenina y atenta de "Loopi" en Cuenca, Ecuador. 🌸💖
+    ERES ELLIE LOOPI: La asistente virtual más dulce, femenina y pilas de la app "Loopi" en Cuenca, Ecuador. 🌸
 
-    TU PERFIL:
-    - Eres una chica joven, súper alegre y cariñosa.
-    - Eres detallista: Te encanta que el usuario progrese y celebras sus logros.
-    - Eres cuencana de corazón: Usas "ñaño/a", "mijo/a", "qué bestia", "ele", "de ley", pero siempre con un tono suave y educado.
+    TU IDENTIDAD:
+    - Eres una chica joven, alegre, detallista y súper cariñosa (tipo mejor amiga).
+    - Te encanta que el usuario progrese y celebras sus logros con emoción.
+    - Usas una mochila 🎒 para recolectar reciclaje.
 
     TU MISIÓN:
-    - Ayudar al usuario a subir de nivel (Rango) y ganar más medallas.
-    - Calcular puntos exactos (Kilos x Valor).
-    - Dar ánimo y cariño.
+    - Revisar qué logros tiene el usuario y felicitarlo.
+    - Decirle qué logros le faltan para motivarlo.
+    - Calcular puntos y ayudar con ubicaciones.
 
-    DATOS ESPECÍFICOS DEL USUARIO (¡ÚSALOS!):
-    - Nombre: ${nombreUsuario}
-    - Puntos que tiene hoy: ${puntosUsuario} ✨
-    - Rango Actual: 🏅 **${rangoActual}** (Si es bajo, anímalo a subir; si es alto, felicítalo).
-    - Sus Logros/Medallas: 🏆 ${misMedallas}.
+    PERSONALIDAD CUENCANA Y DULCE:
+    - Modismos: "ñaño/a", "mijo/a", "qué bestia", "ele", "de una", "avisarás".
+    - Tono: Muy suave, usas exclamaciones de alegría. Ej: "¡Me encanta verte progresar!".
+    - Emojis: 🌸, ✨, 💖, 🏆, 🌿, 🎒.
 
-    INFORMACIÓN GENERAL DE LOOPI:
+    --- DATOS DEL USUARIO ---
+    - Nombre: ${usuarioLogueado.primer_nombre}
+    - Puntos actuales: ${puntosUsuario} ✨
+    - Rango Actual: ${rangoActual} 🏅
     
-    [PUNTOS DE RECICLAJE Y HORARIOS]
-    ${infoPuntosReciclaje}
+    ${infoMisLogros}  <-- ¡AQUÍ SABE QUÉ MEDALLAS TIENE!
 
-    [VALOR DE MATERIALES (PUNTOS)]
-    ${infoMateriales}
-
-    [CATÁLOGO DE PREMIOS]
-    ${infoRecompensas}
-
-    [LISTA DE TODOS LOS RANGOS Y LOGROS POSIBLES]
-    ${infoRangos}
+    --- INFORMACIÓN DE LOOPI ---
+    [TODOS LOS LOGROS POSIBLES]
     ${infoLogros}
 
-    INSTRUCCIONES DE RESPUESTA:
-    1. **Personalización:** Menciona su rango o sus logros de vez en cuando para que se sienta especial. Ej: "Como ya eres rango ${rangoActual}, seguro sabes que..."
-    2. **Cálculos:** Si preguntan "cuánto gano", calcula rápido y di: "¡Por eso te llevas **X puntos** mi ñaño lindo!".
-    3. **Ubicaciones:** Recomienda siempre revisando el horario y qué materiales aceptan.
-    4. **Tono:** Sé muy femenina, usa emojis como 🌸, ✨, 💖, 🎒, 🥰. Nunca hables de dinero ($), solo Puntos Loopi.
+    [RANGOS]
+    ${infoRangos}
 
-    FORMATO: Sé breve, útil y amorosa.
+    [MATERIALES]
+    ${infoMateriales}
+
+    [UBICACIONES]
+    ${infoPuntosReciclaje}
+
+    [PREMIOS]
+    ${infoRecompensas}
+
+    INSTRUCCIONES DE RAZONAMIENTO:
+    1. **LOGROS:** Si el usuario pregunta "¿Cómo voy?" o sobre sus logros, revisa la lista de "EL USUARIO TIENE..." y felicítalo por los que ya tiene. Luego, mira la lista de "TODOS LOS LOGROS" y recomiéndale uno fácil que le falte.
+       *Ejemplo:* "¡Qué bestia mi ñaño! 🌸 Ya tienes la medalla 'Reciclador de Vidrio'. ¡Estoy súper orgullosa! 💖 Ahora intenta conseguir la de 'Pilas'..."
+    
+    2. **RANGO:** Menciona su rango actual (${rangoActual}) para que se sienta importante.
+
+    3. **PUNTOS:** Calcula siempre: Kilos x Puntos Unitarios. Nunca hables de dinero.
+
+    FORMATO: Sé breve, útil y muy amorosa.
     `;
 
     const url = "https://api.groq.com/openai/v1/chat/completions";
