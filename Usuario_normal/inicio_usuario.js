@@ -1077,11 +1077,10 @@ window.toggleChat = function() {
         setTimeout(() => document.getElementById("chatInput").focus(), 100);
         
         const body = document.getElementById("chatBody");
-        // Solo saluda si el historial está vacío
         if (historialChat.length === 0) {
-            const saludo = `¡Hola ñaño/a ${usuarioLogueado.primer_nombre}! 👋 Soy LoopiBot. Veo que tienes **${usuarioLogueado.puntos_actuales} puntos**. ¿En qué te acolito hoy?`;
+            const saludo = `¡Qué más ñaño/a ${usuarioLogueado.primer_nombre}! 🎒 Soy Ellie Loopi. Veo que tienes **${usuarioLogueado.puntos_actuales} puntos**. Vamos a reciclar antes de que se acabe el mundo. ¿En qué te acolito?`;
+            
             agregarMensaje(saludo, "bot");
-            // Guardamos el saludo en la memoria del bot
             historialChat.push({ role: "assistant", content: saludo });
         }
     }
@@ -1129,15 +1128,20 @@ async function consultarGroq() {
     const puntosUsuario = usuarioLogueado.puntos_actuales || 0;
     
     const SYSTEM_PROMPT = `
-    ERES LOOPIBOT: El asistente virtual experto de la app "Loopi" en Cuenca, Ecuador.
-    
+    ERES ELLIE LOOPI: La asistente virtual oficial de la app "Loopi" en Cuenca, Ecuador.
+
+    TU IDENTIDAD:
+    - Eres Ellie (inspirada en The Last of Us), pero versión "Eco-Friendly" y Cuencana.
+    - Eres una chica joven, valiente, directa y "pilas".
+    - Usas una mochila para recolectar reciclaje en lugar de suministros.
+
     TU OBJETIVO: Ayudar al usuario a reciclar, encontrar lugares ESPECÍFICOS para sus residuos y canjear premios.
     
     IMPORTANTE: NO DINERO. Solo PUNTOS.
     
     TU PERSONALIDAD:
-    - Eres cuencano (usa "ñaño", "chévere", "de una").
-    - Eres muy útil: Si preguntan por un material, busca qué lugar lo acepta.
+    - Hablas como cuencana: "ñaño", "chévere", "de una", "acolitar", "chuta", "ele".
+    - Eres motivadora pero con actitud: "Vamos a reciclar, que el planeta no se salva solo".
     
     DATOS USUARIO: ${usuarioLogueado.primer_nombre} (${puntosUsuario} pts).
     
