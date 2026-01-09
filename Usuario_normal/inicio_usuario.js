@@ -998,18 +998,18 @@ function renderizarCaminoRangos(rangos, totalReal) {
 
 const GEMINI_API_KEY = "AIzaSyDwesq_y6S0L7SdNCuXjdwOZlrDeS6_puU";
 
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+// CEREBRO DE LOOPI
 const LOOPI_DATA = `
-ERES LOOPIBOT: Un asistente virtual experto en reciclaje para la app "Loopi" en Cuenca, Ecuador.
-TU ESTILO: Amable, ecuatoriano ("ñaño", "chévere"), respuestas cortas.
-INFO APP:
+ERES LOOPIBOT: Asistente de reciclaje para la app "Loopi" en Cuenca, Ecuador.
+PERSONALIDAD: Amable, "ñaño", respuestas cortas.
+INFO:
 - Rangos: Semilla, Brote, Árbol Joven, Bosque.
-- Puntos: Ganas por kg reciclado.
+- Puntos: Por kg reciclado.
 - Materiales: Plástico PET, Cartón, Vidrio, Papel, Pilas.
 - Recompensas: Cupones en Supermaxi, KFC, Farmacias.
-- Reciclaje: Lavar, secar y aplastar.
 `;
-
-
 window.toggleChat = function() {
     const chat = document.getElementById("chatWindow");
     if (chat.style.display === "flex") {
@@ -1020,7 +1020,7 @@ window.toggleChat = function() {
         
         const body = document.getElementById("chatBody");
         if (body.children.length === 0) {
-            agregarMensaje("¡Hola ñaño! 👋 Soy LoopiBot. Pregúntame sobre reciclaje.", "bot");
+            agregarMensaje("¡Hola ñaño! 👋 Soy LoopiBot. Pregúntame lo que quieras.", "bot");
         }
     }
 };
@@ -1032,7 +1032,6 @@ window.checkEnter = function(e) {
 window.enviarMensaje = async function() {
     const input = document.getElementById("chatInput");
     const texto = input.value.trim();
-
     if (!texto) return;
 
     agregarMensaje(texto, "user");
@@ -1042,78 +1041,59 @@ window.enviarMensaje = async function() {
     const loadingId = agregarMensaje("Pensando... 🤔", "bot", true);
 
     try {
-        const respuestaIA = await consultarGeminiRobusto(texto);
+        const respuesta = await consultarGeminiSimple(texto);
         eliminarMensaje(loadingId);
-        agregarMensaje(respuestaIA, "bot");
+        agregarMensaje(respuesta, "bot");
     } catch (error) {
         console.error("Error IA:", error);
         eliminarMensaje(loadingId);
-        // Si falla, mensaje amigable
-        agregarMensaje("Chuta ñaño, no pude conectar. Asegúrate de haber habilitado la API en Google Cloud.", "bot");
+        agregarMensaje("Chuta ñaño, no pude conectar. (" + error.message + ")", "bot");
     } finally {
         input.disabled = false;
         input.focus();
     }
 };
 
-async function consultarGeminiRobusto(pregunta) {
-    // LISTA DE MODELOS VÁLIDOS (En orden de prioridad)
-    // Todos usan 'v1beta' porque ahí es donde viven los modelos gratuitos actuales.
-    const intentos = [
-        { modelo: "gemini-1.5-flash", version: "v1beta" },     // El más rápido y nuevo
-        { modelo: "gemini-1.5-flash-latest", version: "v1beta" }, // Alias alternativo
-        { modelo: "gemini-1.0-pro", version: "v1beta" }        // El clásico confiable
-    ];
-
+// --- FUNCIÓN DE IA DIRECTA (SIN BUCLES) ---
+async function consultarGeminiSimple(pregunta) {
     const payload = {
-        contents: [{ 
-            parts: [{ 
-                text: LOOPI_DATA + "\n\nUsuario: " + pregunta 
-            }] 
+        contents: [{
+            parts: [{ text: LOOPI_DATA + "\n\nUsuario: " + pregunta }]
         }]
     };
 
-    // Probamos uno por uno
-    for (const intento of intentos) {
-        try {
-            console.log(`📡 Probando conexión con: ${intento.modelo} (${intento.version})...`);
-            
-            const url = `https://generativelanguage.googleapis.com/${intento.version}/models/${intento.modelo}:generateContent?key=${GEMINI_API_KEY}`;
-            
-            const response = await fetch(url, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
+    console.log("Enviando petición a:", GEMINI_URL); // Para depurar en consola
 
-            if (response.ok) {
-                const data = await response.json();
-                if (data.candidates && data.candidates.length > 0) {
-                    return data.candidates[0].content.parts[0].text;
-                }
-            } else {
-                console.warn(`❌ Falló ${intento.modelo}: ${response.status} ${response.statusText}`);
-            }
-        } catch (e) {
-            console.warn(`⚠️ Error de red con ${intento.modelo}`, e);
-        }
+    const response = await fetch(GEMINI_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+        // Si falla, intentamos leer el error
+        let errorMsg = response.statusText;
+        try {
+            const errJson = await response.json();
+            errorMsg = errJson.error.message || response.status;
+        } catch(e) {}
+        throw new Error("Google Error: " + errorMsg);
     }
 
-    // Si llega aquí, fallaron todos
-    throw new Error("No se pudo conectar con ningún modelo de IA. Verifica tu internet o la API Key.");
+    const data = await response.json();
+    if (data.candidates && data.candidates.length > 0) {
+        return data.candidates[0].content.parts[0].text;
+    }
+    return "No entendí.";
 }
 
 function agregarMensaje(texto, tipo, esLoading = false) {
     const chatBody = document.getElementById("chatBody");
     const div = document.createElement("div");
     div.className = `msg ${tipo}`;
-    const id = "msg-" + Date.now();
+    div.id = esLoading ? "msg-" + Date.now() : "";
     
-    if (esLoading) {
-        div.id = id;
-        div.style.fontStyle = "italic";
-        div.style.opacity = "0.7";
-    }
+    if (esLoading) { div.style.fontStyle = "italic"; div.style.opacity = "0.7"; }
 
     const textoFormat = texto.replace(/\n/g, "<br>").replace(/\*\*(.*?)\*\*/g, "<b>$1</b>");
     const hora = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -1121,7 +1101,7 @@ function agregarMensaje(texto, tipo, esLoading = false) {
     div.innerHTML = `<p>${textoFormat}</p>${!esLoading ? `<span class="time">${hora}</span>` : ''}`;
     chatBody.appendChild(div);
     chatBody.scrollTop = chatBody.scrollHeight;
-    return id;
+    return div.id;
 }
 
 function eliminarMensaje(id) {
