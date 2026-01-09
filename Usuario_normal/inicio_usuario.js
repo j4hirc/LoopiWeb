@@ -19,6 +19,11 @@ let notificacionesCargadas = false;
 let fotoNuevaFile = null;
 
 
+const GROQ_API_KEY = "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"; 
+let infoMateriales = "Cargando materiales...";
+let infoRecompensas = "Cargando recompensas...";
+let infoRangos = "Cargando rangos...";
+let infoPuntosReciclaje = "Cargando puntos cercanos...";
 
 const CUENCA_BOUNDS = L.latLngBounds(
     [-2.99, -79.15], 
@@ -66,6 +71,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   await cargarPuntosReciclaje();
   await cargarPuntosRecompensa();
   
+  prepararDatosCompletosIA();
 
  cargarParroquiasEnBackground();
 
@@ -996,28 +1002,38 @@ function renderizarCaminoRangos(rangos, totalReal) {
 
 
 
-const GROQ_API_KEY = "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"; 
-let infoMateriales = "Cargando materiales...";
-let infoRecompensas = "Cargando recompensas...";
 
-async function prepararDatosParaIA() {
+
+async function prepararDatosCompletosIA() {
     try {
         const resMat = await fetch(`${API_BASE}/materiales`);
         if(resMat.ok) {
             const mats = await resMat.json();
-            infoMateriales = mats.map(m => `- ${m.nombre}: ${m.descripcion || 'Sin descripción'}`).join('\n');
+            infoMateriales = mats.map(m => `- ${m.nombre} (${m.puntos_kg} pts/kg): ${m.descripcion || ''}`).join('\n');
         }
 
         const resRec = await fetch(`${API_BASE}/recompensas`);
         if(resRec.ok) {
             const recs = await resRec.json();
-            infoRecompensas = recs.map(r => `- ${r.nombre} (Cuesta ${r.costoPuntos} puntos): ${r.descripcion || ''}`).join('\n');
+            infoRecompensas = recs.map(r => `- ${r.nombre} (Cuesta ${r.costoPuntos} pts): ${r.descripcion || ''}`).join('\n');
         }
+
+        const resRan = await fetch(`${API_BASE}/rangos`);
+        if(resRan.ok) {
+            const rangos = await resRan.json();
+            infoRangos = rangos.map(r => `- Rango ${r.nombre_rango}`).join('\n');
+        }
+
+        const resUbi = await fetch(`${API_BASE}/ubicacion_reciclajes`);
+        if(resUbi.ok) {
+            const ubis = await resUbi.json();
+            infoPuntosReciclaje = ubis.slice(0, 10).map(u => `- ${u.nombre} en ${u.direccion}`).join('\n');
+        }
+
     } catch(e) {
-        console.error("Error preparando datos IA:", e);
+        console.error("Error preparando cerebro IA:", e);
     }
-}
-window.toggleChat = function() {
+}window.toggleChat = function() {
     const chat = document.getElementById("chatWindow");
     if (chat.style.display === "flex") {
         chat.style.display = "none";
@@ -1027,7 +1043,7 @@ window.toggleChat = function() {
         
         const body = document.getElementById("chatBody");
         if (body.children.length === 0) {
-            agregarMensaje(`¡Hola ${usuarioLogueado.primer_nombre}! 👋 Soy LoopiBot. Veo que tienes ${usuarioLogueado.puntos_actuales} puntos. ¿En qué te ayudo?`, "bot");
+            agregarMensaje(`¡Hola ${usuarioLogueado.primer_nombre}! 👋 Soy LoopiBot. Tienes ${usuarioLogueado.puntos_actuales} puntos. ¿En qué te ayudo?`, "bot");
         }
     }
 };
@@ -1046,7 +1062,7 @@ window.enviarMensaje = async function() {
     input.value = "";
     input.disabled = true;
 
-    const loadingId = agregarMensaje("Analizando base de datos... 💾", "bot", true);
+    const loadingId = agregarMensaje("Analizando... 🧠", "bot", true);
 
     try {
         const respuesta = await consultarGroq(texto);
@@ -1066,24 +1082,27 @@ async function consultarGroq(pregunta) {
     
     const SYSTEM_PROMPT = `
     ERES LOOPIBOT: El asistente oficial de la app de reciclaje "Loopi" en Cuenca, Ecuador.
-    TU PERSONALIDAD: Ecuatoriano amable ("ñaño", "chévere", "de una"). Responde corto y útil.
+    TU PERSONALIDAD: Ecuatoriano amable ("ñaño", "chévere", "de una"). Responde corto, útil y motivador.
 
-    DATOS DEL USUARIO ACTUAL (Con quien hablas):
-    - Nombre: ${usuarioLogueado.primer_nombre} ${usuarioLogueado.apellido_paterno}
-    - Puntos actuales: ${usuarioLogueado.puntos_actuales}
-    - Rango: ${usuarioLogueado.rango ? usuarioLogueado.rango.nombre_rango : 'Nuevo'}
-    - Correo: ${usuarioLogueado.correo}
 
-    DATOS DE LA BASE DE DATOS (MATERIALES ACEPTADOS):
+    Nombre: ${usuarioLogueado.primer_nombre} ${usuarioLogueado.apellido_paterno}
+    Puntos: ${usuarioLogueado.puntos_actuales}
+    Rango Actual: ${usuarioLogueado.rango ? usuarioLogueado.rango.nombre_rango : 'Nuevo'}
+    Correo: ${usuarioLogueado.correo}
+
     ${infoMateriales}
 
-    DATOS DE LA BASE DE DATOS (RECOMPENSAS DISPONIBLES):
     ${infoRecompensas}
 
-    REGLAS:
-    1. Si te preguntan "qué puedo canjear", revisa sus puntos y dile para qué le alcanza de la lista de recompensas.
-    2. Si te preguntan "qué reciclan", usa la lista de materiales.
-    3. Nunca inventes datos que no estén en estas listas.
+    ${infoRangos}
+
+    ${infoPuntosReciclaje}
+
+    --- REGLAS DE RESPUESTA ---
+    1. Si preguntan "¿Qué puedo canjear?", revisa sus puntos (${usuarioLogueado.puntos_actuales}) y sugiere SOLO lo que les alcanza.
+    2. Si preguntan "¿Cómo reciclo?", diles: Lavar, Secar y Aplastar.
+    3. Si preguntan por puntos de reciclaje, menciona algunos de la lista o diles que miren el mapa.
+    4. Sé breve. Máximo 3 oraciones.
     `;
 
     const url = "https://api.groq.com/openai/v1/chat/completions";
@@ -1094,7 +1113,7 @@ async function consultarGroq(pregunta) {
             { role: "system", content: SYSTEM_PROMPT },
             { role: "user", content: pregunta }
         ],
-        temperature: 0.5 // Un poco más bajo para que sea más preciso con los datos
+        temperature: 0.5 
     };
 
     const response = await fetch(url, {
