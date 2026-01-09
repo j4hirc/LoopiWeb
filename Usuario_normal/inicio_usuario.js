@@ -996,14 +996,10 @@ function renderizarCaminoRangos(rangos, totalReal) {
 
 const GEMINI_API_KEY = "AIzaSyDxwjFcMMwQJMBCFH-cvXAEKrftbJ701m8";
 
-// CAMBIO IMPORTANTE: Usamos 'gemini-1.5-flash' que es más rápido y estable para cuentas gratis
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-
-// 2. CEREBRO DE LOOPI (Contexto para la IA)
+// CEREBRO DE LOOPI (Contexto para la IA)
 const LOOPI_DATA = `
 ERES LOOPIBOT: Un asistente virtual experto en reciclaje para la app "Loopi" en Cuenca, Ecuador.
 TU PERSONALIDAD: Amable, motivador, usas jerga ecuatoriana suave ("ñaño", "chévere", "de una"). Respuestas cortas (máx 3 frases).
-
 DATOS DE LA APP:
 - Objetivo: Conectar recicladores con ciudadanos y gestionar residuos.
 - Rangos de Usuario: Semilla (0-25 entregas), Brote (26-50), Árbol Joven (51-100), Bosque (100+).
@@ -1015,53 +1011,57 @@ DATOS DE LA APP:
   2. Aplástalos para ahorrar espacio.
   3. Abre la app y pide un reciclador o ve a un punto fijo.
 - Ubicación: Funcionamos principalmente en Cuenca, Azuay.
-
 SI TE PREGUNTAN ALGO FUERA DEL TEMA: Di amablemente que solo sabes de reciclaje y Loopi.
 `;
 
 function toggleChat() {
     const chat = document.getElementById("chatWindow");
-    if(chat.style.display === "flex") {
+    if (chat.style.display === "flex") {
         chat.style.display = "none";
     } else {
         chat.style.display = "flex";
         setTimeout(() => document.getElementById("chatInput").focus(), 100);
+        
+        // Mensaje de bienvenida si el chat está vacío
         const body = document.getElementById("chatBody");
-        if(body.children.length === 0) {
+        if (body.children.length === 0) {
             agregarMensaje("¡Hola ñaño! 👋 Soy LoopiBot. Pregúntame sobre cómo ganar puntos o dónde reciclar.", "bot");
         }
     }
 }
 
 function checkEnter(e) {
-    if(e.key === "Enter") enviarMensaje();
+    if (e.key === "Enter") enviarMensaje();
 }
 
 async function enviarMensaje() {
     const input = document.getElementById("chatInput");
     const btn = document.getElementById("btnSend");
     const texto = input.value.trim();
-    
-    if(!texto) return;
 
+    if (!texto) return;
+
+    // 1. Mostrar mensaje del usuario
     agregarMensaje(texto, "user");
     input.value = "";
     input.disabled = true;
     btn.disabled = true;
 
+    // 2. Mostrar estado "Pensando..."
     const loadingId = agregarMensaje("Pensando... 🤔", "bot", true);
 
     try {
-        const respuestaIA = await consultarGemini(texto);
+        // 3. Consultar a la IA (Con lógica de reintento automática)
+        const respuestaIA = await consultarGeminiRobusto(texto);
         
+        // 4. Mostrar respuesta
         eliminarMensaje(loadingId);
         agregarMensaje(respuestaIA, "bot");
 
     } catch (error) {
-        console.error(error);
+        console.error("Error IA:", error);
         eliminarMensaje(loadingId);
-        // Mensaje de error amigable
-        agregarMensaje("Chuta ñaño, hubo un error de conexión. Intenta de nuevo en un ratito.", "bot");
+        agregarMensaje("Chuta ñaño, hubo un error de conexión con la IA. Intenta de nuevo en un ratito.", "bot");
     } finally {
         input.disabled = false;
         btn.disabled = false;
@@ -1069,58 +1069,68 @@ async function enviarMensaje() {
     }
 }
 
-async function consultarGemini(preguntaUsuario) {
+// --- FUNCIÓN DE IA ROBUSTA (PRUEBA VARIOS MODELOS SI FALLA) ---
+async function consultarGeminiRobusto(pregunta) {
+    // Lista de modelos a probar en orden de preferencia
+    const modelos = [
+        "gemini-1.5-flash",
+        "gemini-1.5-pro",
+        "gemini-1.0-pro",
+        "gemini-pro"
+    ];
+
     const payload = {
-        contents: [{
-            parts: [{
-                text: LOOPI_DATA + "\n\nPregunta del usuario: " + preguntaUsuario
-            }]
-        }]
+        contents: [{ parts: [{ text: LOOPI_DATA + "\n\nPregunta del usuario: " + pregunta }] }]
     };
 
-    try {
-        // Usamos la variable global GEMINI_URL que definimos arriba
-        const response = await fetch(GEMINI_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        });
+    // Intentar con cada modelo hasta que uno funcione
+    for (const modelo of modelos) {
+        try {
+            console.log(`Intentando conectar con modelo: ${modelo}...`);
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${GEMINI_API_KEY}`;
+            
+            const response = await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
 
-        if (!response.ok) {
-            // Si falla, intentamos lanzar el error para que lo capture el catch
-            throw new Error(`Error API: ${response.status} - ${response.statusText}`);
+            if (response.ok) {
+                const data = await response.json();
+                if (data.candidates && data.candidates.length > 0) {
+                    return data.candidates[0].content.parts[0].text;
+                }
+            } else {
+                console.warn(`Fallo modelo ${modelo}: ${response.status}`);
+            }
+        } catch (e) {
+            console.warn(`Error de red con modelo ${modelo}`, e);
         }
-
-        const data = await response.json();
-        
-        if (data.candidates && data.candidates.length > 0 && data.candidates[0].content) {
-            return data.candidates[0].content.parts[0].text;
-        } else {
-            return "Lo siento ñaño, no entendí bien eso. ¿Puedes preguntar de otra forma?";
-        }
-    } catch (error) {
-        console.error("Detalle del error:", error);
-        throw error;
     }
+
+    throw new Error("Ningún modelo de IA respondió correctamente.");
 }
 
+// --- UTILIDADES DEL CHAT ---
 function agregarMensaje(texto, tipo, esLoading = false) {
     const chatBody = document.getElementById("chatBody");
     const div = document.createElement("div");
     div.className = `msg ${tipo}`;
-    
     const id = "msg-" + Date.now();
-    if(esLoading) {
+    
+    if (esLoading) {
         div.id = id;
         div.style.fontStyle = "italic";
         div.style.opacity = "0.7";
     }
 
-    const textoFormateado = texto.replace(/\n/g, "<br>");
-    const hora = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    const textoFormat = texto.replace(/\n/g, "<br>"); 
+    // Usamos marked.js si quisieras markdown, pero texto plano con br basta por ahora
+    
+    const hora = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     div.innerHTML = `
-        <p>${textoFormateado}</p>
+        <p>${textoFormat}</p>
         ${!esLoading ? `<span class="time">${hora}</span>` : ''}
     `;
 
@@ -1131,5 +1141,5 @@ function agregarMensaje(texto, tipo, esLoading = false) {
 
 function eliminarMensaje(id) {
     const el = document.getElementById(id);
-    if(el) el.remove();
+    if (el) el.remove();
 }
