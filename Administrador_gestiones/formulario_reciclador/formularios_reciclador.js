@@ -70,6 +70,7 @@ function renderCards(lista) {
             `;
         }
 
+        // --- HORARIOS ---
         let horariosHtml = '<p style="font-size:0.85rem; color:#7f8c8d;">No especificado</p>';
         if (f.horarios && f.horarios.length > 0) {
             horariosHtml = `<ul style="font-size:0.85rem; padding-left:20px; margin:5px 0;">`;
@@ -79,6 +80,7 @@ function renderCards(lista) {
             horariosHtml += `</ul>`;
         }
 
+        // --- MATERIALES ---
         let materialesHtml = '<p style="font-size:0.85rem; color:#7f8c8d;">No especificado</p>';
         if (f.materiales && f.materiales.length > 0) {
             materialesHtml = `<div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:5px;">`;
@@ -92,6 +94,7 @@ function renderCards(lista) {
             materialesHtml += `</div>`;
         }
 
+        // --- EVIDENCIA ---
         let imgEvidenciaHtml = `<p style="color:#e74c3c; font-size:0.9rem;">Sin evidencia cargada</p>`;
         if (f.evidencia_experiencia) {
             let srcImagen = f.evidencia_experiencia;
@@ -107,20 +110,40 @@ function renderCards(lista) {
             `;
         }
 
+        // --- PARROQUIA (CORREGIDO) ---
         let idParroquia = null;
-        let nombreParroquia = "No definida (Se pedirá al aprobar)";
-        
+        let nombreParroquia = "No definida";
+        let colorParroquia = "#e67e22"; // Naranja si falta
+
+        // 1. Intentamos obtener el ID de la parroquia del usuario
         if (f.usuario && f.usuario.parroquia) {
             if (typeof f.usuario.parroquia === 'object') {
                 idParroquia = f.usuario.parroquia.id_parroquia || f.usuario.parroquia.id;
-                nombreParroquia = f.usuario.parroquia.nombre_parroquia || f.usuario.parroquia.nombre;
+                // Si el objeto ya trae el nombre, lo usamos
+                if(f.usuario.parroquia.nombre_parroquia) nombreParroquia = f.usuario.parroquia.nombre_parroquia;
+                else if(f.usuario.parroquia.nombre) nombreParroquia = f.usuario.parroquia.nombre;
             } else {
+                // Si es solo un número (ID)
                 idParroquia = f.usuario.parroquia;
-                const pEncontrada = listaParroquias.find(p => (p.id_parroquia || p.id) == idParroquia);
-                if(pEncontrada) nombreParroquia = pEncontrada.nombre_parroquia || pEncontrada.nombre;
             }
         }
 
+        // 2. Si tenemos ID pero no nombre, lo buscamos en la lista global
+        if (idParroquia && nombreParroquia === "No definida") {
+            const pEncontrada = listaParroquias.find(p => (p.id_parroquia || p.id) == idParroquia);
+            if (pEncontrada) {
+                nombreParroquia = pEncontrada.nombre_parroquia || pEncontrada.nombre;
+            }
+        }
+
+        // 3. Si encontramos parroquia, cambiamos color a normal
+        if (idParroquia) {
+            colorParroquia = "#2c3e50";
+        } else {
+            nombreParroquia += " (Se pedirá al aprobar)";
+        }
+
+        // Importante: Pasamos 'null' como string si no hay ID, para que no rompa el HTML
         const paramParroquia = idParroquia ? idParroquia : 'null';
 
         const card = document.createElement("div");
@@ -151,7 +174,7 @@ function renderCards(lista) {
                 <div style="margin-bottom:10px;">
                     <p style="margin:2px 0;"><strong>Sitio:</strong> ${f.nombre_sitio}</p>
                     <p style="margin:2px 0;"><strong>Ubicación:</strong> ${f.ubicacion}</p>
-                    <p style="margin:2px 0; color:${idParroquia ? '#2c3e50' : '#e67e22'}">
+                    <p style="margin:2px 0; color:${colorParroquia}">
                         <strong>Parroquia:</strong> ${nombreParroquia}
                     </p>
                     <p style="margin:2px 0;"><strong>Años Exp:</strong> ${f.anios_experiencia}</p>
