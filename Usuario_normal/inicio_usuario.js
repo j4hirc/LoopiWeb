@@ -997,19 +997,16 @@ function renderizarCaminoRangos(rangos, totalReal) {
    LOOPI BOT - INTELIGENCIA ARTIFICIAL
    ========================================= */
 
-// 1. CONFIGURACIÓN
-const GEMINI_API_KEY = "AIzaSyDxwjFcMMwQJMBCFH-cvXAEKrftbJ701m8";
+const GEMINI_API_KEY = "AIzaSyDxwjFcMMwQJMBCFH-cvXAEKrftbJ701m8"; // TU CLAVE AQUÍ
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
-// 2. CEREBRO DE LOOPI (Contexto para la IA)
-// Aquí le enseñamos a la IA todo sobre la app
 const LOOPI_DATA = `
 ERES LOOPIBOT: Un asistente virtual experto en reciclaje para la app "Loopi" en Cuenca, Ecuador.
 TU PERSONALIDAD: Amable, motivador, usas jerga ecuatoriana suave ("ñaño", "chévere", "de una"). Respuestas cortas (máx 3 frases).
 
 DATOS DE LA APP:
 - Objetivo: Conectar recicladores con ciudadanos y gestionar residuos.
-- Rangos de Usuario: Bronce (0-25 entregas), Plata (26-50), Oro (51-100), Diamante(100+).
+- Rangos de Usuario: Bronce (0-25 entregas), Plata (26-50), Oro (51-100), Diamante (100+).
 - Puntos: Ganas puntos por cada kg entregado.
 - Materiales que aceptamos: Plástico (Botellas PET), Cartón, Vidrio, Papel, Pilas.
 - Recompensas: Cupones de descuento en Supermaxi, KFC, Farmacias, Entradas al cine.
@@ -1021,7 +1018,6 @@ DATOS DE LA APP:
 
 SI TE PREGUNTAN ALGO FUERA DEL TEMA: Di amablemente que solo sabes de reciclaje y Loopi.
 `;
-
 
 
 function toggleChat() {
@@ -1074,10 +1070,6 @@ async function enviarMensaje() {
 }
 
 async function consultarGemini(preguntaUsuario) {
-    if(GEMINI_API_KEY === "AIzaSyDxwjFcMMwQJMBCFH-cvXAEKrftbJ701m8") {
-        return "⚠️ Ñaño, falta configurar la API KEY en el código (inicio_usuario.js). Pero sí te entiendo: " + preguntaUsuario;
-    }
-
     const payload = {
         contents: [{
             parts: [{
