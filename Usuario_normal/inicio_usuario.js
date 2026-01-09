@@ -1002,7 +1002,7 @@ const GROQ_API_KEY = "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";
 const LOOPI_DATA = `
 ERES LOOPIBOT: Un asistente experto en reciclaje para la app "Loopi" en Cuenca, Ecuador.
 TU PERSONALIDAD: Amable, motivador, usas jerga ecuatoriana suave ("ñaño", "chévere", "de una").
-REGLAS: Respuestas cortas (máximo 30 palabras). Si no sabes, di que no sabes.
+REGLAS: Respuestas cortas (máximo 30 palabras).
 DATOS CLAVE:
 - Rangos: Semilla -> Brote -> Árbol Joven -> Bosque.
 - Puntos: Ganas por cada kilo entregado.
@@ -1010,6 +1010,7 @@ DATOS CLAVE:
 - Recompensas: Descuentos en Supermaxi, KFC, Farmacias.
 - Cómo reciclar: Lavar, secar y aplastar todo.
 `;
+
 window.toggleChat = function() {
     const chat = document.getElementById("chatWindow");
     if (chat.style.display === "flex") {
@@ -1020,7 +1021,7 @@ window.toggleChat = function() {
         
         const body = document.getElementById("chatBody");
         if (body.children.length === 0) {
-            agregarMensaje("¡Hola ñaño! 👋 Soy LoopiBot. Pregúntame lo que quieras sobre la app.", "bot");
+            agregarMensaje("¡Hola ñaño! 👋 Soy LoopiBot. Pregúntame sobre la app.", "bot");
         }
     }
 };
@@ -1046,30 +1047,24 @@ window.enviarMensaje = async function() {
     try {
         // 3. Llamada a Groq
         const respuesta = await consultarGroq(texto);
-        
         eliminarMensaje(loadingId);
         agregarMensaje(respuesta, "bot");
-
     } catch (error) {
         console.error("Error Groq:", error);
         eliminarMensaje(loadingId);
-        agregarMensaje("Chuta ñaño, me quedé sin megas. Revisa tu clave API.", "bot");
+        agregarMensaje("Chuta ñaño, error de conexión. Intenta luego.", "bot");
     } finally {
         input.disabled = false;
         input.focus();
     }
 };
 
-// --- FUNCIÓN DE CONEXIÓN A GROQ ---
+// --- FUNCIÓN DE CONEXIÓN A GROQ (CORREGIDA) ---
 async function consultarGroq(pregunta) {
-    if(GROQ_API_KEY === "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") {
-        return "⚠️ Ñaño, falta pegar la clave API de Groq en el código.";
-    }
-
     const url = "https://api.groq.com/openai/v1/chat/completions";
     
     const payload = {
-        model: "llama3-8b-8192", // Modelo rápido y gratuito de Meta
+        model: "llama3-8b-8192", 
         messages: [
             { role: "system", content: LOOPI_DATA },
             { role: "user", content: pregunta }
@@ -1087,7 +1082,8 @@ async function consultarGroq(pregunta) {
     });
 
     if (!response.ok) {
-        throw new Error(`Error API: ${response.status}`);
+        const errorDetail = await response.json();
+        throw new Error(`Error API: ${response.status} - ${JSON.stringify(errorDetail)}`);
     }
 
     const data = await response.json();
