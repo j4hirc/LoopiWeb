@@ -998,7 +998,7 @@ function renderizarCaminoRangos(rangos, totalReal) {
 
 const GROQ_API_KEY = "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"; 
 
-
+// CEREBRO DE LOOPI
 const LOOPI_DATA = `
 ERES LOOPIBOT: Un asistente experto en reciclaje para la app "Loopi" en Cuenca, Ecuador.
 TU PERSONALIDAD: Amable, motivador, usas jerga ecuatoriana suave ("ñaño", "chévere", "de una").
@@ -1010,7 +1010,6 @@ DATOS CLAVE:
 - Recompensas: Descuentos en Supermaxi, KFC, Farmacias.
 - Cómo reciclar: Lavar, secar y aplastar todo.
 `;
-
 window.toggleChat = function() {
     const chat = document.getElementById("chatWindow");
     if (chat.style.display === "flex") {
@@ -1052,7 +1051,7 @@ window.enviarMensaje = async function() {
     } catch (error) {
         console.error("Error Groq:", error);
         eliminarMensaje(loadingId);
-        agregarMensaje("Chuta ñaño, error de conexión. Intenta luego.", "bot");
+        agregarMensaje("Chuta ñaño, error de conexión (" + error.message + ").", "bot");
     } finally {
         input.disabled = false;
         input.focus();
@@ -1064,7 +1063,8 @@ async function consultarGroq(pregunta) {
     const url = "https://api.groq.com/openai/v1/chat/completions";
     
     const payload = {
-        model: "llama3-8b-8192", 
+        // CAMBIO AQUÍ: Usamos el modelo más nuevo y estable
+        model: "llama-3.3-70b-versatile", 
         messages: [
             { role: "system", content: LOOPI_DATA },
             { role: "user", content: pregunta }
@@ -1083,7 +1083,9 @@ async function consultarGroq(pregunta) {
 
     if (!response.ok) {
         const errorDetail = await response.json();
-        throw new Error(`Error API: ${response.status} - ${JSON.stringify(errorDetail)}`);
+        // Mensaje de error más limpio para que veas qué pasa
+        const msg = errorDetail.error ? errorDetail.error.message : response.statusText;
+        throw new Error(msg);
     }
 
     const data = await response.json();
