@@ -291,24 +291,22 @@ window.seleccionarPuntoDesdePopup = function (id, nombre, esReciclador) {
             Swal.fire("Aviso", "Este punto no tiene materiales configurados.", "warning");
         }
 
-        // --- RUTA ---
         if (markerUsuario) {
             const userLatLng = markerUsuario.getLatLng();
             const destLatLng = L.latLng(puntoSeleccionado.latitud, puntoSeleccionado.longitud);
 
             if (routingControl) map.removeControl(routingControl);
 
-            // CONFIGURACION DE RUTA SIN MARCADORES EXTRAÑOS
             routingControl = L.Routing.control({
                 waypoints: [userLatLng, destLatLng],
                 routeWhileDragging: false,
                 draggableWaypoints: false,
                 addWaypoints: false,
-                show: false, // Ocultar panel de instrucciones
+                show: false,
                 lineOptions: { 
                     styles: [{color: colorHTML, opacity: 0.8, weight: 5}] 
                 },
-                createMarker: function() { return null; } // NO crear marcadores A y B (ya tenemos los nuestros)
+                createMarker: function() { return null; } 
             }).addTo(map);
 
             routingControl.on('routesfound', function(e) {

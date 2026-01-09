@@ -48,38 +48,37 @@ function getRolId(rolSel) {
 
 
 document.addEventListener("DOMContentLoaded", async () => {
-  const userStr = localStorage.getItem("usuario");
-  if (!userStr) return redirigirLogin();
+    const userStr = localStorage.getItem("usuario");
+    if (!userStr) return redirigirLogin();
 
-  usuario = JSON.parse(userStr);
+    usuario = JSON.parse(userStr);
 
-  if (getRolId(usuario.rol_seleccionado) !== 2) return redirigirLogin();
+    if (getRolId(usuario.rol_seleccionado) !== 2) return redirigirLogin();
 
-  actualizarSaludoUI();
+    actualizarSaludoUI();
+    await Promise.all([
+        refrescarDatosUsuario(),
+        identificarMiPunto() 
+    ]);
 
-  await refrescarDatosUsuario();
+    document.getElementById("btnAbrirPerfil").onclick = abrirPerfil;
+    document.getElementById("btnCerrarSesion").onclick = cerrarSesion;
 
-  document.getElementById("btnAbrirPerfil").onclick = abrirPerfil;
-  document.getElementById("btnCerrarSesion").onclick = cerrarSesion;
-  
-  const inputFoto = document.getElementById("inputPerfilFoto");
-  if(inputFoto) inputFoto.addEventListener("change", previsualizarFoto);
+    const inputFoto = document.getElementById("inputPerfilFoto");
+    if (inputFoto) inputFoto.addEventListener("change", previsualizarFoto);
 
-  const btnUbicacion = document.getElementById("btnMiUbicacion");
-  if (btnUbicacion) btnUbicacion.onclick = obtenerUbicacionActual;
+    const btnUbicacion = document.getElementById("btnMiUbicacion");
+    if (btnUbicacion) btnUbicacion.onclick = obtenerUbicacionActual;
 
+    initMapaReciclador();
 
-  initMapaReciclador();
-  
-  await Promise.all([
-      cargarFiltrosMateriales(), // Cargar botones de filtro
-      cargarPuntosReciclajeReciclador(), // Cargar puntos
-      cargarNotificacionesReciclador()
-  ]);
+    Promise.all([
+        cargarFiltrosMateriales(),
+        cargarPuntosReciclajeReciclador(),
+        cargarNotificacionesReciclador()
+    ]);
 
-  setInterval(cargarNotificacionesReciclador, 15000);
-
-  await identificarMiPunto();
+    setInterval(cargarNotificacionesReciclador, 15000);
 });
 
 async function refrescarDatosUsuario() {
