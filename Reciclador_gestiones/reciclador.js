@@ -578,6 +578,8 @@ async function abrirModalMiPunto() {
 
     Swal.fire({ title: "Cargando detalles...", didOpen: () => Swal.showLoading() });
 
+    fotoPuntoFile = null;
+
     try {
         const idUbicacion = miPuntoData.id_ubicacion_reciclaje;
         const res = await fetch(`${API_BASE}/ubicacion_reciclajes/${idUbicacion}`);
@@ -782,10 +784,8 @@ async function guardarCambiosPunto() {
 
         listaHorariosEnvio.push({
             dia_semana: dia,
-            hora_apertura: inicio,
-            horaApertura: inicio,
-            hora_cierre: fin,
-            horaCierre: fin
+            hora_inicio: inicio,
+            hora_fin: fin
         });
     });
 
@@ -806,7 +806,7 @@ async function guardarCambiosPunto() {
     const lat = document.getElementById("txtLatitud").value;
     const lng = document.getElementById("txtLongitud").value;
 
-    if (!nombre || !idParroquia || !direccion) return Swal.fire("Campos vacíos", "Faltan datos obligatorios (Nombre, Parroquia, Dirección).", "warning");
+    if (!nombre || !idParroquia || !direccion) return Swal.fire("Campos vacíos", "Faltan datos obligatorios.", "warning");
 
     const objetoUpdate = {
         id_ubicacion_reciclaje: miPuntoData.id_ubicacion_reciclaje,
@@ -828,6 +828,7 @@ async function guardarCambiosPunto() {
 
     const formData = new FormData();
     formData.append("datos", JSON.stringify(objetoUpdate));
+    
     if (fotoPuntoFile) formData.append("archivo", fotoPuntoFile);
 
     try {
