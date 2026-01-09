@@ -1062,7 +1062,7 @@ window.enviarMensaje = async function() {
 
 // --- FUNCIÓN DE CONEXIÓN A GROQ ---
 async function consultarGroq(pregunta) {
-    if(GROQ_API_KEY === "PEGAR_TU_CLAVE_GROQ_AQUI") {
+    if(GROQ_API_KEY === "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") {
         return "⚠️ Ñaño, falta pegar la clave API de Groq en el código.";
     }
 
