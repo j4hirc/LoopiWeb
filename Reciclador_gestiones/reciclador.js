@@ -804,27 +804,47 @@ function renderizarHorariosEdicion() {
     }
 }
 
-function agregarFilaHorario(dia = "", inicio = "", fin = "") {
+function agregarFilaHorario(dia = null, inicio = "08:00", fin = "18:00") {
     const lista = document.getElementById("listaHorarios");
+    
+    const diasSemana = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+    
+    const selectsExistentes = lista.querySelectorAll(".input-dia");
+    const diasUsados = Array.from(selectsExistentes).map(s => normalizarDia(s.value));
+
+    let diaSugerido = dia;
+    if (!dia) {
+        const diaLibre = diasSemana.find(d => !diasUsados.includes(normalizarDia(d)));
+        if (!diaLibre) {
+            Swal.fire("Semana Completa", "Ya has agregado todos los días de la semana.", "info");
+            return; 
+        }
+        diaSugerido = diaLibre;
+    }
+
     const div = document.createElement("div");
     div.className = "horario-row";
 
-  
-    const diaBonito = formatearDiaBonito(dia);
+    const diaNormalizado = normalizarDia(diaSugerido);
 
-    const diasSemana = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
     let options = `<option value="">Seleccione día</option>`;
 
     diasSemana.forEach(d => {
-        const selected = (d === diaBonito) ? "selected" : "";
+        const opcNormalizada = normalizarDia(d);
+        const selected = (opcNormalizada === diaNormalizado) ? "selected" : "";
+        
+  
         options += `<option value="${d}" ${selected}>${d}</option>`;
     });
 
+    const horaIniFmt = (inicio && inicio.length >= 5) ? inicio.substring(0, 5) : "08:00";
+    const horaFinFmt = (fin && fin.length >= 5) ? fin.substring(0, 5) : "18:00";
+
     div.innerHTML = `
         <select class="input-dia">${options}</select>
-        <input type="time" class="input-inicio" value="${inicio}">
+        <input type="time" class="input-inicio" value="${horaIniFmt}">
         <span>a</span>
-        <input type="time" class="input-fin" value="${fin}">
+        <input type="time" class="input-fin" value="${horaFinFmt}">
         <button class="btn-del-horario" onclick="this.parentElement.remove()">
             <i class="fa-solid fa-trash"></i>
         </button>
