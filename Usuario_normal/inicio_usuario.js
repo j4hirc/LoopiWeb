@@ -998,7 +998,7 @@ function renderizarCaminoRangos(rangos, totalReal) {
    ========================================= */
 
 // 1. CONFIGURACIÓN
-const GEMINI_API_KEY = "AIzaSyD_9XJiD_fKVgNUMKuYfVN4NIbTCc2dQdI"; // <--- ¡PON TU API KEY AQUÍ!
+const GEMINI_API_KEY = "AIzaSyD_9XJiD_fKVgNUMKuYfVN4NIbTCc2dQdI";
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
 // 2. CEREBRO DE LOOPI (Contexto para la IA)
