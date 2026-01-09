@@ -24,6 +24,7 @@ let infoMateriales = "Cargando materiales...";
 let infoRecompensas = "Cargando recompensas...";
 let infoRangos = "Cargando rangos...";
 let infoPuntosReciclaje = "Cargando puntos cercanos...";
+let infoLogros = "Cargando logros...";
 
 const CUENCA_BOUNDS = L.latLngBounds(
     [-2.99, -79.15], 
@@ -1030,11 +1031,16 @@ async function prepararDatosCompletosIA() {
             infoPuntosReciclaje = ubis.slice(0, 10).map(u => `- ${u.nombre} en ${u.direccion}`).join('\n');
         }
 
+        const resLog = await fetch(`${API_BASE}/logros`);
+        if(resLog.ok) {
+            const logros = await resLog.json();
+            infoLogros = logros.map(l => `- Medalla: "${l.nombre}" (Premio: ${l.puntos_ganados} pts). Misión: ${l.descripcion}`).join('\n');
+        }
+
     } catch(e) {
         console.error("Error preparando cerebro IA:", e);
     }
 }
-
 window.toggleChat = function() {
     const chat = document.getElementById("chatWindow");
     if (chat.style.display === "flex") {
@@ -1100,6 +1106,9 @@ async function consultarGroq(pregunta) {
     --- BASE DE DATOS DE RECOMPENSAS ---
     ${infoRecompensas}
 
+    --- SISTEMA DE LOGROS Y MEDALLAS ---
+    ${infoLogros}
+
     --- SISTEMA DE RANGOS ---
     ${infoRangos}
 
@@ -1108,8 +1117,8 @@ async function consultarGroq(pregunta) {
 
     --- REGLAS DE RESPUESTA ---
     1. Si preguntan "¿Qué puedo canjear?", revisa sus puntos (${usuarioLogueado.puntos_actuales}) y sugiere SOLO lo que les alcanza.
-    2. Si preguntan "¿Cómo reciclo?", diles: Lavar, Secar y Aplastar.
-    3. Si preguntan por puntos de reciclaje, menciona algunos de la lista o diles que miren el mapa.
+    2. Si preguntan sobre LOGROS, diles qué medallas existen y cuántos puntos ganan.
+    3. Si preguntan "¿Cómo reciclo?", diles: Lavar, Secar y Aplastar.
     4. Sé breve. Máximo 3 oraciones.
     `;
 
