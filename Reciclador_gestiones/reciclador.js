@@ -538,19 +538,46 @@ function cerrarModalEstadisticas() {
 
 async function identificarMiPunto() {
     try {
+        console.log("🔍 Buscando punto de reciclaje para:", usuario.cedula);
+        
         const res = await fetch(`${API_BASE}/ubicacion_reciclajes`);
         if (res.ok) {
             const todos = await res.json();
-            miPuntoData = todos.find(p => p.reciclador && p.reciclador.cedula === usuario.cedula);
+            
+            miPuntoData = todos.find(p => {
+                if (p.reciclador && p.reciclador.cedula) {
+                    return String(p.reciclador.cedula) === String(usuario.cedula);
+                }
+                return false;
+            });
+
+            if (miPuntoData) {
+                console.log("✅ PUNTO ENCONTRADO:", miPuntoData.nombre);
+                document.querySelector('.card-orange').style.border = "2px solid #e67e22";
+            } else {
+                console.warn("⚠️ No se encontró ningún punto asociado a esta cédula.");
+                console.log("Lista completa recibida (para depurar):", todos);
+            }
+        } else {
+            console.error("Error al obtener ubicaciones desde la API");
         }
     } catch (e) {
-        console.error("Error buscando mi punto:", e);
+        console.error("Error crítico buscando mi punto:", e);
     }
 }
-
 async function abrirModalMiPunto() {
+    // Si la variable está vacía, intentamos buscarla de nuevo por si acaso falló la carga inicial
     if (!miPuntoData) {
-        Swal.fire("Aviso", "No tienes un punto de reciclaje asignado para editar. Contacta al administrador.", "info");
+        await identificarMiPunto();
+    }
+
+    if (!miPuntoData) {
+        Swal.fire({
+            icon: 'info',
+            title: 'Sin Punto Asignado',
+            text: 'No hemos encontrado un punto de reciclaje vinculado a tu usuario. Si crees que es un error, contacta al administrador.',
+            footer: 'Revisa la consola (F12) para más detalles.'
+        });
         return;
     }
 
@@ -562,17 +589,19 @@ async function abrirModalMiPunto() {
     document.getElementById("txtLatitud").value = miPuntoData.latitud || "";
     document.getElementById("txtLongitud").value = miPuntoData.longitud || "";
     
-    // Foto Preview
     const imgPreview = document.getElementById("previewPuntoFoto");
     if(miPuntoData.foto) {
-        imgPreview.src = miPuntoData.foto.startsWith("http") ? miPuntoData.foto : `${API_BASE.replace('/api','')}${miPuntoData.foto}`;
+        let urlFoto = miPuntoData.foto;
+        if (!urlFoto.startsWith("http") && !urlFoto.startsWith("data:")) {
+
+        }
+        imgPreview.src = urlFoto;
         imgPreview.style.display = "block";
     } else {
         imgPreview.style.display = "none";
     }
     
     await renderizarMaterialesEdicion();
-
     renderizarHorariosEdicion();
 
     Swal.close();
@@ -582,7 +611,11 @@ async function abrirModalMiPunto() {
         initMapaEdicion(miPuntoData.latitud, miPuntoData.longitud);
     }, 300);
     
-    document.getElementById("filePuntoFoto").addEventListener('change', function(e) {
+    const inputFoto = document.getElementById("filePuntoFoto");
+    const nuevoInput = inputFoto.cloneNode(true);
+    inputFoto.parentNode.replaceChild(nuevoInput, inputFoto);
+    
+    nuevoInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
         if(file){
             fotoPuntoFile = file;
