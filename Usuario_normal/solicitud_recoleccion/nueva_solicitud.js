@@ -43,9 +43,12 @@ function initMap() {
     const lngCuenca = -79.0059;
 
     map = L.map("mapaSeleccion", {
-        maxBounds: CUENCA_BOUNDS,
-        maxBoundsViscosity: 1.0
-    }).setView([latCuenca, lngCuenca], 14);
+        center: [latCuenca, lngCuenca],
+        zoom: 14,
+        maxBounds: CUENCA_BOUNDS, 
+        maxBoundsViscosity: 1.0,       
+        minZoom: 13                    
+    });
 
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
@@ -54,16 +57,11 @@ function initMap() {
 
     markersLayer = L.layerGroup().addTo(map);
 
-   if (navigator.geolocation) {
+
+    if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(pos => {
             const lat = pos.coords.latitude;
             const lng = pos.coords.longitude;
-            
-            if (CUENCA_BOUNDS.contains([lat, lng])) {
-                map.setView([lat, lng], 15);
-            } else {
-                Swal.fire("Ubicación", "Estás fuera del área de servicio (Cuenca).", "info");
-            }
             
             const userIcon = L.divIcon({
                 className: 'user-pin',
@@ -71,13 +69,20 @@ function initMap() {
                 iconSize: [20, 20]
             });
 
-            markerUsuario = L.marker([lat, lng], {icon: userIcon}).addTo(map).bindPopup("<b>Tu ubicación</b>").openPopup();
+
+            if (CUENCA_BOUNDS.contains([lat, lng])) {
+                map.setView([lat, lng], 15);
+                markerUsuario = L.marker([lat, lng], {icon: userIcon}).addTo(map).bindPopup("<b>Tu ubicación</b>").openPopup();
+            } else {
+                Swal.fire("Ubicación", "Te encuentras fuera del área de servicio (Cuenca).", "info");
+
+            }
+            
         }, () => {
-            console.log("Geolocalización denegada");
+            console.log("Geolocalización denegada o error");
         });
     }
 }
-
 async function cargarMaterialesGlobales() {
     try {
         const res = await fetch(`${API_BASE}/materiales`);
