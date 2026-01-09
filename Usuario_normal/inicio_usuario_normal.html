@@ -18,7 +18,8 @@
 
     <nav class="navbar">
         <div class="nav-logo">
-            <img src="../Imagenes/logo_icon.png" alt="Loop" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3405/3405802.png'">
+            <img src="../Imagenes/logo_icon.png" alt="Loop"
+                onerror="this.src='https://cdn-icons-png.flaticon.com/512/3405/3405802.png'">
             <span class="logo-text">Loopi</span>
         </div>
 
@@ -48,8 +49,10 @@
                     <span>Mi Cuenta</span>
                 </div>
                 <a href="#" id="btnAbrirPerfil"><i class="fa-solid fa-user"></i> Mi Perfil</a>
-                <a href="Form_reciclador/ser-reciclador.html"><i class="fa-solid fa-briefcase"></i> Quiero ser Reciclador</a>
-                <a href="#" id="btnLogout" class="logout"><i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión</a>
+                <a href="Form_reciclador/ser-reciclador.html"><i class="fa-solid fa-briefcase"></i> Quiero ser
+                    Reciclador</a>
+                <a href="#" id="btnLogout" class="logout"><i class="fa-solid fa-right-from-bracket"></i> Cerrar
+                    Sesión</a>
             </div>
         </div>
     </nav>
@@ -73,7 +76,8 @@
         </section>
 
         <section class="actions-grid">
-            <div class="action-card card-solicitud" onclick="window.location.href='solicitud_recoleccion/nueva_solicitud.html'">
+            <div class="action-card card-solicitud"
+                onclick="window.location.href='solicitud_recoleccion/nueva_solicitud.html'">
                 <div class="icon-circle"><i class="fa-solid fa-truck-fast"></i></div>
                 <h3>Solicitud</h3>
                 <p>Solicitar retiro</p>
@@ -117,7 +121,8 @@
                 <p>Únete</p>
             </div>
 
-            <div class="action-card card-stats" onclick="window.location.href='stats_historial/estadisticas_historial.html'">
+            <div class="action-card card-stats"
+                onclick="window.location.href='stats_historial/estadisticas_historial.html'">
                 <div class="icon-circle"><i class="fa-solid fa-chart-line"></i></div>
                 <h3>Historial</h3>
                 <p>Estadísticas</p>
@@ -127,11 +132,11 @@
         <section class="map-section">
             <div class="section-header">
                 <h2>Explora tu zona</h2>
-                
+
                 <div class="filtros-container">
                     <div id="contenedorBotonesMateriales" class="filtros-scroll">
                         <button class="btn-filtro active" data-id="todos">Todos</button>
-                        </div>
+                    </div>
                 </div>
 
                 <div class="leyenda">
@@ -141,7 +146,8 @@
             </div>
 
             <div class="mapa-wrapper" style="position: relative;">
-                <button id="btnMiUbicacion" onclick="irAMiUbicacion()" class="btn-ubicacion-flotante" title="Ir a mi ubicación">
+                <button id="btnMiUbicacion" onclick="irAMiUbicacion()" class="btn-ubicacion-flotante"
+                    title="Ir a mi ubicación">
                     <i class="fa-solid fa-location-crosshairs"></i>
                 </button>
                 <div id="mapaUsuario" class="mapa-container"></div>
@@ -158,13 +164,14 @@
             </div>
             <div class="modal-body-perfil">
                 <div class="profile-img-container">
-                    <img id="perfilPreview" src="https://via.placeholder.com/100" class="profile-img-preview" alt="Foto perfil">
+                    <img id="perfilPreview" src="https://via.placeholder.com/100" class="profile-img-preview"
+                        alt="Foto perfil">
                 </div>
                 <div style="text-align:center; margin-bottom: 20px;">
                     <label for="inputPerfilFoto" class="perfil-link-foto">Cambiar Foto</label>
                     <input type="file" id="inputPerfilFoto" accept="image/*" style="display:none;">
                 </div>
-                
+
                 <div class="perfil-grid">
                     <div class="perfil-row">
                         <div class="perfil-col">
@@ -186,7 +193,7 @@
                             <input type="text" id="perfilApellidoMaterno" class="perfil-input">
                         </div>
                     </div>
-                    
+
                     <div class="perfil-col">
                         <label class="perfil-label">Parroquia</label>
                         <select id="perfilParroquia" class="perfil-input">
@@ -196,7 +203,8 @@
 
                     <div class="perfil-col">
                         <label class="perfil-label">Correo Electrónico</label>
-                        <input type="email" id="perfilCorreo" class="perfil-input" disabled style="background:#f0f0f0; color:#888;">
+                        <input type="email" id="perfilCorreo" class="perfil-input" disabled
+                            style="background:#f0f0f0; color:#888;">
                     </div>
                     <div class="perfil-col">
                         <label class="perfil-label">Nueva Contraseña <small>(Dejar vacío si no cambia)</small></label>
@@ -233,40 +241,41 @@
     </div>
 
     <div class="chat-fab" onclick="toggleChat()">
-    <i class="fa-solid fa-robot"></i>
-    <span class="tooltip-chat">¡Pregúntame!</span>
-</div>
+        <img src="../Imagenes/ELLIE_LOOPI.png" class="fab-img" alt="Ellie">
 
-<div class="chat-window" id="chatWindow">
-    <div class="chat-header">
-        <div class="header-info">
-            <div class="avatar-bot">
-                <img src="../Imagenes/ELLIE_LOOPI.png" 
-                     alt="Ellie" 
-                     onerror="this.src='https://i.pinimg.com/564x/87/15/8e/87158e8e772f777b7858eb56da6d3388.jpg'">
+        <span class="tooltip-chat">¡Pregúntame!</span>
+    </div>
+
+    <div class="chat-window" id="chatWindow">
+        <div class="chat-header">
+            <div class="header-info">
+                <div class="avatar-bot">
+                    <img src="../Imagenes/ELLIE_LOOPI.png" alt="Ellie"
+                        onerror="this.src='https://i.pinimg.com/564x/87/15/8e/87158e8e772f777b7858eb56da6d3388.jpg'">
+                </div>
+                <div>
+                    <h4>Ellie Loopi 🌿</h4>
+                    <small>En línea</small>
+                </div>
             </div>
-            <div>
-                <h4>Ellie Loopi 🌿</h4>
-                <small>En línea</small>
+            <button class="btn-close-chat" onclick="toggleChat()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div class="chat-body" id="chatBody">
+            <div class="msg bot">
+                <p>Iniciando Sesion...</p>
+                <span class="time">Ahora</span>
             </div>
         </div>
-        <button class="btn-close-chat" onclick="toggleChat()"><i class="fa-solid fa-xmark"></i></button>
-    </div>
 
-    <div class="chat-body" id="chatBody">
-        <div class="msg bot">
-            <p>¡Hola! Soy Ellie Loopi. 🎒 Estoy aquí para ayudarte a reciclar ¿Qué necesitas?</p>
-            <span class="time">Ahora</span>
+        <div class="chat-footer">
+            <input type="text" id="chatInput" placeholder="Escribe tu duda..." onkeypress="checkEnter(event)">
+            <button onclick="enviarMensaje()" id="btnSend"><i class="fa-solid fa-paper-plane"></i></button>
         </div>
     </div>
-
-    <div class="chat-footer">
-        <input type="text" id="chatInput" placeholder="Escribe tu duda..." onkeypress="checkEnter(event)">
-        <button onclick="enviarMensaje()" id="btnSend"><i class="fa-solid fa-paper-plane"></i></button>
-    </div>
-</div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="inicio_usuario.js"></script>
 </body>
+
 </html>
