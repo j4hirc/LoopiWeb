@@ -538,7 +538,6 @@ function cerrarModalEstadisticas() {
 
 async function identificarMiPunto() {
     try {
-        console.log("🔍 Buscando punto de reciclaje para:", usuario.cedula);
         const res = await fetch(`${API_BASE}/ubicacion_reciclajes`);
         if (res.ok) {
             const todos = await res.json();
@@ -548,11 +547,10 @@ async function identificarMiPunto() {
                 }
                 return false;
             });
-
+            
             if (miPuntoData) {
-                console.log("✅ PUNTO ENCONTRADO:", miPuntoData.nombre);
                 const card = document.querySelector('.card-orange');
-                if(card) card.style.border = "2px solid #e67e22";
+                if (card) card.style.border = "2px solid #e67e22";
             }
         }
     } catch (e) {
@@ -564,34 +562,40 @@ async function identificarMiPunto() {
 async function abrirModalMiPunto() {
     fotoPuntoFile = null;
     
+    if (mapaEdicion) {
+        mapaEdicion.remove();
+        mapaEdicion = null;
+        markerEdicion = null;
+    }
+
     if (!miPuntoData) {
         await identificarMiPunto();
     }
 
     if (!miPuntoData) {
-        Swal.fire({
-            icon: 'info',
-            title: 'Sin Punto Asignado',
-            text: 'No tienes un punto de reciclaje vinculado. Contacta al administrador.'
-        });
+        Swal.fire("Sin Punto", "No tienes un punto asignado. Contacta al soporte.", "info");
         return;
     }
 
-    Swal.fire({ title: "Cargando detalles...", didOpen: () => Swal.showLoading() });
+    Swal.fire({ title: "Cargando datos...", didOpen: () => Swal.showLoading() });
 
     try {
         const idUbicacion = miPuntoData.id_ubicacion_reciclaje;
-        const res = await fetch(`${API_BASE}/ubicacion_reciclajes/${idUbicacion}`);
 
-        if (res.ok) {
-            miPuntoData = await res.json();
+
+        const [resDetalles, _parroquias, _materiales] = await Promise.all([
+            fetch(`${API_BASE}/ubicacion_reciclajes/${idUbicacion}`),
+            cargarListadoParroquias(),
+            renderizarMaterialesEdicion()
+        ]);
+
+        if (resDetalles.ok) {
+            miPuntoData = await resDetalles.json();
         }
+
     } catch (e) {
-        console.error("Error refrescando detalles:", e);
+        console.error("Error cargando datos del modal:", e);
     }
-
-    await cargarListadoParroquias();
-
 
     document.getElementById("txtPuntoNombre").value = miPuntoData.nombre || "";
     document.getElementById("txtPuntoDireccion").value = miPuntoData.direccion || "";
@@ -602,25 +606,21 @@ async function abrirModalMiPunto() {
         const idParroquia = (typeof miPuntoData.parroquia === 'object') ?
             (miPuntoData.parroquia.id_parroquia || miPuntoData.parroquia.id) :
             miPuntoData.parroquia;
-
         document.getElementById("txtPuntoParroquia").value = idParroquia || "";
     }
 
     const imgPreview = document.getElementById("previewPuntoFoto");
     if (miPuntoData.foto) {
-        let urlFoto = miPuntoData.foto;
-        imgPreview.src = urlFoto;
+        imgPreview.src = miPuntoData.foto;
         imgPreview.style.display = "block";
     } else {
         imgPreview.style.display = "none";
     }
 
-    await renderizarMaterialesEdicion();
     renderizarHorariosEdicion();
 
     Swal.close();
     document.getElementById("modalMiPunto").style.display = "flex";
-
 
     setTimeout(() => {
         initMapaEdicion(miPuntoData.latitud, miPuntoData.longitud);
@@ -923,11 +923,10 @@ async function cargarListadoParroquias() {
 
     try {
         const res = await fetch(`${API_BASE}/parroquias`);
-        if(res.ok) {
+        if (res.ok) {
             const parroquias = await res.json();
             select.innerHTML = '<option value="">Seleccione Parroquia</option>';
             parroquias.forEach(p => {
-                // Asumiendo que el objeto parroquia tiene id_parroquia y nombre_parroquia o nombre
                 const id = p.id_parroquia || p.id;
                 const nombre = p.nombre_parroquia || p.nombre;
                 const opt = document.createElement("option");
@@ -938,8 +937,8 @@ async function cargarListadoParroquias() {
         } else {
             select.innerHTML = '<option value="">Error cargando</option>';
         }
-    } catch(e) {
-        console.error("Error cargando parroquias:", e);
+    } catch (e) {
+        console.error("Error:", e);
         select.innerHTML = '<option value="">Error conexión</option>';
     }
 }
