@@ -1,6 +1,9 @@
 const API_BASE = 'https://api-loopi.onrender.com/api';
 
-document.addEventListener("DOMContentLoaded", () => {
+let listaParroquias = [];
+
+document.addEventListener("DOMContentLoaded", async () => {
+    await cargarParroquias(); 
     cargarFormularios();
 });
 
@@ -67,7 +70,6 @@ function renderCards(lista) {
             `;
         }
 
-        // --- HORARIOS ---
         let horariosHtml = '<p style="font-size:0.85rem; color:#7f8c8d;">No especificado</p>';
         if (f.horarios && f.horarios.length > 0) {
             horariosHtml = `<ul style="font-size:0.85rem; padding-left:20px; margin:5px 0;">`;
@@ -77,7 +79,6 @@ function renderCards(lista) {
             horariosHtml += `</ul>`;
         }
 
-        // --- MATERIALES ---
         let materialesHtml = '<p style="font-size:0.85rem; color:#7f8c8d;">No especificado</p>';
         if (f.materiales && f.materiales.length > 0) {
             materialesHtml = `<div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:5px;">`;
@@ -91,7 +92,6 @@ function renderCards(lista) {
             materialesHtml += `</div>`;
         }
 
-        // --- EVIDENCIA ---
         let imgEvidenciaHtml = `<p style="color:#e74c3c; font-size:0.9rem;">Sin evidencia cargada</p>`;
         if (f.evidencia_experiencia) {
             let srcImagen = f.evidencia_experiencia;
@@ -107,13 +107,18 @@ function renderCards(lista) {
             `;
         }
 
-        // --- PARROQUIA ---
         let idParroquia = null;
         let nombreParroquia = "No definida (Se pedirá al aprobar)";
         
         if (f.usuario && f.usuario.parroquia) {
-            idParroquia = f.usuario.parroquia.id_parroquia || f.usuario.parroquia.id;
-            nombreParroquia = f.usuario.parroquia.nombre_parroquia || f.usuario.parroquia.nombre;
+            if (typeof f.usuario.parroquia === 'object') {
+                idParroquia = f.usuario.parroquia.id_parroquia || f.usuario.parroquia.id;
+                nombreParroquia = f.usuario.parroquia.nombre_parroquia || f.usuario.parroquia.nombre;
+            } else {
+                idParroquia = f.usuario.parroquia;
+                const pEncontrada = listaParroquias.find(p => (p.id_parroquia || p.id) == idParroquia);
+                if(pEncontrada) nombreParroquia = pEncontrada.nombre_parroquia || pEncontrada.nombre;
+            }
         }
 
         const paramParroquia = idParroquia ? idParroquia : 'null';
