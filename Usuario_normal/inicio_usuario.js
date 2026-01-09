@@ -997,19 +997,26 @@ function renderizarCaminoRangos(rangos, totalReal) {
 
 
 const GROQ_API_KEY = "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"; 
+let infoMateriales = "Cargando materiales...";
+let infoRecompensas = "Cargando recompensas...";
 
-// CEREBRO DE LOOPI
-const LOOPI_DATA = `
-ERES LOOPIBOT: Un asistente experto en reciclaje para la app "Loopi" en Cuenca, Ecuador.
-TU PERSONALIDAD: Amable, motivador, usas jerga ecuatoriana suave ("ñaño", "chévere", "de una").
-REGLAS: Respuestas cortas (máximo 30 palabras).
-DATOS CLAVE:
-- Rangos: Semilla -> Brote -> Árbol Joven -> Bosque.
-- Puntos: Ganas por cada kilo entregado.
-- Materiales: Plástico PET, Cartón, Vidrio, Papel, Pilas.
-- Recompensas: Descuentos en Supermaxi, KFC, Farmacias.
-- Cómo reciclar: Lavar, secar y aplastar todo.
-`;
+async function prepararDatosParaIA() {
+    try {
+        const resMat = await fetch(`${API_BASE}/materiales`);
+        if(resMat.ok) {
+            const mats = await resMat.json();
+            infoMateriales = mats.map(m => `- ${m.nombre}: ${m.descripcion || 'Sin descripción'}`).join('\n');
+        }
+
+        const resRec = await fetch(`${API_BASE}/recompensas`);
+        if(resRec.ok) {
+            const recs = await resRec.json();
+            infoRecompensas = recs.map(r => `- ${r.nombre} (Cuesta ${r.costoPuntos} puntos): ${r.descripcion || ''}`).join('\n');
+        }
+    } catch(e) {
+        console.error("Error preparando datos IA:", e);
+    }
+}
 window.toggleChat = function() {
     const chat = document.getElementById("chatWindow");
     if (chat.style.display === "flex") {
@@ -1020,7 +1027,7 @@ window.toggleChat = function() {
         
         const body = document.getElementById("chatBody");
         if (body.children.length === 0) {
-            agregarMensaje("¡Hola ñaño! 👋 Soy LoopiBot. Pregúntame sobre la app.", "bot");
+            agregarMensaje(`¡Hola ${usuarioLogueado.primer_nombre}! 👋 Soy LoopiBot. Veo que tienes ${usuarioLogueado.puntos_actuales} puntos. ¿En qué te ayudo?`, "bot");
         }
     }
 };
@@ -1035,16 +1042,13 @@ window.enviarMensaje = async function() {
 
     if (!texto) return;
 
-    // 1. Mostrar mensaje usuario
     agregarMensaje(texto, "user");
     input.value = "";
     input.disabled = true;
 
-    // 2. Loading
-    const loadingId = agregarMensaje("Pensando... ⚡", "bot", true);
+    const loadingId = agregarMensaje("Analizando base de datos... 💾", "bot", true);
 
     try {
-        // 3. Llamada a Groq
         const respuesta = await consultarGroq(texto);
         eliminarMensaje(loadingId);
         agregarMensaje(respuesta, "bot");
@@ -1058,18 +1062,39 @@ window.enviarMensaje = async function() {
     }
 };
 
-// --- FUNCIÓN DE CONEXIÓN A GROQ (CORREGIDA) ---
 async function consultarGroq(pregunta) {
+    
+    const SYSTEM_PROMPT = `
+    ERES LOOPIBOT: El asistente oficial de la app de reciclaje "Loopi" en Cuenca, Ecuador.
+    TU PERSONALIDAD: Ecuatoriano amable ("ñaño", "chévere", "de una"). Responde corto y útil.
+
+    DATOS DEL USUARIO ACTUAL (Con quien hablas):
+    - Nombre: ${usuarioLogueado.primer_nombre} ${usuarioLogueado.apellido_paterno}
+    - Puntos actuales: ${usuarioLogueado.puntos_actuales}
+    - Rango: ${usuarioLogueado.rango ? usuarioLogueado.rango.nombre_rango : 'Nuevo'}
+    - Correo: ${usuarioLogueado.correo}
+
+    DATOS DE LA BASE DE DATOS (MATERIALES ACEPTADOS):
+    ${infoMateriales}
+
+    DATOS DE LA BASE DE DATOS (RECOMPENSAS DISPONIBLES):
+    ${infoRecompensas}
+
+    REGLAS:
+    1. Si te preguntan "qué puedo canjear", revisa sus puntos y dile para qué le alcanza de la lista de recompensas.
+    2. Si te preguntan "qué reciclan", usa la lista de materiales.
+    3. Nunca inventes datos que no estén en estas listas.
+    `;
+
     const url = "https://api.groq.com/openai/v1/chat/completions";
     
     const payload = {
-        // CAMBIO AQUÍ: Usamos el modelo más nuevo y estable
-        model: "llama-3.3-70b-versatile", 
+        model: "llama-3.3-70b-versatile",
         messages: [
-            { role: "system", content: LOOPI_DATA },
+            { role: "system", content: SYSTEM_PROMPT },
             { role: "user", content: pregunta }
         ],
-        temperature: 0.7
+        temperature: 0.5 // Un poco más bajo para que sea más preciso con los datos
     };
 
     const response = await fetch(url, {
@@ -1083,7 +1108,6 @@ async function consultarGroq(pregunta) {
 
     if (!response.ok) {
         const errorDetail = await response.json();
-        // Mensaje de error más limpio para que veas qué pasa
         const msg = errorDetail.error ? errorDetail.error.message : response.statusText;
         throw new Error(msg);
     }
@@ -1102,7 +1126,7 @@ function agregarMensaje(texto, tipo, esLoading = false) {
 
     const textoHtml = texto
         .replace(/\n/g, "<br>")
-        .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>");
+        .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>"); // Negritas markdown
 
     const hora = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
