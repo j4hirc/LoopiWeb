@@ -1112,7 +1112,7 @@ async function consultarGeminiRobusto(pregunta) {
     throw new Error("Lo siento, la IA no está disponible. Revisa tu API Key.");
 }
 
-// --- UTILIDADES DEL CHAT ---
+
 function agregarMensaje(texto, tipo, esLoading = false) {
     const chatBody = document.getElementById("chatBody");
     const div = document.createElement("div");
