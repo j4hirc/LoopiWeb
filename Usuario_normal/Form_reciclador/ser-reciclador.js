@@ -5,6 +5,11 @@ let fotoPerfilFile = null;
 let evidenciaFile = null;
 let materialesSeleccionados = new Set();
 
+const CUENCA_BOUNDS = L.latLngBounds(
+    [-2.99, -79.15], 
+    [-2.8, -78.85] 
+);
+
 document.addEventListener("DOMContentLoaded", async () => {
     const usuarioStr = localStorage.getItem("usuario");
     if (!usuarioStr) {
@@ -52,7 +57,6 @@ function setupImageUpload(inputId, imgId, placeholderId, callback) {
             return;
         }
 
-        // Validar tamaño inicial (opcional, igual vamos a comprimir)
         if(file.size > 10 * 1024 * 1024) {
             Swal.fire("Archivo muy pesado", "Intenta con una imagen menor a 10MB.", "warning");
             this.value = "";
@@ -60,15 +64,12 @@ function setupImageUpload(inputId, imgId, placeholderId, callback) {
         }
 
         try {
-            // Comprimir Imagen
             document.body.style.cursor = 'wait';
             
             const archivoComprimido = await comprimirImagen(file);
 
-            // Guardar archivo comprimido en variable global
             callback(archivoComprimido);
 
-            // Generar vista previa
             const reader = new FileReader();
             reader.onload = function(e) {
                 const preview = document.getElementById(imgId);
@@ -92,7 +93,6 @@ function setupImageUpload(inputId, imgId, placeholderId, callback) {
     });
 }
 
-// --- LÓGICA DE COMPRESIÓN (Menor a 2MB garantizado) ---
 async function comprimirImagen(archivo) {
     return new Promise((resolve, reject) => {
         const maxWidth = 1000; 
@@ -144,7 +144,6 @@ async function verificarEstadoReciclador(cedula) {
         const res = await fetch(`${API_BASE}/formularios_reciclador/usuario/${cedula}`);
         if(res.ok) {
             const form = await res.json();
-            // Si el backend devuelve un formulario, analizamos el estado
             if(form.aprobado === true) {
                 redirigirConMensaje("¡Ya eres Reciclador!", "Tu cuenta ya está activa.", "success", "../inicio_usuario_normal.html");
             } else if (form.aprobado === false) {
@@ -154,7 +153,6 @@ async function verificarEstadoReciclador(cedula) {
                     icon: "error"
                  });
             } else {
-                // Aprobado es null (Pendiente)
                 redirigirConMensaje("Solicitud en proceso", "Ya enviaste una solicitud. Espera la respuesta.", "info", "../inicio_usuario_normal.html");
             }
         }
@@ -169,19 +167,35 @@ function redirigirConMensaje(titulo, texto, icono, url) {
 }
 
 function initMap() {
-    map = L.map("mapaRegistro").setView([-2.9001, -79.0059], 13);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+    map = L.map("mapaRegistro", {
+        maxBounds: CUENCA_BOUNDS,      
+        maxBoundsViscosity: 1.0,       
+        minZoom: 12
+    }).setView([-2.9001, -79.0059], 13);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap"
+    }).addTo(map);
+
     map.on("click", e => actualizarMarcador(e.latlng.lat, e.latlng.lng));
 }
 
 function obtenerUbicacionActual() {
     if(!navigator.geolocation) return Swal.fire("Error", "Geolocalización no soportada", "error");
+    
     Swal.showLoading();
     navigator.geolocation.getCurrentPosition(pos => {
         Swal.close();
         const { latitude, longitude } = pos.coords;
-        map.setView([latitude, longitude], 16);
-        actualizarMarcador(latitude, longitude);
+        
+        if (CUENCA_BOUNDS.contains([latitude, longitude])) {
+            map.setView([latitude, longitude], 16);
+            actualizarMarcador(latitude, longitude);
+        } else {
+            Swal.fire("Ubicación Fuera de Rango", "Solo se permiten registros dentro de la ciudad de Cuenca.", "warning");
+            map.setView([-2.9001, -79.0059], 13);
+        }
+        
     }, () => Swal.fire("Error", "No se pudo obtener ubicación", "error"));
 }
 
@@ -235,7 +249,9 @@ function agregarFilaHorario(horaInicioDefecto = "", horaFinDefecto = "") {
         if (filas.length > 0) {
             const ultimaFila = filas[filas.length - 1];
             horaInicioDefecto = ultimaFila.querySelector(".hora-inicio").value;
-            horaFinDefecto = ultimaFila.querySelector(".hora-fin").value;
+            const [h, m] = horaInicioDefecto.split(':').map(Number);
+            const finH = (h + 2) % 24;
+            horaFinDefecto = `${finH.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
         }
     }
 
@@ -250,40 +266,118 @@ function agregarFilaHorario(horaInicioDefecto = "", horaFinDefecto = "") {
         <input type="time" class="input-field hora-fin" value="${horaFinDefecto}">
         <i class="fa-solid fa-circle-xmark btn-remove" onclick="this.parentElement.remove()"></i>
     `;
+    
+    const inpInicio = div.querySelector(".hora-inicio");
+    const inpFin = div.querySelector(".hora-fin");
+
+    inpInicio.addEventListener("change", function() {
+        if (this.value) {
+            const [h, m] = this.value.split(':').map(Number);
+            const finH = (h + 2);
+            if (finH < 24) {
+                inpFin.value = `${finH.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+            } else {
+                inpFin.value = "23:59";
+            }
+        }
+    });
+
+    inpFin.addEventListener("change", function() {
+        validarDiferenciaHoras(inpInicio, inpFin);
+    });
+
     document.getElementById("containerHorarios").appendChild(div);
+}
+
+
+function validarDiferenciaHoras(inputInicio, inputFin) {
+    const inicio = inputInicio.value;
+    const fin = inputFin.value;
+
+    if (!inicio || !fin) return;
+
+    const [h1, m1] = inicio.split(':').map(Number);
+    const [h2, m2] = fin.split(':').map(Number);
+
+    const minutosInicio = h1 * 60 + m1;
+    const minutosFin = h2 * 60 + m2;
+    const diferencia = minutosFin - minutosInicio;
+
+    if (diferencia < 120) { 
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'warning',
+            title: 'Horario muy corto',
+            text: 'El turno debe durar mínimo 2 horas.',
+            showConfirmButton: false,
+            timer: 3000
+        });
+        
+        inputFin.style.border = "2px solid #e74c3c";
+        inputFin.value = ""; // Borrar valor inválido para obligar a poner bien
+    } else {
+        inputFin.style.border = "1px solid #ccc"; // Restaurar borde
+    }
 }
 
 async function enviarFormulario(e) {
     e.preventDefault();
     const usuario = JSON.parse(localStorage.getItem("usuario"));
 
+    const nombreSitio = document.getElementById("nombreSitio").value.trim();
+    const direccionTexto = document.getElementById("direccionTexto").value.trim();
+    const aniosExp = document.getElementById("aniosExperiencia").value;
+
+    if(!nombreSitio) return Swal.fire("Campo Vacío", "Ingresa el nombre de tu Base / Sitio.", "warning");
+    if(!direccionTexto) return Swal.fire("Campo Vacío", "Ingresa la dirección escrita.", "warning");
     if(!fotoPerfilFile) return Swal.fire("Falta Foto", "Sube tu foto de perfil profesional.", "warning");
     if(!evidenciaFile) return Swal.fire("Falta Evidencia", "Sube tu certificado o evidencia.", "warning");
     if(materialesSeleccionados.size === 0) return Swal.fire("Materiales", "Selecciona al menos un material.", "warning");
-    if(!coordenadas) return Swal.fire("Ubicación", "Marca tu ubicación en el mapa.", "warning");
+    if(!coordenadas) return Swal.fire("Ubicación", "Marca tu ubicación en el mapa (dentro de Cuenca).", "warning");
 
     const horarios = [];
-    document.querySelectorAll(".horario-row").forEach(row => {
+    let errorHorario = null;
+    const diasUsados = new Set();
+
+    const filas = document.querySelectorAll(".horario-row");
+    for (const row of filas) {
         const d = row.querySelector(".dia-select").value;
         const i = row.querySelector(".hora-inicio").value;
         const f = row.querySelector(".hora-fin").value;
-        if(d && i && f) horarios.push({ dia_semana: d, hora_inicio: i+":00", hora_fin: f+":00" });
-    });
+        
+        if(!i || !f) {
+            errorHorario = "Completa todas las horas de inicio y fin.";
+            break;
+        }
 
-    if(horarios.length < 3) {
-        return Swal.fire({
-            title: "Horario Incompleto",
-            text: "Para asegurar un buen servicio, por favor registra al menos 3 horarios de atención.",
-            icon: "warning",
-            confirmButtonColor: "#e67e22"
-        });
+        const [h1, m1] = i.split(':').map(Number);
+        const [h2, m2] = f.split(':').map(Number);
+        if ((h2*60 + m2) - (h1*60 + m1) < 120) {
+            errorHorario = `El horario del ${d} debe durar al menos 2 horas.`;
+            break;
+        }
+
+        if(diasUsados.has(d)) {
+            errorHorario = `El día ${d} está repetido.`;
+            break;
+        }
+        diasUsados.add(d);
+
+        horarios.push({ dia_semana: d, hora_inicio: i+":00", hora_fin: f+":00" });
+    }
+
+    if(errorHorario) return Swal.fire("Error en Horario", errorHorario, "error");
+
+    if(horarios.length < 1) { 
+        return Swal.fire("Horario Vacío", "Registra al menos un horario de atención.", "warning");
     }
 
     const datosObj = {
         usuario: { cedula: usuario.cedula },
-        anios_experiencia: parseInt(document.getElementById("aniosExperiencia").value) || 0,
-        nombre_sitio: document.getElementById("nombreSitio").value.trim(),
-        ubicacion: document.getElementById("direccionTexto").value.trim(),
+        anios_experiencia: parseInt(aniosExp) || 0,
+        nombre_sitio: nombreSitio,
+        ubicacion: direccionTexto,
         latitud: coordenadas.lat,
         longitud: coordenadas.lng,
         foto_perfil_profesional: null, 
@@ -320,4 +414,3 @@ async function enviarFormulario(e) {
         Swal.fire("Error", "No se pudo enviar la solicitud. Intenta luego.", "error");
     }
 }
-
