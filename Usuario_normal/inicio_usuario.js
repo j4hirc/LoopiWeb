@@ -998,7 +998,7 @@ function renderizarCaminoRangos(rangos, totalReal) {
    ========================================= */
 
 // 1. CONFIGURACIÓN
-const GEMINI_API_KEY = "AIzaSyD_9XJiD_fKVgNUMKuYfVN4NIbTCc2dQdI";
+const GEMINI_API_KEY = "AIzaSyDxwjFcMMwQJMBCFH-cvXAEKrftbJ701m8";
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
 // 2. CEREBRO DE LOOPI (Contexto para la IA)
@@ -1074,7 +1074,7 @@ async function enviarMensaje() {
 }
 
 async function consultarGemini(preguntaUsuario) {
-    if(GEMINI_API_KEY === "AIzaSyD_9XJiD_fKVgNUMKuYfVN4NIbTCc2dQdI") {
+    if(GEMINI_API_KEY === "AIzaSyDxwjFcMMwQJMBCFH-cvXAEKrftbJ701m8") {
         return "⚠️ Ñaño, falta configurar la API KEY en el código (inicio_usuario.js). Pero sí te entiendo: " + preguntaUsuario;
     }
 
