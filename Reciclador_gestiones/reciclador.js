@@ -750,11 +750,32 @@ async function renderizarMaterialesEdicion() {
 function normalizarDia(texto) {
     if (!texto) return "";
     return texto.toString()
-        .toUpperCase()                     
-        .normalize("NFD")                  
+        .toUpperCase()                      
+        .normalize("NFD")                   
         .replace(/[\u0300-\u036f]/g, "")    
-        .trim();  
-}                          
+        .trim();                            
+}          
+
+function formatearDiaBonito(diaDb) {
+    if (!diaDb) return "";
+    const diaLimpio = diaDb.toString()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim(); 
+
+    const mapa = {
+        "lunes": "Lunes",
+        "martes": "Martes",
+        "miercoles": "Miércoles",
+        "jueves": "Jueves",
+        "viernes": "Viernes",
+        "sabado": "Sábado",
+        "domingo": "Domingo"
+    };
+
+    return mapa[diaLimpio] || diaDb; 
+}
 
 function renderizarHorariosEdicion() {
     const lista = document.getElementById("listaHorarios");
@@ -766,12 +787,12 @@ function renderizarHorariosEdicion() {
         agregarFilaHorario();
     } else {
         const ordenDias = { 
-            "LUNES": 1, "MARTES": 2, "MIERCOLES": 3, "JUEVES": 4, "VIERNES": 5, "SABADO": 6, "DOMINGO": 7 
+            "Lunes": 1, "Martes": 2, "Miércoles": 3, "Jueves": 4, "Viernes": 5, "Sábado": 6, "Domingo": 7 
         };
 
         horarios.sort((a, b) => {
-            const da = normalizarDia(a.dia_semana);
-            const db = normalizarDia(b.dia_semana);
+            const da = formatearDiaBonito(a.dia_semana);
+            const db = formatearDiaBonito(b.dia_semana);
             return (ordenDias[da] || 99) - (ordenDias[db] || 99);
         });
 
@@ -788,13 +809,16 @@ function agregarFilaHorario(dia = "", inicio = "", fin = "") {
     const div = document.createElement("div");
     div.className = "horario-row";
 
-    const diaNormalizado = normalizarDia(dia);
+    // 1. Transformamos el día que viene de la BD a "Bonito"
+    // "MIERCOLES" -> "Miércoles"
+    const diaBonito = formatearDiaBonito(dia);
 
-    const diasSemana = ["LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO", "DOMINGO"];
+    const diasSemana = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
     let options = `<option value="">Seleccione día</option>`;
 
     diasSemana.forEach(d => {
-        const selected = (d === diaNormalizado) ? "selected" : "";
+        // 2. Comparamos el día de la lista con el día bonito de la BD
+        const selected = (d === diaBonito) ? "selected" : "";
         options += `<option value="${d}" ${selected}>${d}</option>`;
     });
 
