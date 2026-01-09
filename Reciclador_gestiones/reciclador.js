@@ -8,6 +8,8 @@ let marcadorMiUbicacion = null;
 let ubicacionActual = null;
 let miPuntoData = null;
 let fotoNuevaFile = null;
+let mapaEdicion = null;     
+let markerEdicion = null;
 
 const CUENCA_BOUNDS = L.latLngBounds(
   [-2.99, -79.15], 
@@ -134,9 +136,7 @@ async function cargarFiltrosMateriales() {
     const contenedor = document.getElementById("contenedorBotonesMateriales");
     if (!contenedor) return;
   
-    // Limpiar container pero dejar botón "Todos" si ya existe o crearlo de cero
     contenedor.innerHTML = "";
-  
     const btnTodos = document.createElement("button");
     btnTodos.className = "btn-filtro active";
     btnTodos.innerText = "Todos";
@@ -539,11 +539,9 @@ function cerrarModalEstadisticas() {
 async function identificarMiPunto() {
     try {
         console.log("🔍 Buscando punto de reciclaje para:", usuario.cedula);
-        
         const res = await fetch(`${API_BASE}/ubicacion_reciclajes`);
         if (res.ok) {
             const todos = await res.json();
-            
             miPuntoData = todos.find(p => {
                 if (p.reciclador && p.reciclador.cedula) {
                     return String(p.reciclador.cedula) === String(usuario.cedula);
@@ -553,13 +551,9 @@ async function identificarMiPunto() {
 
             if (miPuntoData) {
                 console.log("✅ PUNTO ENCONTRADO:", miPuntoData.nombre);
-                document.querySelector('.card-orange').style.border = "2px solid #e67e22";
-            } else {
-                console.warn("⚠️ No se encontró ningún punto asociado a esta cédula.");
-                console.log("Lista completa recibida (para depurar):", todos);
+                const card = document.querySelector('.card-orange');
+                if(card) card.style.border = "2px solid #e67e22";
             }
-        } else {
-            console.error("Error al obtener ubicaciones desde la API");
         }
     } catch (e) {
         console.error("Error crítico buscando mi punto:", e);
@@ -568,65 +562,79 @@ async function identificarMiPunto() {
 
 
 async function abrirModalMiPunto() {
+    // 1. Si no hay datos, buscar de nuevo
     if (!miPuntoData) {
-        await identificarMiPunto(); 
+        await identificarMiPunto();
     }
 
     if (!miPuntoData) {
-        Swal.fire("Error", "No se encuentra el punto de reciclaje vinculado a este usuario.", "error");
+        Swal.fire({
+            icon: 'info',
+            title: 'Sin Punto Asignado',
+            text: 'No tienes un punto de reciclaje vinculado. Contacta al administrador.'
+        });
         return;
     }
 
-    Swal.fire({ title: "Cargando datos del punto...", didOpen: () => Swal.showLoading() });
+    Swal.fire({ title: "Cargando detalles...", didOpen: () => Swal.showLoading() });
 
     try {
-
+        // PETICIÓN EXTRA PARA ASEGURAR HORARIOS COMPLETOS
         const idUbicacion = miPuntoData.id_ubicacion_reciclaje;
         const res = await fetch(`${API_BASE}/ubicacion_reciclajes/${idUbicacion}`);
         
         if (res.ok) {
             miPuntoData = await res.json();
-            console.log("Datos frescos cargados:", miPuntoData); // MIRA LA CONSOLA PARA VER QUÉ LLEGA
+            console.log("Datos frescos cargados:", miPuntoData);
         }
     } catch (e) {
-        console.error("Error refrescando detalles del punto:", e);
+        console.error("Error refrescando detalles:", e);
     }
 
+    // 2. Llenar Inputs
     document.getElementById("txtPuntoNombre").value = miPuntoData.nombre || "";
-    
-    document.getElementById("txtPuntoParroquia").value = miPuntoData.parroquia || miPuntoData.Parroquia || "";
-    
     document.getElementById("txtPuntoDireccion").value = miPuntoData.direccion || "";
     document.getElementById("txtLatitud").value = miPuntoData.latitud || "";
     document.getElementById("txtLongitud").value = miPuntoData.longitud || "";
     
+    // --- CORRECCIÓN PARROQUIA ---
+    // Si viene como objeto {id, nombre} o como string
+    let nombreParroquia = "";
+    if (miPuntoData.parroquia) {
+        if (typeof miPuntoData.parroquia === 'object') {
+            // Intenta leer propiedades comunes
+            nombreParroquia = miPuntoData.parroquia.nombre || miPuntoData.parroquia.nombre_parroquia || "";
+        } else {
+            nombreParroquia = miPuntoData.parroquia; // Es un string directo
+        }
+    }
+    document.getElementById("txtPuntoParroquia").value = nombreParroquia;
+
+    // --- FOTO ---
     const imgPreview = document.getElementById("previewPuntoFoto");
     if(miPuntoData.foto) {
         let urlFoto = miPuntoData.foto;
-        // Si no empieza con http ni data, asumimos que falta el dominio base (ajusta si es necesario)
-        if (!urlFoto.startsWith("http") && !urlFoto.startsWith("data:")) {
-             // urlFoto = API_BASE.replace('/api', '') + urlFoto; // Descomenta si usas rutas relativas locales
-        }
+        // Si no es absoluta y no es base64, quizás necesite prefijo (opcional)
+        // if (!urlFoto.startsWith("http") && !urlFoto.startsWith("data:")) urlFoto = API_BASE + urlFoto;
         imgPreview.src = urlFoto;
         imgPreview.style.display = "block";
     } else {
         imgPreview.style.display = "none";
     }
     
-    // 4. Cargar Materiales y Horarios
-    // Usamos await para asegurar que los materiales se marquen después de cargar los checkboxes
+    // 3. Renderizar Listas
     await renderizarMaterialesEdicion();
-    renderizarHorariosEdicion(); // Esto llenará los horarios con los datos frescos
+    renderizarHorariosEdicion(); // ¡AQUÍ ESTÁ LA MAGIA CORREGIDA!
 
     Swal.close();
     document.getElementById("modalMiPunto").style.display = "flex";
 
-    // 5. Iniciar Mapa
+    // 4. Mapa
     setTimeout(() => {
         initMapaEdicion(miPuntoData.latitud, miPuntoData.longitud);
     }, 300);
     
-    // 6. Resetear listener de foto para no acumular eventos
+    // 5. Reset input foto
     const inputFoto = document.getElementById("filePuntoFoto");
     const nuevoInput = inputFoto.cloneNode(true);
     inputFoto.parentNode.replaceChild(nuevoInput, inputFoto);
@@ -645,10 +653,11 @@ async function abrirModalMiPunto() {
     });
 }
 
+
 function cerrarModalMiPunto() {
     document.getElementById("modalMiPunto").style.display = "none";
     if (mapaEdicion) {
-        mapaEdicion.remove(); // Limpiar instancia de mapa para evitar conflictos al reabrir
+        mapaEdicion.remove(); 
         mapaEdicion = null;
     }
 }
@@ -659,25 +668,23 @@ function initMapaEdicion(lat, lng) {
     const container = document.getElementById("mapaEdicionContainer");
     if(!container) return;
 
-    mapaEdicion = L.map(container).setView([lat, lng], 15);
+    if (!mapaEdicion) {
+        mapaEdicion = L.map(container).setView([lat, lng], 15);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: "© OpenStreetMap"
+        }).addTo(mapaEdicion);
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "© OpenStreetMap"
-    }).addTo(mapaEdicion);
+        mapaEdicion.on('click', function(e) {
+            actualizarPosicionMarker(e.latlng);
+        });
+    } else {
+        // Si ya existe, nos aseguramos que se vea bien
+        setTimeout(() => { mapaEdicion.invalidateSize(); }, 100);
+        mapaEdicion.setView([lat, lng], 15);
+    }
 
-    markerEdicion = L.marker([lat, lng], { draggable: true }).addTo(mapaEdicion);
-
-    markerEdicion.on('dragend', function(e) {
-        const pos = e.target.getLatLng();
-        document.getElementById("txtLatitud").value = pos.lat.toFixed(6);
-        document.getElementById("txtLongitud").value = pos.lng.toFixed(6);
-    });
-    
-    mapaEdicion.on('click', function(e) {
-        markerEdicion.setLatLng(e.latlng);
-        document.getElementById("txtLatitud").value = e.latlng.lat.toFixed(6);
-        document.getElementById("txtLongitud").value = e.latlng.lng.toFixed(6);
-    });
+    // Colocar o mover marcador
+    actualizarPosicionMarker({ lat: lat, lng: lng });
 }
 
 async function renderizarMaterialesEdicion() {
@@ -699,7 +706,6 @@ async function renderizarMaterialesEdicion() {
 
         todosMateriales.forEach(mat => {
             const checked = idsMisMateriales.has(mat.id_material) ? "checked" : "";
-            
             const div = document.createElement("div");
             div.className = "material-check-item";
             div.innerHTML = `
@@ -722,8 +728,15 @@ function renderizarHorariosEdicion() {
     if(horarios.length === 0) {
         agregarFilaHorario();
     } else {
+        const ordenDias = { "Lunes": 1, "Martes": 2, "Miércoles": 3, "Jueves": 4, "Viernes": 5, "Sábado": 6, "Domingo": 7, "LUNES": 1, "MARTES": 2, "MIERCOLES": 3, "JUEVES": 4, "VIERNES": 5, "SABADO": 6, "DOMINGO": 7 };
+        
+        horarios.sort((a, b) => (ordenDias[a.dia_semana] || 99) - (ordenDias[b.dia_semana] || 99));
+
         horarios.forEach(h => {
-            agregarFilaHorario(h.dia_semana, h.hora_apertura, h.hora_cierre);
+            const inicio = h.hora_apertura || h.horaApertura || h.hora_inicio || h.horaInicio || "";
+            const cierre = h.hora_cierre || h.horaCierre || h.hora_fin || h.horaFin || "";
+            
+            agregarFilaHorario(h.dia_semana, inicio, cierre);
         });
     }
 }
@@ -733,11 +746,13 @@ function agregarFilaHorario(dia = "", inicio = "", fin = "") {
     const div = document.createElement("div");
     div.className = "horario-row";
     
+    const diaUpper = dia ? dia.toUpperCase() : "";
+    
     const diasSemana = ["LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO", "DOMINGO"];
     let options = `<option value="">Seleccione día</option>`;
     
     diasSemana.forEach(d => {
-        const selected = (d === dia) ? "selected" : "";
+        const selected = (d === diaUpper || d === dia) ? "selected" : "";
         options += `<option value="${d}" ${selected}>${d}</option>`;
     });
 
@@ -755,69 +770,53 @@ function agregarFilaHorario(dia = "", inicio = "", fin = "") {
 
 async function guardarCambiosPunto() {
     const filasHorario = document.querySelectorAll(".horario-row");
-    if(filasHorario.length === 0) {
-        return Swal.fire("Error", "Debe registrar al menos un horario de atención.", "warning");
-    }
+    if(filasHorario.length === 0) return Swal.fire("Error", "Debe registrar al menos un horario.", "warning");
 
     const listaHorariosEnvio = [];
     const diasUsados = new Set();
     let errorHorario = null;
 
-    filasHorario.forEach((fila, index) => {
+    filasHorario.forEach((fila) => {
         const dia = fila.querySelector(".input-dia").value;
         const inicio = fila.querySelector(".input-inicio").value;
         const fin = fila.querySelector(".input-fin").value;
 
-        if(!dia || !inicio || !fin) {
-            errorHorario = "Complete todos los campos de los horarios.";
-            return;
-        }
-
-        if(diasUsados.has(dia)) {
-            errorHorario = `El día ${dia} está repetido. Unifique los horarios en una sola franja o corrija.`;
-            return;
-        }
-        
+        if(!dia || !inicio || !fin) { errorHorario = "Complete todos los campos de horarios."; return; }
+        if(diasUsados.has(dia)) { errorHorario = `El día ${dia} está repetido.`; return; }
         diasUsados.add(dia);
         
         listaHorariosEnvio.push({
             dia_semana: dia,
-            hora_apertura: inicio,
+            hora_apertura: inicio, 
             hora_cierre: fin
         });
     });
 
-    if(errorHorario) {
-        return Swal.fire("Error en Horarios", errorHorario, "warning");
-    }
+    if(errorHorario) return Swal.fire("Error en Horarios", errorHorario, "warning");
 
     const checks = document.querySelectorAll("#containerMaterialesCheck input[type='checkbox']:checked");
-    if(checks.length === 0) {
-        return Swal.fire("Atención", "Selecciona al menos un material que aceptas.", "warning");
-    }
+    if(checks.length === 0) return Swal.fire("Atención", "Selecciona al menos un material.", "warning");
     
     const materialesEnvio = Array.from(checks).map(c => ({
         material: { id_material: parseInt(c.value) }
     }));
 
     const nombre = document.getElementById("txtPuntoNombre").value.trim();
-    const parroquia = document.getElementById("txtPuntoParroquia").value.trim();
+    const parroquia = document.getElementById("txtPuntoParroquia").value.trim(); // Enviamos string
     const direccion = document.getElementById("txtPuntoDireccion").value.trim();
     const lat = document.getElementById("txtLatitud").value;
     const lng = document.getElementById("txtLongitud").value;
 
-    if(!nombre || !parroquia || !direccion) {
-        return Swal.fire("Campos vacíos", "Nombre, Parroquia y Dirección son obligatorios", "warning");
-    }
+    if(!nombre || !parroquia || !direccion) return Swal.fire("Campos vacíos", "Faltan datos obligatorios.", "warning");
 
+    
     const objetoUpdate = {
         id_ubicacion_reciclaje: miPuntoData.id_ubicacion_reciclaje,
         nombre: nombre,
-        parroquia: parroquia,
+        parroquia: parroquia, 
         direccion: direccion,
         latitud: parseFloat(lat),
         longitud: parseFloat(lng),
-        // Importante: Enviar el reciclador para no perder la referencia (aunque el backend lo controla)
         reciclador: { cedula: usuario.cedula }, 
         horarios: listaHorariosEnvio,
         materialesAceptados: materialesEnvio
@@ -825,14 +824,10 @@ async function guardarCambiosPunto() {
 
     const formData = new FormData();
     formData.append("datos", JSON.stringify(objetoUpdate));
-    
-    if(fotoPuntoFile) {
-        formData.append("archivo", fotoPuntoFile);
-    }
+    if(fotoPuntoFile) formData.append("archivo", fotoPuntoFile);
 
     try {
         Swal.fire({ title: "Guardando...", didOpen: () => Swal.showLoading() });
-
         const res = await fetch(`${API_BASE}/ubicacion_reciclajes/${miPuntoData.id_ubicacion_reciclaje}`, {
             method: "PUT",
             body: formData
@@ -842,8 +837,7 @@ async function guardarCambiosPunto() {
             const dataNueva = await res.json();
             miPuntoData = dataNueva; 
             cerrarModalMiPunto();
-            Swal.fire("Éxito", "Tu punto de reciclaje ha sido actualizado.", "success");
-            
+            Swal.fire("Éxito", "Punto actualizado.", "success");
             cargarPuntosReciclajeReciclador(); 
         } else {
             const err = await res.text();
@@ -853,4 +847,19 @@ async function guardarCambiosPunto() {
         console.error(e);
         Swal.fire("Error de Red", "Intenta más tarde.", "error");
     }
+}
+
+function actualizarPosicionMarker(latlng) {
+    if (markerEdicion) {
+        markerEdicion.setLatLng(latlng);
+    } else {
+        markerEdicion = L.marker(latlng, { draggable: true }).addTo(mapaEdicion);
+        markerEdicion.on('dragend', function(e) {
+            const pos = e.target.getLatLng();
+            document.getElementById("txtLatitud").value = pos.lat.toFixed(6);
+            document.getElementById("txtLongitud").value = pos.lng.toFixed(6);
+        });
+    }
+    document.getElementById("txtLatitud").value = parseFloat(latlng.lat).toFixed(6);
+    document.getElementById("txtLongitud").value = parseFloat(latlng.lng).toFixed(6);
 }
