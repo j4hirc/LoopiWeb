@@ -4,6 +4,18 @@ document.addEventListener("DOMContentLoaded", () => {
     cargarFormularios();
 });
 
+
+async function cargarParroquias() {
+    try {
+        const res = await fetch(`${API_BASE}/parroquias`);
+        if (res.ok) {
+            listaParroquias = await res.json();
+        }
+    } catch (e) {
+        console.error("Error cargando parroquias", e);
+    }
+}
+
 async function cargarFormularios() {
     try {
         const res = await fetch(`${API_BASE}/formularios_reciclador`);
@@ -34,7 +46,7 @@ function renderCards(lista) {
     }
 
     lista.forEach((f) => {
-        // --- 1. LÓGICA DE FOTO DE PERFIL ---
+        // --- FOTO ---
         let avatarUrl = `https://ui-avatars.com/api/?name=${f.usuario.primer_nombre}+${f.usuario.apellido_paterno}&background=random&color=fff`;
         if (f.usuario.foto && f.usuario.foto.length > 5) {
             if (f.usuario.foto.startsWith("http") || f.usuario.foto.startsWith("data:")) {
@@ -44,7 +56,7 @@ function renderCards(lista) {
             }
         }
 
-        // --- 2. LÓGICA DE DESCARGA ---
+        // --- DESCARGA ---
         let botonDescarga = "";
         if (f.foto_perfil_profesional) {
             sessionStorage.setItem(`doc_${f.id_formulario}`, f.foto_perfil_profesional);
@@ -55,7 +67,7 @@ function renderCards(lista) {
             `;
         }
 
-        // --- 3. HORARIOS ---
+        // --- HORARIOS ---
         let horariosHtml = '<p style="font-size:0.85rem; color:#7f8c8d;">No especificado</p>';
         if (f.horarios && f.horarios.length > 0) {
             horariosHtml = `<ul style="font-size:0.85rem; padding-left:20px; margin:5px 0;">`;
@@ -65,7 +77,7 @@ function renderCards(lista) {
             horariosHtml += `</ul>`;
         }
 
-        // --- 4. MATERIALES ---
+        // --- MATERIALES ---
         let materialesHtml = '<p style="font-size:0.85rem; color:#7f8c8d;">No especificado</p>';
         if (f.materiales && f.materiales.length > 0) {
             materialesHtml = `<div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:5px;">`;
@@ -79,7 +91,7 @@ function renderCards(lista) {
             materialesHtml += `</div>`;
         }
 
-        // --- 5. EVIDENCIA ---
+        // --- EVIDENCIA ---
         let imgEvidenciaHtml = `<p style="color:#e74c3c; font-size:0.9rem;">Sin evidencia cargada</p>`;
         if (f.evidencia_experiencia) {
             let srcImagen = f.evidencia_experiencia;
@@ -95,17 +107,15 @@ function renderCards(lista) {
             `;
         }
 
-        // --- 6. EXTRAER PARROQUIA DEL USUARIO (NUEVO) ---
-        // Buscamos el ID de la parroquia dentro del objeto usuario
+        // --- PARROQUIA ---
         let idParroquia = null;
-        let nombreParroquia = "No definida";
+        let nombreParroquia = "No definida (Se pedirá al aprobar)";
         
         if (f.usuario && f.usuario.parroquia) {
             idParroquia = f.usuario.parroquia.id_parroquia || f.usuario.parroquia.id;
             nombreParroquia = f.usuario.parroquia.nombre_parroquia || f.usuario.parroquia.nombre;
         }
 
-        // Si no hay parroquia, pasamos null explícito al onclick
         const paramParroquia = idParroquia ? idParroquia : 'null';
 
         const card = document.createElement("div");
@@ -136,7 +146,10 @@ function renderCards(lista) {
                 <div style="margin-bottom:10px;">
                     <p style="margin:2px 0;"><strong>Sitio:</strong> ${f.nombre_sitio}</p>
                     <p style="margin:2px 0;"><strong>Ubicación:</strong> ${f.ubicacion}</p>
-                    <p style="margin:2px 0;"><strong>Parroquia (User):</strong> ${nombreParroquia}</p> <p style="margin:2px 0;"><strong>Años Exp:</strong> ${f.anios_experiencia}</p>
+                    <p style="margin:2px 0; color:${idParroquia ? '#2c3e50' : '#e67e22'}">
+                        <strong>Parroquia:</strong> ${nombreParroquia}
+                    </p>
+                    <p style="margin:2px 0;"><strong>Años Exp:</strong> ${f.anios_experiencia}</p>
                 </div>
 
                 ${botonDescarga}
@@ -157,7 +170,6 @@ function renderCards(lista) {
 
             <div class="card-actions btn-group">
                 <button class="btn btn-reject" onclick="procesar(${f.id_formulario}, false, null)">Rechazar</button>
-                
                 <button class="btn btn-approve" onclick="procesar(${f.id_formulario}, true, ${paramParroquia})">Aprobar</button>
             </div>
         `;
@@ -212,36 +224,50 @@ function descargarDocumento(idFormulario) {
 async function procesar(id, aprobar, idParroquia) {
     const accionTexto = aprobar ? "Aprobar" : "Rechazar";
     const colorBtn = aprobar ? "#27ae60" : "#e74c3c";
-    const mensajeDefault = aprobar
-        ? "Cumple con los requisitos. Aprobado."
-        : "Falta información en la evidencia.";
+    const mensajeDefault = aprobar ? "Cumple con los requisitos. Aprobado." : "Falta información en la evidencia.";
+
+    let parroquiaSeleccionada = idParroquia;
 
     if (aprobar && !idParroquia) {
-        const confirmSinParroquia = await Swal.fire({
-            title: "¡Atención!",
-            text: "El usuario no tiene una parroquia definida. Se creará el punto sin parroquia. ¿Deseas continuar?",
+        let optionsHtml = `<option value="" disabled selected>Seleccione una parroquia</option>`;
+        listaParroquias.forEach(p => {
+            const pid = p.id_parroquia || p.id;
+            const pnom = p.nombre_parroquia || p.nombre;
+            optionsHtml += `<option value="${pid}">${pnom}</option>`;
+        });
+
+        const { value: pSeleccionada } = await Swal.fire({
+            title: "¡Falta Parroquia!",
+            html: `
+                <p>El usuario no tiene parroquia asignada.</p>
+                <p>Por favor, selecciona la ubicación del punto:</p>
+                <select id="swal-parroquia" class="swal2-input">
+                    ${optionsHtml}
+                </select>
+            `,
             icon: "warning",
             showCancelButton: true,
-            confirmButtonText: "Sí, continuar",
-            cancelButtonText: "Cancelar"
+            confirmButtonText: "Continuar",
+            preConfirm: () => {
+                return document.getElementById('swal-parroquia').value;
+            }
         });
-        if (!confirmSinParroquia.isConfirmed) return;
+
+        if (!pSeleccionada) return; // Cancelado o no seleccionó
+        parroquiaSeleccionada = parseInt(pSeleccionada);
     }
 
     const { value: mensaje, isConfirmed } = await Swal.fire({
         title: `${accionTexto} Solicitud`,
         input: "textarea",
-        inputLabel: "Observación para el usuario",
-        inputPlaceholder: "Escribe aquí la razón...",
+        inputLabel: "Observación",
         inputValue: mensajeDefault,
         showCancelButton: true,
         confirmButtonText: `Sí, ${accionTexto}`,
         confirmButtonColor: colorBtn,
         cancelButtonText: "Cancelar",
         inputValidator: (value) => {
-            if (!value) {
-                return "¡Debes escribir una observación!";
-            }
+            if (!value) return "¡Escribe una observación!";
         },
     });
 
@@ -257,7 +283,7 @@ async function procesar(id, aprobar, idParroquia) {
             method = "PUT";
             body = { 
                 observacion_admin: mensaje,
-                parroquia: idParroquia ? { id_parroquia: idParroquia } : null 
+                parroquia: { id_parroquia: parroquiaSeleccionada }
             };
         } else {
             url = `${API_BASE}/formularios_reciclador/${id}`;
@@ -268,7 +294,7 @@ async function procesar(id, aprobar, idParroquia) {
             };
         }
 
-        console.log("Enviando body:", body); // Debug
+        console.log("Enviando body:", body);
 
         const response = await fetch(url, {
             method: method,
@@ -277,16 +303,16 @@ async function procesar(id, aprobar, idParroquia) {
         });
 
         if (response.ok) {
-            Swal.fire("¡Éxito!", `Solicitud procesada correctamente.`, "success");
+            Swal.fire("¡Éxito!", `Solicitud procesada.`, "success");
             cargarFormularios();
         } else {
             const errorText = await response.text();
             console.error("Error del servidor:", errorText);
-            Swal.fire("Error", "Hubo un problema al procesar la solicitud: " + errorText, "error");
+            Swal.fire("Error", "Problema al procesar: " + errorText, "error");
         }
     } catch (e) {
         console.error(e);
-        Swal.fire("Error", "Fallo de conexión con el servidor.", "error");
+        Swal.fire("Error", "Fallo de conexión.", "error");
     }
 }
 
