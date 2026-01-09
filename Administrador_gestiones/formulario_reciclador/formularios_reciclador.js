@@ -23,12 +23,27 @@ async function cargarFormularios() {
     try {
         const res = await fetch(`${API_BASE}/formularios_reciclador`);
         const data = await res.json();
-
-
         const pendientes = data.filter((f) => f.aprobado === null); 
 
         document.getElementById("count-badge").innerText = pendientes.length;
-        renderCards(pendientes);
+
+        const pendientesCompletos = await Promise.all(pendientes.map(async (f) => {
+            try {
+                const resUser = await fetch(`${API_BASE}/usuarios/${f.usuario.cedula}`);
+                if (resUser.ok) {
+                    const usuarioFull = await resUser.json();
+                    if (usuarioFull.parroquia) {
+                        f.usuario.parroquia = usuarioFull.parroquia;
+                    }
+                }
+            } catch (err) {
+                console.warn("No se pudo cargar detalles extra del usuario", f.usuario.cedula);
+            }
+            return f;
+        }));
+
+        renderCards(pendientesCompletos);
+
     } catch (e) {
         console.error(e);
         Swal.fire("Error", "No se pudo cargar formularios", "error");
@@ -49,7 +64,7 @@ function renderCards(lista) {
     }
 
     lista.forEach((f) => {
-        // 1. FOTO
+        // --- FOTO ---
         let avatarUrl = `https://ui-avatars.com/api/?name=${f.usuario.primer_nombre}+${f.usuario.apellido_paterno}&background=random&color=fff`;
         if (f.usuario.foto && f.usuario.foto.length > 5) {
             if (f.usuario.foto.startsWith("http") || f.usuario.foto.startsWith("data:")) {
@@ -59,7 +74,7 @@ function renderCards(lista) {
             }
         }
 
-        // 2. DOCUMENTO
+        // --- DESCARGA ---
         let botonDescarga = "";
         if (f.foto_perfil_profesional) {
             sessionStorage.setItem(`doc_${f.id_formulario}`, f.foto_perfil_profesional);
@@ -70,7 +85,7 @@ function renderCards(lista) {
             `;
         }
 
-        // 3. HORARIOS
+        // --- HORARIOS ---
         let horariosHtml = '<p style="font-size:0.85rem; color:#7f8c8d;">No especificado</p>';
         if (f.horarios && f.horarios.length > 0) {
             horariosHtml = `<ul style="font-size:0.85rem; padding-left:20px; margin:5px 0;">`;
@@ -80,7 +95,7 @@ function renderCards(lista) {
             horariosHtml += `</ul>`;
         }
 
-        // 4. MATERIALES
+        // --- MATERIALES ---
         let materialesHtml = '<p style="font-size:0.85rem; color:#7f8c8d;">No especificado</p>';
         if (f.materiales && f.materiales.length > 0) {
             materialesHtml = `<div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:5px;">`;
@@ -94,7 +109,7 @@ function renderCards(lista) {
             materialesHtml += `</div>`;
         }
 
-        // 5. EVIDENCIA
+        // --- EVIDENCIA ---
         let imgEvidenciaHtml = `<p style="color:#e74c3c; font-size:0.9rem;">Sin evidencia cargada</p>`;
         if (f.evidencia_experiencia) {
             let srcImagen = f.evidencia_experiencia;
@@ -110,37 +125,30 @@ function renderCards(lista) {
             `;
         }
 
-        // --- 6. PARROQUIA (LÓGICA MEJORADA) ---
+        // --- PARROQUIA (LÓGICA BLINDADA) ---
         let idParroquia = null;
         let nombreParroquia = "No definida";
-        let estiloParroquia = "color:#e67e22"; // Naranja por defecto (alerta)
+        let colorParroquia = "#e67e22"; // Naranja alerta
 
-        // Verificamos si existe el objeto usuario y el campo parroquia
+        // Intentar sacar la parroquia del objeto usuario enriquecido
         if (f.usuario && f.usuario.parroquia) {
-            // CASO A: Viene como Objeto completo { id_parroquia: 1, nombre: "Cuenca" }
             if (typeof f.usuario.parroquia === 'object') {
                 idParroquia = f.usuario.parroquia.id_parroquia || f.usuario.parroquia.id;
-                nombreParroquia = f.usuario.parroquia.nombre_parroquia || f.usuario.parroquia.nombre || "Sin Nombre";
-            } 
-            // CASO B: Viene solo el ID (ej: parroquia: 5)
-            else if (typeof f.usuario.parroquia === 'number' || typeof f.usuario.parroquia === 'string') {
+                nombreParroquia = f.usuario.parroquia.nombre_parroquia || f.usuario.parroquia.nombre;
+            } else {
+                // Si es solo ID
                 idParroquia = f.usuario.parroquia;
-                // Buscamos el nombre en la lista global que cargamos al inicio
                 const pEncontrada = listaParroquias.find(p => (p.id_parroquia || p.id) == idParroquia);
-                if (pEncontrada) {
-                    nombreParroquia = pEncontrada.nombre_parroquia || pEncontrada.nombre;
-                }
+                if(pEncontrada) nombreParroquia = pEncontrada.nombre_parroquia || pEncontrada.nombre;
             }
         }
 
-        // Si logramos capturar un ID válido, cambiamos el estilo a normal
         if (idParroquia) {
-            estiloParroquia = "color:#2c3e50"; 
+            colorParroquia = "#2c3e50"; // Color normal si existe
         } else {
             nombreParroquia += " (Se pedirá al aprobar)";
         }
 
-        // Preparamos el valor para pasar a la función procesar (null o ID)
         const paramParroquia = idParroquia ? idParroquia : 'null';
 
         const card = document.createElement("div");
@@ -171,11 +179,9 @@ function renderCards(lista) {
                 <div style="margin-bottom:10px;">
                     <p style="margin:2px 0;"><strong>Sitio:</strong> ${f.nombre_sitio}</p>
                     <p style="margin:2px 0;"><strong>Ubicación:</strong> ${f.ubicacion}</p>
-                    
-                    <p style="margin:2px 0; ${estiloParroquia}">
+                    <p style="margin:2px 0; color:${colorParroquia}">
                         <strong>Parroquia:</strong> ${nombreParroquia}
                     </p>
-                    
                     <p style="margin:2px 0;"><strong>Años Exp:</strong> ${f.anios_experiencia}</p>
                 </div>
 
