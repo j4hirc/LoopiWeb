@@ -604,3 +604,51 @@ select.perfil-input { appearance: none; background-image: url("data:image/svg+xm
 
 /* FIX PARA SWEETALERT */
 div:where(.swal2-container) { z-index: 20000 !important; }
+
+.chat-fab {
+    /* Mantenemos tus estilos fijos */
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    /* ... resto de tus estilos ... */
+    
+    /* IMPORTANTE: */
+    overflow: visible !important; /* Permitimos que el tooltip salga de la bola */
+}
+
+/* Estilo para la imagen dentro de la bola */
+.fab-img {
+    width: 60px;  /* Forzamos el tamaño exacto */
+    height: 60px; /* Forzamos el tamaño exacto */
+    border-radius: 50%; /* Redonda */
+    object-fit: cover; /* Que la cara se vea bien */
+    display: block;
+    border: 2px solid white; /* Borde blanco para que resalte */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3); /* Sombra para profundidad */
+}
+
+/* Estilo para el texto flotante (Tooltip) */
+.tooltip-chat {
+    visibility: hidden;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 10px;
+    position: absolute;
+    z-index: 1;
+    right: 120%; /* Lo empujamos a la izquierda de la bola */
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    white-space: nowrap;
+    font-size: 0.8rem;
+    pointer-events: none;
+}
+
+/* Mostrar el texto al pasar el mouse */
+.chat-fab:hover .tooltip-chat {
+    visibility: visible;
+    opacity: 1;
+}
