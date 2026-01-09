@@ -996,23 +996,20 @@ function renderizarCaminoRangos(rangos, totalReal) {
 
 
 
-const GEMINI_API_KEY = "AIzaSyDwesq_y6S0L7SdNCuXjdwOZlrDeS6_puU";
+const GROQ_API_KEY = "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"; 
 
-// MODELO CLÁSICO (El que nunca falla en versión gratuita)
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`;
 
-// CEREBRO DE LOOPI
 const LOOPI_DATA = `
-ERES LOOPIBOT: Asistente virtual de reciclaje para "Loopi" en Cuenca, Ecuador.
-TU ESTILO: Amable, ecuatoriano ("ñaño", "chévere"), respuestas cortas (máx 40 palabras).
-INFO:
-- Rangos: Semilla, Brote, Árbol Joven, Bosque.
-- Puntos: Ganas por cada kg reciclado.
+ERES LOOPIBOT: Un asistente experto en reciclaje para la app "Loopi" en Cuenca, Ecuador.
+TU PERSONALIDAD: Amable, motivador, usas jerga ecuatoriana suave ("ñaño", "chévere", "de una").
+REGLAS: Respuestas cortas (máximo 30 palabras). Si no sabes, di que no sabes.
+DATOS CLAVE:
+- Rangos: Semilla -> Brote -> Árbol Joven -> Bosque.
+- Puntos: Ganas por cada kilo entregado.
 - Materiales: Plástico PET, Cartón, Vidrio, Papel, Pilas.
-- Recompensas: Cupones en Supermaxi, KFC, Farmacias.
-- Reciclaje: Lavar, secar y aplastar.
+- Recompensas: Descuentos en Supermaxi, KFC, Farmacias.
+- Cómo reciclar: Lavar, secar y aplastar todo.
 `;
-
 window.toggleChat = function() {
     const chat = document.getElementById("chatWindow");
     if (chat.style.display === "flex") {
@@ -1023,7 +1020,7 @@ window.toggleChat = function() {
         
         const body = document.getElementById("chatBody");
         if (body.children.length === 0) {
-            agregarMensaje("¡Hola ñaño! 👋 Soy LoopiBot. Pregúntame sobre reciclaje.", "bot");
+            agregarMensaje("¡Hola ñaño! 👋 Soy LoopiBot. Pregúntame lo que quieras sobre la app.", "bot");
         }
     }
 };
@@ -1038,51 +1035,63 @@ window.enviarMensaje = async function() {
 
     if (!texto) return;
 
+    // 1. Mostrar mensaje usuario
     agregarMensaje(texto, "user");
     input.value = "";
     input.disabled = true;
 
-    const loadingId = agregarMensaje("Pensando... 🤔", "bot", true);
+    // 2. Loading
+    const loadingId = agregarMensaje("Pensando... ⚡", "bot", true);
 
     try {
-        const respuesta = await consultarGeminiDirecto(texto);
+        // 3. Llamada a Groq
+        const respuesta = await consultarGroq(texto);
+        
         eliminarMensaje(loadingId);
         agregarMensaje(respuesta, "bot");
+
     } catch (error) {
-        console.error("Error IA:", error);
+        console.error("Error Groq:", error);
         eliminarMensaje(loadingId);
-        agregarMensaje("Chuta ñaño, error de red (" + error.message + ").", "bot");
+        agregarMensaje("Chuta ñaño, me quedé sin megas. Revisa tu clave API.", "bot");
     } finally {
         input.disabled = false;
         input.focus();
     }
 };
 
-// --- FUNCIÓN IA SIMPLE Y DIRECTA ---
-async function consultarGeminiDirecto(pregunta) {
+// --- FUNCIÓN DE CONEXIÓN A GROQ ---
+async function consultarGroq(pregunta) {
+    if(GROQ_API_KEY === "PEGAR_TU_CLAVE_GROQ_AQUI") {
+        return "⚠️ Ñaño, falta pegar la clave API de Groq en el código.";
+    }
+
+    const url = "https://api.groq.com/openai/v1/chat/completions";
+    
     const payload = {
-        contents: [{ parts: [{ text: LOOPI_DATA + "\n\nUsuario: " + pregunta }] }]
+        model: "llama3-8b-8192", // Modelo rápido y gratuito de Meta
+        messages: [
+            { role: "system", content: LOOPI_DATA },
+            { role: "user", content: pregunta }
+        ],
+        temperature: 0.7
     };
 
-    console.log("Consultando a:", GEMINI_URL);
-
-    const response = await fetch(GEMINI_URL, {
+    const response = await fetch(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${GROQ_API_KEY}`
+        },
         body: JSON.stringify(payload)
     });
 
     if (!response.ok) {
-        const errJson = await response.json();
-        const msg = errJson.error?.message || response.statusText;
-        throw new Error(msg);
+        throw new Error(`Error API: ${response.status}`);
     }
 
     const data = await response.json();
-    if (data.candidates && data.candidates.length > 0) {
-        return data.candidates[0].content.parts[0].text;
-    }
-    return "No entendí, ñaño.";
+    return data.choices[0].message.content;
 }
 
 function agregarMensaje(texto, tipo, esLoading = false) {
@@ -1093,10 +1102,13 @@ function agregarMensaje(texto, tipo, esLoading = false) {
     
     if (esLoading) { div.style.fontStyle = "italic"; div.style.opacity = "0.7"; }
 
-    const textoFormat = texto.replace(/\n/g, "<br>").replace(/\*\*(.*?)\*\*/g, "<b>$1</b>");
+    const textoHtml = texto
+        .replace(/\n/g, "<br>")
+        .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>");
+
     const hora = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    div.innerHTML = `<p>${textoFormat}</p>${!esLoading ? `<span class="time">${hora}</span>` : ''}`;
+    div.innerHTML = `<p>${textoHtml}</p>${!esLoading ? `<span class="time">${hora}</span>` : ''}`;
     chatBody.appendChild(div);
     chatBody.scrollTop = chatBody.scrollHeight;
     return div.id;
