@@ -440,10 +440,9 @@ select.perfil-input { appearance: none; background-image: url("data:image/svg+xm
 .fab-img {
     width: 100%;
     height: 100%;
-    object-fit: cover; 
+    object-fit: cover;
     display: block;
 }
-
 .chat-fab:hover {
     transform: scale(1.1) rotate(10deg);
     background: var(--secondary);
