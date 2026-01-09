@@ -612,7 +612,6 @@ function cerrarModalPerfil() {
   document.getElementById("modalPerfil").style.display = "none";
 }
 
-// --- CARGA DE IMAGEN CON COMPRESIÓN ---
 async function cargarImagenPerfil() {
   const input = document.getElementById("inputPerfilFoto");
   const prev = document.getElementById("perfilPreview");
@@ -626,13 +625,10 @@ async function cargarImagenPerfil() {
   }
 
   try {
-      // 1. Comprimir
       const archivoComprimido = await comprimirImagen(file);
       
-      // 2. Guardar para enviar después
       fotoNuevaFile = archivoComprimido;
 
-      // 3. Previsualizar
       const reader = new FileReader();
       reader.onload = (e) => {
         prev.src = e.target.result;
@@ -645,10 +641,9 @@ async function cargarImagenPerfil() {
   }
 }
 
-// --- FUNCIÓN DE COMPRESIÓN ---
 async function comprimirImagen(archivo) {
     return new Promise((resolve, reject) => {
-        const maxWidth = 500; // Avatar pequeño, 500px es suficiente
+        const maxWidth = 500;
         const quality = 0.7;
 
         const reader = new FileReader();
@@ -690,7 +685,6 @@ async function comprimirImagen(archivo) {
     });
 }
 
-// --- GUARDAR PERFIL CON FORMDATA ---
 async function guardarPerfil() {
   try {
     const passInput = document.getElementById("perfilPassword").value.trim();
@@ -700,7 +694,6 @@ async function guardarPerfil() {
         return Swal.fire("Atención", "Selecciona una parroquia", "warning");
     }
 
-    // 1. Objeto JSON
     const datosUsuario = {
       cedula: usuarioLogueado.cedula,
       primer_nombre: document.getElementById("perfilPrimerNombre").value.trim(),
@@ -716,7 +709,6 @@ async function guardarPerfil() {
       password: passInput !== "" ? passInput : null 
     };
 
-    // 2. FormData
     const formData = new FormData();
     formData.append("datos", JSON.stringify(datosUsuario));
 
@@ -726,7 +718,6 @@ async function guardarPerfil() {
  
     Swal.fire({ title: 'Guardando...', didOpen: () => Swal.showLoading() });
 
-    // 3. Enviar
     const res = await fetch(`${API_BASE}/usuarios/${usuarioLogueado.cedula}`, {
       method: "PUT",
       body: formData, 
@@ -765,7 +756,6 @@ async function guardarPerfil() {
   }
 }
 
-// --- NUEVA FUNCIÓN PARA CARGAR PARROQUIAS ---
 async function cargarParroquiasEnPerfil() {
     const select = document.getElementById('perfilParroquia');
     if(!select) return;
@@ -929,7 +919,7 @@ async function abrirModalRangos() {
     let totalRecolecciones = 0;
 
     if (resCount.ok) {
-      totalRecolecciones = await resCount.json(); // Número entero (ej: 12, 27, 30)
+      totalRecolecciones = await resCount.json(); 
     }
 
     renderizarCaminoRangos(rangos, totalRecolecciones);
@@ -1081,7 +1071,7 @@ window.toggleChat = function() {
             
             chatBody.innerHTML = ""; 
 
-            const saludo = `¡Qué más ñaño/a ${usuarioLogueado.primer_nombre}! 🎒 Soy **Ellie Loopi**. Estoy aquí para ayudarte a reciclar. ¿Tienes dudas sobre materiales o puntos?`;
+            const saludo = `¡Hola ñaño/a ${usuarioLogueado.primer_nombre}! ✨ Qué lindo verte por aquí. Soy **Ellie Loopi**, tu amiga ecológica 🌸. Estoy lista para ayudarte a ganar puntos y cuidar el planeta. ¿En qué te acolito hoy? 💖`;
             
             agregarMensaje(saludo, "bot");
             historialChat.push({ role: "assistant", content: saludo });
@@ -1135,7 +1125,9 @@ async function consultarGroq() {
 
     TU IDENTIDAD:
     - Eres Ellie (inspirada en The Last of Us), pero versión "Eco-Friendly" y Cuencana.
-    - Eres una chica joven, valiente, directa y "pilas".
+    - Eres una chica joven, alegre, detallista y súper amigable, valiente.
+    - Te encanta la naturaleza y reciclar es tu pasión.
+    - Eres como esa "mejor amiga" que siempre está dispuesta a ayudar con una sonrisa.
     - Usas una mochila para recolectar reciclaje en lugar de suministros.
 
     TU OBJETIVO: Ayudar al usuario a reciclar, encontrar lugares ESPECÍFICOS para sus residuos y canjear premios.
@@ -1143,7 +1135,9 @@ async function consultarGroq() {
     IMPORTANTE: NO DINERO. Solo PUNTOS.
     
     TU PERSONALIDAD:
-    - Hablas como cuencana: "ñaño", "chévere", "de una", "acolitar", "chuta", "ele".
+    - **Cuencana y Dulce**: Usas modismos cuencanos ("ñaño/a", "chévere", "de una", "ele", "qué bestia") pero siempre con un tono suave y femenino.
+    - **Entusiasta**: Celebras cada logro del usuario ("¡Qué genial!", "¡Te pasaste!", "¡Me encanta!").
+    - **Empática**: Si el usuario no sabe algo, explícale con paciencia y cariño.
     - Eres motivadora pero con actitud: "Vamos a reciclar, que el planeta no se salva solo".
     
     DATOS USUARIO: ${usuarioLogueado.primer_nombre} (${puntosUsuario} pts).
