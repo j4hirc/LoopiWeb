@@ -755,7 +755,7 @@ function agregarFilaHorario(dia = "", inicio = "", fin = "") {
 
 async function guardarCambiosPunto() {
     const filasHorario = document.querySelectorAll(".horario-row");
-    if(filasHorario.length === 0) return Swal.fire("Error", "Debe registrar al menos un horario.", "warning");
+    if (filasHorario.length === 0) return Swal.fire("Error", "Debe registrar al menos un horario.", "warning");
 
     const listaHorariosEnvio = [];
     const diasUsados = new Set();
@@ -763,27 +763,40 @@ async function guardarCambiosPunto() {
 
     filasHorario.forEach((fila) => {
         const dia = fila.querySelector(".input-dia").value;
-        const inicio = fila.querySelector(".input-inicio").value;
-        const fin = fila.querySelector(".input-fin").value;
+        let inicio = fila.querySelector(".input-inicio").value;
+        let fin = fila.querySelector(".input-fin").value;
 
-        if(!dia || !inicio || !fin) { errorHorario = "Complete todos los campos de horarios."; return; }
-        if(diasUsados.has(dia)) { errorHorario = `El día ${dia} está repetido.`; return; }
+        if (!dia || !inicio || !fin) {
+            errorHorario = "Complete todos los campos de horarios.";
+            return;
+        }
+        if (diasUsados.has(dia)) {
+            errorHorario = `El día ${dia} está repetido.`;
+            return;
+        }
         diasUsados.add(dia);
-        
+
+        if (inicio.length === 5) inicio += ":00";
+        if (fin.length === 5) fin += ":00";
+
         listaHorariosEnvio.push({
             dia_semana: dia,
-            hora_apertura: inicio, 
-            hora_cierre: fin
+            hora_apertura: inicio,
+            horaApertura: inicio,
+            hora_cierre: fin,
+            horaCierre: fin
         });
     });
 
-    if(errorHorario) return Swal.fire("Error en Horarios", errorHorario, "warning");
+    if (errorHorario) return Swal.fire("Error en Horarios", errorHorario, "warning");
 
     const checks = document.querySelectorAll("#containerMaterialesCheck input[type='checkbox']:checked");
-    if(checks.length === 0) return Swal.fire("Atención", "Selecciona al menos un material.", "warning");
-    
+    if (checks.length === 0) return Swal.fire("Atención", "Selecciona al menos un material.", "warning");
+
     const materialesEnvio = Array.from(checks).map(c => ({
-        material: { id_material: parseInt(c.value) }
+        material: {
+            id_material: parseInt(c.value)
+        }
     }));
 
     const nombre = document.getElementById("txtPuntoNombre").value.trim();
@@ -792,26 +805,35 @@ async function guardarCambiosPunto() {
     const lat = document.getElementById("txtLatitud").value;
     const lng = document.getElementById("txtLongitud").value;
 
-    if(!nombre || !idParroquia || !direccion) return Swal.fire("Campos vacíos", "Faltan datos obligatorios.", "warning");
+    if (!nombre || !idParroquia || !direccion) return Swal.fire("Campos vacíos", "Faltan datos obligatorios (Nombre, Parroquia, Dirección).", "warning");
 
     const objetoUpdate = {
         id_ubicacion_reciclaje: miPuntoData.id_ubicacion_reciclaje,
         nombre: nombre,
-        parroquia: { id_parroquia: parseInt(idParroquia) }, // Formato correcto para backend Spring Boot
+        parroquia: {
+            id_parroquia: parseInt(idParroquia)
+        },
         direccion: direccion,
         latitud: parseFloat(lat),
         longitud: parseFloat(lng),
-        reciclador: { cedula: usuario.cedula }, 
+        reciclador: {
+            cedula: usuario.cedula
+        },
         horarios: listaHorariosEnvio,
         materialesAceptados: materialesEnvio
     };
 
+    console.log("Enviando actualización:", objetoUpdate);
+
     const formData = new FormData();
     formData.append("datos", JSON.stringify(objetoUpdate));
-    if(fotoPuntoFile) formData.append("archivo", fotoPuntoFile);
+    if (fotoPuntoFile) formData.append("archivo", fotoPuntoFile);
 
     try {
-        Swal.fire({ title: "Guardando...", didOpen: () => Swal.showLoading() });
+        Swal.fire({
+            title: "Guardando...",
+            didOpen: () => Swal.showLoading()
+        });
         const res = await fetch(`${API_BASE}/ubicacion_reciclajes/${miPuntoData.id_ubicacion_reciclaje}`, {
             method: "PUT",
             body: formData
@@ -819,17 +841,18 @@ async function guardarCambiosPunto() {
 
         if (res.ok) {
             const dataNueva = await res.json();
-            miPuntoData = dataNueva; 
+            miPuntoData = dataNueva;
             cerrarModalMiPunto();
             Swal.fire("Éxito", "Punto actualizado.", "success");
-            cargarPuntosReciclajeReciclador(); 
+            cargarPuntosReciclajeReciclador();
         } else {
             const err = await res.text();
-            Swal.fire("Error", "No se pudo actualizar: " + err, "error");
+            console.error("Error backend:", err);
+            Swal.fire("Error al Guardar", "El servidor rechazó los datos: " + err, "error");
         }
     } catch (e) {
         console.error(e);
-        Swal.fire("Error de Red", "Intenta más tarde.", "error");
+        Swal.fire("Error de Conexión", "No se pudo conectar con el servidor.", "error");
     }
 }
 

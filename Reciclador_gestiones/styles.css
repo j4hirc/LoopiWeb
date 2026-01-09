@@ -715,3 +715,7 @@ body {
 .btn-add-horario:hover {
     opacity: 0.9;
 }
+
+.swal2-container {
+    z-index: 20000 !important;
+}
