@@ -54,12 +54,17 @@ function initMap() {
 
     markersLayer = L.layerGroup().addTo(map);
 
-    if (navigator.geolocation) {
+   if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(pos => {
             const lat = pos.coords.latitude;
             const lng = pos.coords.longitude;
             
-            map.setView([lat, lng], 15);
+            // Verificar si está dentro de Cuenca antes de centrar
+            if (CUENCA_BOUNDS.contains([lat, lng])) {
+                map.setView([lat, lng], 15);
+            } else {
+                Swal.fire("Ubicación", "Estás fuera del área de servicio (Cuenca).", "info");
+            }
             
             const userIcon = L.divIcon({
                 className: 'user-pin',
