@@ -18,7 +18,7 @@ let notificacionesCargadas = false;
 
 let fotoNuevaFile = null;
 
-const GEMINI_API_KEY = "AIzaSyDwesq_y6S0L7SdNCuXjdwOZlrDeS6_puU";
+
 
 const CUENCA_BOUNDS = L.latLngBounds(
     [-2.99, -79.15], 
@@ -780,7 +780,6 @@ async function cargarParroquiasEnPerfil() {
     }
 }
 
-// ... (Resto de funciones de notificaciones y rangos siguen igual) ...
 
 async function cargarNotificaciones() {
 
@@ -997,6 +996,7 @@ function renderizarCaminoRangos(rangos, totalReal) {
 
 
 
+const GEMINI_API_KEY = "AIzaSyDwesq_y6S0L7SdNCuXjdwOZlrDeS6_puU";
 
 const LOOPI_DATA = `
 ERES LOOPIBOT: Un asistente virtual experto en reciclaje para la app "Loopi" en Cuenca, Ecuador.
@@ -1057,10 +1057,14 @@ window.enviarMensaje = async function() {
 };
 
 async function consultarGeminiRobusto(pregunta) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`;
     
     const payload = {
-        contents: [{ parts: [{ text: LOOPI_DATA + "\n\nUsuario: " + pregunta }] }]
+        contents: [{ 
+            parts: [{ 
+                text: LOOPI_DATA + "\n\nUsuario: " + pregunta 
+            }] 
+        }]
     };
 
     const response = await fetch(url, {
@@ -1070,17 +1074,18 @@ async function consultarGeminiRobusto(pregunta) {
     });
 
     if (!response.ok) {
-        // Si da 404, es casi seguro que falta habilitar la API en la consola de Google
-        if (response.status === 404) throw new Error("API no habilitada o modelo no encontrado");
-        throw new Error(`Error ${response.status}`);
+        const errorData = await response.json();
+        console.error("ERROR GOOGLE DETALLADO:", errorData);
+        throw new Error(`Google Error: ${errorData.error.message || response.status}`);
     }
 
     const data = await response.json();
-    if (data.candidates && data.candidates.length > 0) {
+    
+    if (data.candidates && data.candidates.length > 0 && data.candidates[0].content) {
         return data.candidates[0].content.parts[0].text;
     }
     
-    return "No entendí, ñaño. ¿Repites?";
+    return "Lo siento, no pude procesar eso. Intenta de nuevo.";
 }
 
 function agregarMensaje(texto, tipo, esLoading = false) {
