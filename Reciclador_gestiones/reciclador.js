@@ -562,7 +562,6 @@ async function identificarMiPunto() {
 
 
 async function abrirModalMiPunto() {
-    // 1. Si no hay datos, buscar de nuevo
     if (!miPuntoData) {
         await identificarMiPunto();
     }
@@ -579,62 +578,48 @@ async function abrirModalMiPunto() {
     Swal.fire({ title: "Cargando detalles...", didOpen: () => Swal.showLoading() });
 
     try {
-        // PETICIÓN EXTRA PARA ASEGURAR HORARIOS COMPLETOS
         const idUbicacion = miPuntoData.id_ubicacion_reciclaje;
         const res = await fetch(`${API_BASE}/ubicacion_reciclajes/${idUbicacion}`);
         
         if (res.ok) {
             miPuntoData = await res.json();
-            console.log("Datos frescos cargados:", miPuntoData);
         }
     } catch (e) {
         console.error("Error refrescando detalles:", e);
     }
 
-    // 2. Llenar Inputs
+    await cargarListadoParroquias();
+
     document.getElementById("txtPuntoNombre").value = miPuntoData.nombre || "";
     document.getElementById("txtPuntoDireccion").value = miPuntoData.direccion || "";
     document.getElementById("txtLatitud").value = miPuntoData.latitud || "";
     document.getElementById("txtLongitud").value = miPuntoData.longitud || "";
     
-    // --- CORRECCIÓN PARROQUIA ---
-    // Si viene como objeto {id, nombre} o como string
-    let nombreParroquia = "";
     if (miPuntoData.parroquia) {
-        if (typeof miPuntoData.parroquia === 'object') {
-            // Intenta leer propiedades comunes
-            nombreParroquia = miPuntoData.parroquia.nombre || miPuntoData.parroquia.nombre_parroquia || "";
-        } else {
-            nombreParroquia = miPuntoData.parroquia; // Es un string directo
-        }
+        const idParroquia = miPuntoData.parroquia.id_parroquia || miPuntoData.parroquia.id;
+        document.getElementById("txtPuntoParroquia").value = idParroquia || "";
     }
-    document.getElementById("txtPuntoParroquia").value = nombreParroquia;
 
     // --- FOTO ---
     const imgPreview = document.getElementById("previewPuntoFoto");
     if(miPuntoData.foto) {
         let urlFoto = miPuntoData.foto;
-        // Si no es absoluta y no es base64, quizás necesite prefijo (opcional)
-        // if (!urlFoto.startsWith("http") && !urlFoto.startsWith("data:")) urlFoto = API_BASE + urlFoto;
         imgPreview.src = urlFoto;
         imgPreview.style.display = "block";
     } else {
         imgPreview.style.display = "none";
     }
     
-    // 3. Renderizar Listas
     await renderizarMaterialesEdicion();
-    renderizarHorariosEdicion(); // ¡AQUÍ ESTÁ LA MAGIA CORREGIDA!
+    renderizarHorariosEdicion();
 
     Swal.close();
     document.getElementById("modalMiPunto").style.display = "flex";
 
-    // 4. Mapa
     setTimeout(() => {
         initMapaEdicion(miPuntoData.latitud, miPuntoData.longitud);
     }, 300);
     
-    // 5. Reset input foto
     const inputFoto = document.getElementById("filePuntoFoto");
     const nuevoInput = inputFoto.cloneNode(true);
     inputFoto.parentNode.replaceChild(nuevoInput, inputFoto);
@@ -802,18 +787,17 @@ async function guardarCambiosPunto() {
     }));
 
     const nombre = document.getElementById("txtPuntoNombre").value.trim();
-    const parroquia = document.getElementById("txtPuntoParroquia").value.trim(); // Enviamos string
+    const idParroquia = document.getElementById("txtPuntoParroquia").value;
     const direccion = document.getElementById("txtPuntoDireccion").value.trim();
     const lat = document.getElementById("txtLatitud").value;
     const lng = document.getElementById("txtLongitud").value;
 
-    if(!nombre || !parroquia || !direccion) return Swal.fire("Campos vacíos", "Faltan datos obligatorios.", "warning");
+    if(!nombre || !idParroquia || !direccion) return Swal.fire("Campos vacíos", "Faltan datos obligatorios.", "warning");
 
-    
     const objetoUpdate = {
         id_ubicacion_reciclaje: miPuntoData.id_ubicacion_reciclaje,
         nombre: nombre,
-        parroquia: parroquia, 
+        parroquia: { id_parroquia: parseInt(idParroquia) }, // Formato correcto para backend Spring Boot
         direccion: direccion,
         latitud: parseFloat(lat),
         longitud: parseFloat(lng),
@@ -862,4 +846,31 @@ function actualizarPosicionMarker(latlng) {
     }
     document.getElementById("txtLatitud").value = parseFloat(latlng.lat).toFixed(6);
     document.getElementById("txtLongitud").value = parseFloat(latlng.lng).toFixed(6);
+}
+
+async function cargarListadoParroquias() {
+    const select = document.getElementById("txtPuntoParroquia");
+    select.innerHTML = '<option value="">Cargando...</option>';
+
+    try {
+        const res = await fetch(`${API_BASE}/parroquias`);
+        if(res.ok) {
+            const parroquias = await res.json();
+            select.innerHTML = '<option value="">Seleccione Parroquia</option>';
+            parroquias.forEach(p => {
+                // Asumiendo que el objeto parroquia tiene id_parroquia y nombre_parroquia o nombre
+                const id = p.id_parroquia || p.id;
+                const nombre = p.nombre_parroquia || p.nombre;
+                const opt = document.createElement("option");
+                opt.value = id;
+                opt.text = nombre;
+                select.appendChild(opt);
+            });
+        } else {
+            select.innerHTML = '<option value="">Error cargando</option>';
+        }
+    } catch(e) {
+        console.error("Error cargando parroquias:", e);
+        select.innerHTML = '<option value="">Error conexión</option>';
+    }
 }
