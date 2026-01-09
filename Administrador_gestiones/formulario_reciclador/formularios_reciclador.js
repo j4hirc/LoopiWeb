@@ -34,7 +34,7 @@ function renderCards(lista) {
     }
 
     lista.forEach((f) => {
-
+        // --- 1. LÓGICA DE FOTO DE PERFIL ---
         let avatarUrl = `https://ui-avatars.com/api/?name=${f.usuario.primer_nombre}+${f.usuario.apellido_paterno}&background=random&color=fff`;
         if (f.usuario.foto && f.usuario.foto.length > 5) {
             if (f.usuario.foto.startsWith("http") || f.usuario.foto.startsWith("data:")) {
@@ -44,11 +44,10 @@ function renderCards(lista) {
             }
         }
 
-
+        // --- 2. LÓGICA DE DESCARGA ---
         let botonDescarga = "";
         if (f.foto_perfil_profesional) {
             sessionStorage.setItem(`doc_${f.id_formulario}`, f.foto_perfil_profesional);
-
             botonDescarga = `
                 <button class="btn btn-download" onclick="descargarDocumento(${f.id_formulario})">
                     <i class="fa-solid fa-file-arrow-down"></i> Ver/Descargar Foto
@@ -56,6 +55,7 @@ function renderCards(lista) {
             `;
         }
 
+        // --- 3. HORARIOS ---
         let horariosHtml = '<p style="font-size:0.85rem; color:#7f8c8d;">No especificado</p>';
         if (f.horarios && f.horarios.length > 0) {
             horariosHtml = `<ul style="font-size:0.85rem; padding-left:20px; margin:5px 0;">`;
@@ -65,6 +65,7 @@ function renderCards(lista) {
             horariosHtml += `</ul>`;
         }
 
+        // --- 4. MATERIALES ---
         let materialesHtml = '<p style="font-size:0.85rem; color:#7f8c8d;">No especificado</p>';
         if (f.materiales && f.materiales.length > 0) {
             materialesHtml = `<div style="display:flex; flex-wrap:wrap; gap:5px; margin-top:5px;">`;
@@ -78,17 +79,14 @@ function renderCards(lista) {
             materialesHtml += `</div>`;
         }
 
+        // --- 5. EVIDENCIA ---
         let imgEvidenciaHtml = `<p style="color:#e74c3c; font-size:0.9rem;">Sin evidencia cargada</p>`;
-
         if (f.evidencia_experiencia) {
             let srcImagen = f.evidencia_experiencia;
-            
             if (!srcImagen.startsWith("http") && !srcImagen.startsWith("data:")) {
                 srcImagen = `data:image/jpeg;base64,${f.evidencia_experiencia}`;
             }
-
             sessionStorage.setItem(`img_evidencia_${f.id_formulario}`, srcImagen);
-
             imgEvidenciaHtml = `
                 <div style="width:100%; height:150px; overflow:hidden; border-radius:8px; cursor:pointer; border:1px solid #ddd;" 
                      onclick="verImagenDesdeMemoria(${f.id_formulario})">
@@ -96,6 +94,19 @@ function renderCards(lista) {
                 </div>
             `;
         }
+
+        // --- 6. EXTRAER PARROQUIA DEL USUARIO (NUEVO) ---
+        // Buscamos el ID de la parroquia dentro del objeto usuario
+        let idParroquia = null;
+        let nombreParroquia = "No definida";
+        
+        if (f.usuario && f.usuario.parroquia) {
+            idParroquia = f.usuario.parroquia.id_parroquia || f.usuario.parroquia.id;
+            nombreParroquia = f.usuario.parroquia.nombre_parroquia || f.usuario.parroquia.nombre;
+        }
+
+        // Si no hay parroquia, pasamos null explícito al onclick
+        const paramParroquia = idParroquia ? idParroquia : 'null';
 
         const card = document.createElement("div");
         card.className = "card";
@@ -125,7 +136,7 @@ function renderCards(lista) {
                 <div style="margin-bottom:10px;">
                     <p style="margin:2px 0;"><strong>Sitio:</strong> ${f.nombre_sitio}</p>
                     <p style="margin:2px 0;"><strong>Ubicación:</strong> ${f.ubicacion}</p>
-                    <p style="margin:2px 0;"><strong>Años Exp:</strong> ${f.anios_experiencia}</p>
+                    <p style="margin:2px 0;"><strong>Parroquia (User):</strong> ${nombreParroquia}</p> <p style="margin:2px 0;"><strong>Años Exp:</strong> ${f.anios_experiencia}</p>
                 </div>
 
                 ${botonDescarga}
@@ -145,8 +156,9 @@ function renderCards(lista) {
             </div>
 
             <div class="card-actions btn-group">
-                <button class="btn btn-reject" onclick="procesar(${f.id_formulario}, false)">Rechazar</button>
-                <button class="btn btn-approve" onclick="procesar(${f.id_formulario}, true)">Aprobar</button>
+                <button class="btn btn-reject" onclick="procesar(${f.id_formulario}, false, null)">Rechazar</button>
+                
+                <button class="btn btn-approve" onclick="procesar(${f.id_formulario}, true, ${paramParroquia})">Aprobar</button>
             </div>
         `;
 
@@ -197,12 +209,24 @@ function descargarDocumento(idFormulario) {
     document.body.removeChild(link);
 }
 
-async function procesar(id, aprobar) {
+async function procesar(id, aprobar, idParroquia) {
     const accionTexto = aprobar ? "Aprobar" : "Rechazar";
     const colorBtn = aprobar ? "#27ae60" : "#e74c3c";
     const mensajeDefault = aprobar
         ? "Cumple con los requisitos. Aprobado."
         : "Falta información en la evidencia.";
+
+    if (aprobar && !idParroquia) {
+        const confirmSinParroquia = await Swal.fire({
+            title: "¡Atención!",
+            text: "El usuario no tiene una parroquia definida. Se creará el punto sin parroquia. ¿Deseas continuar?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Sí, continuar",
+            cancelButtonText: "Cancelar"
+        });
+        if (!confirmSinParroquia.isConfirmed) return;
+    }
 
     const { value: mensaje, isConfirmed } = await Swal.fire({
         title: `${accionTexto} Solicitud`,
@@ -231,7 +255,10 @@ async function procesar(id, aprobar) {
         if (aprobar) {
             url = `${API_BASE}/formularios_reciclador/aprobar/${id}`;
             method = "PUT";
-            body = { observacion_admin: mensaje };
+            body = { 
+                observacion_admin: mensaje,
+                parroquia: idParroquia ? { id_parroquia: idParroquia } : null 
+            };
         } else {
             url = `${API_BASE}/formularios_reciclador/${id}`;
             method = "PUT";
@@ -240,6 +267,8 @@ async function procesar(id, aprobar) {
                 observacion_admin: mensaje,
             };
         }
+
+        console.log("Enviando body:", body); // Debug
 
         const response = await fetch(url, {
             method: method,
@@ -253,7 +282,7 @@ async function procesar(id, aprobar) {
         } else {
             const errorText = await response.text();
             console.error("Error del servidor:", errorText);
-            Swal.fire("Error", "Hubo un problema al procesar la solicitud.", "error");
+            Swal.fire("Error", "Hubo un problema al procesar la solicitud: " + errorText, "error");
         }
     } catch (e) {
         console.error(e);
