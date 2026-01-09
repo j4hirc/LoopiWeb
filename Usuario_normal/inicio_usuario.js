@@ -998,18 +998,21 @@ function renderizarCaminoRangos(rangos, totalReal) {
 
 const GEMINI_API_KEY = "AIzaSyDwesq_y6S0L7SdNCuXjdwOZlrDeS6_puU";
 
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+// MODELO CLÁSICO (El que nunca falla en versión gratuita)
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`;
 
 // CEREBRO DE LOOPI
 const LOOPI_DATA = `
-ERES LOOPIBOT: Asistente de reciclaje para la app "Loopi" en Cuenca, Ecuador.
-PERSONALIDAD: Amable, "ñaño", respuestas cortas.
+ERES LOOPIBOT: Asistente virtual de reciclaje para "Loopi" en Cuenca, Ecuador.
+TU ESTILO: Amable, ecuatoriano ("ñaño", "chévere"), respuestas cortas (máx 40 palabras).
 INFO:
 - Rangos: Semilla, Brote, Árbol Joven, Bosque.
-- Puntos: Por kg reciclado.
+- Puntos: Ganas por cada kg reciclado.
 - Materiales: Plástico PET, Cartón, Vidrio, Papel, Pilas.
 - Recompensas: Cupones en Supermaxi, KFC, Farmacias.
+- Reciclaje: Lavar, secar y aplastar.
 `;
+
 window.toggleChat = function() {
     const chat = document.getElementById("chatWindow");
     if (chat.style.display === "flex") {
@@ -1020,7 +1023,7 @@ window.toggleChat = function() {
         
         const body = document.getElementById("chatBody");
         if (body.children.length === 0) {
-            agregarMensaje("¡Hola ñaño! 👋 Soy LoopiBot. Pregúntame lo que quieras.", "bot");
+            agregarMensaje("¡Hola ñaño! 👋 Soy LoopiBot. Pregúntame sobre reciclaje.", "bot");
         }
     }
 };
@@ -1032,6 +1035,7 @@ window.checkEnter = function(e) {
 window.enviarMensaje = async function() {
     const input = document.getElementById("chatInput");
     const texto = input.value.trim();
+
     if (!texto) return;
 
     agregarMensaje(texto, "user");
@@ -1041,28 +1045,26 @@ window.enviarMensaje = async function() {
     const loadingId = agregarMensaje("Pensando... 🤔", "bot", true);
 
     try {
-        const respuesta = await consultarGeminiSimple(texto);
+        const respuesta = await consultarGeminiDirecto(texto);
         eliminarMensaje(loadingId);
         agregarMensaje(respuesta, "bot");
     } catch (error) {
         console.error("Error IA:", error);
         eliminarMensaje(loadingId);
-        agregarMensaje("Chuta ñaño, no pude conectar. (" + error.message + ")", "bot");
+        agregarMensaje("Chuta ñaño, error de red (" + error.message + ").", "bot");
     } finally {
         input.disabled = false;
         input.focus();
     }
 };
 
-// --- FUNCIÓN DE IA DIRECTA (SIN BUCLES) ---
-async function consultarGeminiSimple(pregunta) {
+// --- FUNCIÓN IA SIMPLE Y DIRECTA ---
+async function consultarGeminiDirecto(pregunta) {
     const payload = {
-        contents: [{
-            parts: [{ text: LOOPI_DATA + "\n\nUsuario: " + pregunta }]
-        }]
+        contents: [{ parts: [{ text: LOOPI_DATA + "\n\nUsuario: " + pregunta }] }]
     };
 
-    console.log("Enviando petición a:", GEMINI_URL); // Para depurar en consola
+    console.log("Consultando a:", GEMINI_URL);
 
     const response = await fetch(GEMINI_URL, {
         method: "POST",
@@ -1071,20 +1073,16 @@ async function consultarGeminiSimple(pregunta) {
     });
 
     if (!response.ok) {
-        // Si falla, intentamos leer el error
-        let errorMsg = response.statusText;
-        try {
-            const errJson = await response.json();
-            errorMsg = errJson.error.message || response.status;
-        } catch(e) {}
-        throw new Error("Google Error: " + errorMsg);
+        const errJson = await response.json();
+        const msg = errJson.error?.message || response.statusText;
+        throw new Error(msg);
     }
 
     const data = await response.json();
     if (data.candidates && data.candidates.length > 0) {
         return data.candidates[0].content.parts[0].text;
     }
-    return "No entendí.";
+    return "No entendí, ñaño.";
 }
 
 function agregarMensaje(texto, tipo, esLoading = false) {
