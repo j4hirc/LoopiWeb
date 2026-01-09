@@ -993,13 +993,8 @@ function renderizarCaminoRangos(rangos, totalReal) {
   });
 }
 
-/* =========================================
-   LOOPI BOT - INTELIGENCIA ARTIFICIAL
-   ========================================= */
-
-const GEMINI_API_KEY = "AIzaSyDxwjFcMMwQJMBCFH-cvXAEKrftbJ701m8"; // TU CLAVE AQUÍ
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-
+const GEMINI_API_KEY = "AIzaSyDxwjFcMMwQJMBCFH-cvXAEKrftbJ701m8";
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent?key=${GEMINI_API_KEY}`;
 const LOOPI_DATA = `
 ERES LOOPIBOT: Un asistente virtual experto en reciclaje para la app "Loopi" en Cuenca, Ecuador.
 TU PERSONALIDAD: Amable, motivador, usas jerga ecuatoriana suave ("ñaño", "chévere", "de una"). Respuestas cortas (máx 3 frases).
@@ -1070,6 +1065,8 @@ async function enviarMensaje() {
 }
 
 async function consultarGemini(preguntaUsuario) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`;
+
     const payload = {
         contents: [{
             parts: [{
@@ -1078,18 +1075,28 @@ async function consultarGemini(preguntaUsuario) {
         }]
     };
 
-    const response = await fetch(GEMINI_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-    });
+    try {
+        const response = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
 
-    const data = await response.json();
-    
-    if (data.candidates && data.candidates.length > 0) {
-        return data.candidates[0].content.parts[0].text;
-    } else {
-        throw new Error("Sin respuesta de la IA");
+        if (!response.ok) {
+            throw new Error(`Error API: ${response.status} - ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        
+        if (data.candidates && data.candidates.length > 0 && data.candidates[0].content) {
+            return data.candidates[0].content.parts[0].text;
+        } else {
+            // A veces la IA bloquea la respuesta por seguridad, devolvemos un mensaje genérico
+            return "Lo siento ñaño, no puedo responder a eso por políticas de seguridad. Pregúntame sobre reciclaje.";
+        }
+    } catch (error) {
+        console.error("Detalle del error:", error);
+        throw error;
     }
 }
 
