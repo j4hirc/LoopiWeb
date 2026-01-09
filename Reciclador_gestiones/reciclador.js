@@ -565,35 +565,55 @@ async function identificarMiPunto() {
         console.error("Error crítico buscando mi punto:", e);
     }
 }
+
+
 async function abrirModalMiPunto() {
-    // Si la variable está vacía, intentamos buscarla de nuevo por si acaso falló la carga inicial
+    // 1. Verificación inicial
     if (!miPuntoData) {
-        await identificarMiPunto();
+        await identificarMiPunto(); // Intento de buscar de nuevo
     }
 
     if (!miPuntoData) {
-        Swal.fire({
-            icon: 'info',
-            title: 'Sin Punto Asignado',
-            text: 'No hemos encontrado un punto de reciclaje vinculado a tu usuario. Si crees que es un error, contacta al administrador.',
-            footer: 'Revisa la consola (F12) para más detalles.'
-        });
+        Swal.fire("Error", "No se encuentra el punto de reciclaje vinculado a este usuario.", "error");
         return;
     }
 
-    Swal.showLoading();
-    
+    Swal.fire({ title: "Cargando datos del punto...", didOpen: () => Swal.showLoading() });
+
+    try {
+        // ============================================================
+        // CORRECCIÓN: PETICIÓN INDIVIDUAL PARA TRAER TODOS LOS DETALLES
+        // ============================================================
+        const idUbicacion = miPuntoData.id_ubicacion_reciclaje;
+        const res = await fetch(`${API_BASE}/ubicacion_reciclajes/${idUbicacion}`);
+        
+        if (res.ok) {
+            // Actualizamos miPuntoData con la versión COMPLETA que trae horarios y todo
+            miPuntoData = await res.json();
+            console.log("Datos frescos cargados:", miPuntoData); // MIRA LA CONSOLA PARA VER QUÉ LLEGA
+        }
+    } catch (e) {
+        console.error("Error refrescando detalles del punto:", e);
+    }
+
+    // 2. Llenar formulario (Ahora con miPuntoData actualizado)
     document.getElementById("txtPuntoNombre").value = miPuntoData.nombre || "";
-    document.getElementById("txtPuntoParroquia").value = miPuntoData.parroquia || "";
+    
+    // AQUÍ ESTABA EL PROBLEMA DE LA PARROQUIA
+    // Verificamos si existe, si no, probamos con mayúscula o vacío
+    document.getElementById("txtPuntoParroquia").value = miPuntoData.parroquia || miPuntoData.Parroquia || "";
+    
     document.getElementById("txtPuntoDireccion").value = miPuntoData.direccion || "";
     document.getElementById("txtLatitud").value = miPuntoData.latitud || "";
     document.getElementById("txtLongitud").value = miPuntoData.longitud || "";
     
+    // 3. Foto Preview
     const imgPreview = document.getElementById("previewPuntoFoto");
     if(miPuntoData.foto) {
         let urlFoto = miPuntoData.foto;
+        // Si no empieza con http ni data, asumimos que falta el dominio base (ajusta si es necesario)
         if (!urlFoto.startsWith("http") && !urlFoto.startsWith("data:")) {
-
+             // urlFoto = API_BASE.replace('/api', '') + urlFoto; // Descomenta si usas rutas relativas locales
         }
         imgPreview.src = urlFoto;
         imgPreview.style.display = "block";
@@ -601,16 +621,20 @@ async function abrirModalMiPunto() {
         imgPreview.style.display = "none";
     }
     
+    // 4. Cargar Materiales y Horarios
+    // Usamos await para asegurar que los materiales se marquen después de cargar los checkboxes
     await renderizarMaterialesEdicion();
-    renderizarHorariosEdicion();
+    renderizarHorariosEdicion(); // Esto llenará los horarios con los datos frescos
 
     Swal.close();
     document.getElementById("modalMiPunto").style.display = "flex";
 
+    // 5. Iniciar Mapa
     setTimeout(() => {
         initMapaEdicion(miPuntoData.latitud, miPuntoData.longitud);
     }, 300);
     
+    // 6. Resetear listener de foto para no acumular eventos
     const inputFoto = document.getElementById("filePuntoFoto");
     const nuevoInput = inputFoto.cloneNode(true);
     inputFoto.parentNode.replaceChild(nuevoInput, inputFoto);
