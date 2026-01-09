@@ -113,16 +113,12 @@ function abrirModal() {
     modalOverlay.style.display = "flex";
 }
 
-// --- LOGICA INTELIGENTE PARA HORARIOS ---
 function agregarFilaHorario(data = null, horaIniDefecto = "08:00", horaFinDefecto = "18:00") {
     
-    // Identificar días ya seleccionados
     const diasSeleccionados = Array.from(document.querySelectorAll(".dia-select")).map(s => s.value);
     
-    // Buscar el primer día disponible
     let diaSugerido = DIAS_SEMANA.find(d => !diasSeleccionados.includes(d));
 
-    // Si no hay más días libres y no estamos editando uno existente
     if (!data && !diaSugerido) {
         Swal.fire("Horario Completo", "Ya has agregado todos los días de la semana.", "info");
         return;
@@ -192,7 +188,6 @@ async function cargarMateriales() {
     }
 }
 
-// --- EDICIÓN ---
 window.cargarDatosEdicion = async function (id) {
     const ubi = ubicacionesCache.find(u => u.id_ubicacion_reciclaje == id);
     if (!ubi) return;
@@ -223,7 +218,6 @@ window.cargarDatosEdicion = async function (id) {
 
     containerHorarios.innerHTML = ""; 
     if (ubi.horarios && ubi.horarios.length > 0) {
-        // Ordenar los horarios por día de la semana
         const ordenDias = { "Lunes": 1, "Martes": 2, "Miércoles": 3, "Jueves": 4, "Viernes": 5, "Sábado": 6, "Domingo": 7 };
         ubi.horarios.sort((a,b) => ordenDias[a.dia_semana] - ordenDias[b.dia_semana]);
         
