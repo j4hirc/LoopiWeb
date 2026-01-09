@@ -8,6 +8,7 @@ let marcadorMiUbicacion = null;
 let ubicacionActual = null;
 let miPuntoData = null;
 let fotoNuevaFile = null;
+let fotoPuntoFile = null;
 let mapaEdicion = null;     
 let markerEdicion = null;
 
