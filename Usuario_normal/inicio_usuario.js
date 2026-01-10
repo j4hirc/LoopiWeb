@@ -1078,7 +1078,7 @@ window.toggleChat = function() {
             
             chatBody.innerHTML = ""; 
 
-            const saludo = `¡Hola ñaño/a ${usuarioLogueado.primer_nombre}! ✨ Qué lindo verte por aquí. Soy **Ellie Loopi**, tu amiga ecológica 🌸. Estoy lista para ayudarte a ganar puntos y cuidar el planeta. ¿En qué te acolito hoy? 💖`;
+            const saludo = `¡Hola ${usuarioLogueado.primer_nombre}! ✨ Qué lindo verte por aquí. Soy **Ellie Loopi**, tu amiga ecológica 🌸. Estoy lista para ayudarte a ganar puntos y cuidar el planeta. ¿En qué te acolito hoy? 💖`;
             
             agregarMensaje(saludo, "bot");
             historialChat.push({ role: "assistant", content: saludo });
