@@ -196,6 +196,8 @@ h1 {
     cursor: pointer;
     box-shadow: 0 10px 25px rgba(22, 163, 74, 0.4);
     transition: all 0.3s ease;
+    display: inline-block; /* Importante para que el enlace tenga dimensiones */
+    text-decoration: none; /* Quita el subrayado típico de los enlaces */
 }
 .btn-primary:hover { transform: translateY(-4px); background: var(--primary-dark); }
 
