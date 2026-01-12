@@ -44,6 +44,7 @@ const CUENCA_BOUNDS = L.latLngBounds(
 
 
 document.addEventListener("DOMContentLoaded", async () => {
+  cambiarAvatarEllie();
   const btnLogout = document.getElementById("btnLogout");
   if (btnLogout) {
     btnLogout.addEventListener("click", logout);
@@ -72,7 +73,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   await recargarUsuarioDesdeBackend();
   cargarInfoUsuario();
-  cambiarAvatarEllie();
+
 
   initMap();
 
