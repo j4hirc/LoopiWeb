@@ -79,31 +79,49 @@ async function listarParroquias() {
     }
 }
 
-// --- 3. GUARDAR CON SWEETALERT ---
 async function guardarParroquia(e) {
     e.preventDefault();
 
-    const id = document.getElementById('idParroquia').value;
-    const nombre = document.getElementById('nombreParroquia').value;
+    const idInput = document.getElementById('idParroquia').value;
+    const nombreInput = document.getElementById('nombreParroquia').value.trim(); // Quitamos espacios extra
     const idCiudadSeleccionada = selectCiudad.value; 
 
-    // Validación SweetAlert
+    if (!nombreInput) {
+        return Swal.fire('Atención', 'El nombre de la parroquia es obligatorio', 'warning');
+    }
     if (!idCiudadSeleccionada) {
-        return Swal.fire('Falta información', 'Por favor selecciona una ciudad', 'warning');
+        return Swal.fire('Atención', 'Por favor selecciona una ciudad', 'warning');
     }
 
+    const existeDuplicado = parroquiasCache.some(p => {
+        // Si estamos editando, ignoramos el registro actual (comparamos IDs)
+        if (idInput && p.id_parroquia == idInput) {
+            return false; 
+        }
+        return p.nombre_parroquia.toLowerCase() === nombreInput.toLowerCase();
+    });
+
+    if (existeDuplicado) {
+        return Swal.fire({
+            title: 'Nombre Duplicado',
+            text: `Ya existe una parroquia llamada "${nombreInput}". Por favor usa otro nombre.`,
+            icon: 'error',
+            confirmButtonColor: '#3A6958'
+        });
+    }
+
+
     const datosParroquia = {
-        nombre_parroquia: nombre,
+        nombre_parroquia: nombreInput, 
         ciudad: {
             id_ciudad: parseInt(idCiudadSeleccionada)
         }
     };
 
-    const metodo = id ? 'PUT' : 'POST';
-    const url = id ? `${API_PARROQUIAS}/${id}` : API_PARROQUIAS;
+    const metodo = idInput ? 'PUT' : 'POST';
+    const url = idInput ? `${API_PARROQUIAS}/${idInput}` : API_PARROQUIAS;
 
     try {
-        // Bloquear botón
         const btnGuardar = form.querySelector('.btn-guardar');
         const txtOriginal = btnGuardar.innerText;
         btnGuardar.disabled = true;
@@ -117,16 +135,18 @@ async function guardarParroquia(e) {
 
         if (response.ok) {
             cerrarModal();
-            listarParroquias();
+            listarParroquias(); 
             Swal.fire({
                 title: '¡Éxito!',
-                text: id ? 'Parroquia actualizada correctamente' : 'Parroquia creada correctamente',
+                text: idInput ? 'Parroquia actualizada correctamente' : 'Parroquia creada correctamente',
                 icon: 'success',
                 timer: 2000,
                 showConfirmButton: false
             });
         } else {
-            Swal.fire('Error', 'No se pudo guardar la parroquia.', 'error');
+            const errorData = await response.json().catch(() => ({}));
+            const msg = errorData.mensaje || 'No se pudo guardar la parroquia.';
+            Swal.fire('Error', msg, 'error');
         }
 
         btnGuardar.disabled = false;
@@ -134,7 +154,12 @@ async function guardarParroquia(e) {
 
     } catch (error) {
         console.error(error);
-        Swal.fire('Error', 'Error de conexión.', 'error');
+        Swal.fire('Error', 'Error de conexión con el servidor.', 'error');
+        const btnGuardar = form.querySelector('.btn-guardar');
+        if(btnGuardar) {
+            btnGuardar.disabled = false;
+            btnGuardar.innerText = "Guardar";
+        }
     }
 }
 
