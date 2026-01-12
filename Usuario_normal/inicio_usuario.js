@@ -444,7 +444,6 @@ function cargarInfoUsuario() {
   document.getElementById("nombreUsuarioNav").innerText = usuarioLogueado.primer_nombre;
   document.getElementById("puntosActuales").innerText = usuarioLogueado.puntos_actuales || 0;
 
-  // --- CORRECCIÓN: SOPORTE PARA URL O BASE64 ---
   if (usuarioLogueado.foto && usuarioLogueado.foto.length > 5) {
       let fotoSrc = usuarioLogueado.foto;
       if (!fotoSrc.startsWith("http") && !fotoSrc.startsWith("data:")) {
@@ -452,7 +451,6 @@ function cargarInfoUsuario() {
       }
       document.getElementById("imgPerfilNav").src = fotoSrc;
   }
-  // ---------------------------------------------
 
   const lblRango = document.getElementById("rangoUsuario");
   const imgRango = document.getElementById("imgRango");
@@ -1132,15 +1130,17 @@ async function consultarGroq() {
 [MANUAL OFICIAL DE LOOPI - VERSIÓN USUARIO]
 
 1. FUNCIONALIDADES PRINCIPALES:
-   - SOLICITUD DE RECOLECCIÓN-Re: Ve al botón "Solicitud" -> Elige ubicación, fecha y material -> Confirma[cite: 259, 260, 261].
-   - REGISTRO DE ENTREGA: El reciclador pesa tu material y valida la solicitud. Los puntos se asignan automáticamente tras la validación[cite: 289, 290, 291].
-   - CANJE DE PREMIOS: Entra a "Canjear" -> Elige el premio -> Genera el código QR -> Escanea el QR en el local para recibir tu recompensa[cite: 351, 352, 354, 355].
-   - MAPA: Usa "Explora tu zona" para ver puntos fijos (verde) y móviles (azul). Puedes filtrar por tipo de material[cite: 392, 394].
+   - SOLICITUD DE RECOLECCIÓN-Reciclar: Ve al botón "Solicitud" -> Elige ubicación, fecha y material -> Confirma[cite: 259, 260, 261].
+   - favorito: Si quiere seleccionar una ubicacion a favoritos, busque en el mapa, y seleccione el punto favorito, y presione el icono de corazon.
+   - CANJE DE PREMIOS: Entra a "Canjear" -> Elige el premio -> Canjear -> Escanea el QR en el local para recibir tu recompensa[cite: 351, 352, 354, 355].
+   - MAPA: Usa "Explora tu zona" para ver puntos fijos (verde) y Recicladores (azul). Puedes filtrar por tipo de material[cite: 392, 394].
+   - SECCION APRENDE- QUE TIENE TIPS DE COMO RECICLAR
+   -SECCION MIS CUPONES: DONDE SE VAN A VER TODAS TUS RECOMPENSAS CANJEADAS, (Recuerda ir al local de la recompensa)
 
 2. SISTEMA DE GAMIFICACIÓN:
    - Puntos: Se ganan por cada Kilogramo entregado y validado[cite: 309].
    - Rangos: Subes de nivel automáticamente al acumular entregas (Bronce: 0-25, Plata: 26-50, Oro: 51-75, Diamante: 76-100, Inmortal: >100)[cite: 310, 317, 319, 321, 323, 326].
-   - Logros: Medallas especiales por cumplir metas específicas[cite: 311].
+   - Logros: Medallas especiales por cumplir entregas específicas[cite: 311].
 `;
 
 
