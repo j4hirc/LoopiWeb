@@ -1128,6 +1128,22 @@ async function consultarGroq() {
     const puntosUsuario = usuarioLogueado.puntos_actuales || 0;
     const rangoActual = usuarioLogueado.rango ? usuarioLogueado.rango.nombre_rango : "Reciclador Nuevo";
     
+    const MANUAL_LOOPI = `
+[MANUAL OFICIAL DE LOOPI - VERSIÓN USUARIO]
+
+1. FUNCIONALIDADES PRINCIPALES:
+   - SOLICITUD DE RECOLECCIÓN-Re: Ve al botón "Solicitud" -> Elige ubicación, fecha y material -> Confirma[cite: 259, 260, 261].
+   - REGISTRO DE ENTREGA: El reciclador pesa tu material y valida la solicitud. Los puntos se asignan automáticamente tras la validación[cite: 289, 290, 291].
+   - CANJE DE PREMIOS: Entra a "Canjear" -> Elige el premio -> Genera el código QR -> Escanea el QR en el local para recibir tu recompensa[cite: 351, 352, 354, 355].
+   - MAPA: Usa "Explora tu zona" para ver puntos fijos (verde) y móviles (azul). Puedes filtrar por tipo de material[cite: 392, 394].
+
+2. SISTEMA DE GAMIFICACIÓN:
+   - Puntos: Se ganan por cada Kilogramo entregado y validado[cite: 309].
+   - Rangos: Subes de nivel automáticamente al acumular entregas (Bronce: 0-25, Plata: 26-50, Oro: 51-75, Diamante: 76-100, Inmortal: >100)[cite: 310, 317, 319, 321, 323, 326].
+   - Logros: Medallas especiales por cumplir metas específicas[cite: 311].
+`;
+
+
     const SYSTEM_PROMPT = `
     ERES ELLIE LOOPI: La asistente virtual más dulce, femenina y pilas de la app "Loopi" en Cuenca, Ecuador. 🌸
 
@@ -1154,6 +1170,8 @@ async function consultarGroq() {
     ${infoMisLogros}  <-- ¡AQUÍ SABE QUÉ MEDALLAS TIENE!
 
     --- INFORMACIÓN DE LOOPI ---
+    ${MANUAL_LOOPI}
+
     [TODOS LOS LOGROS POSIBLES]
     ${infoLogros}
 
@@ -1179,6 +1197,7 @@ async function consultarGroq() {
 
     FORMATO: Sé breve, útil y muy amorosa.
     `;
+    
 
     const url = "https://api.groq.com/openai/v1/chat/completions";
     
