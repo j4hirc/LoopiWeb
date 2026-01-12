@@ -28,6 +28,15 @@ let infoLogros = "Cargando logros...";
 let historialChat = [];
 let infoMisLogros = "Aún no reviso tus medallas..."; 
 
+
+const imagenesEllie = [
+    "../Imagenes/ELLIE_LOOPI.png",
+    "../Imagenes/Ellie2.png",
+    "../Imagenes/Ellie3.png",
+    "../Imagenes/Ellie4.png",
+    "../Imagenes/Ellie5.png"
+];
+
 const CUENCA_BOUNDS = L.latLngBounds(
     [-2.99, -79.15], 
     [-2.8, -78.85] 
@@ -63,8 +72,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   await recargarUsuarioDesdeBackend();
   cargarInfoUsuario();
+  cambiarAvatarEllie();
 
-  // 2. Iniciar Mapa y Capas
   initMap();
 
   // 3. Cargar Datos
@@ -103,6 +112,27 @@ async function cargarParroquiasEnBackground() {
         }
     } catch (e) {
         console.error("Error cargando parroquias en background", e);
+    }
+}
+
+
+function cambiarAvatarEllie() {
+    const indexAleatorio = Math.floor(Math.random() * imagenesEllie.length);
+    const nuevaImagen = imagenesEllie[indexAleatorio];
+
+    const imgFab = document.getElementById("imgEllieFab");
+    const imgHeader = document.getElementById("imgEllieHeader");
+
+    if (imgFab) {
+        imgFab.style.opacity = "0"; 
+        setTimeout(() => {
+            imgFab.src = nuevaImagen;
+            imgFab.style.opacity = "1";
+        }, 200);
+    }
+    
+    if (imgHeader) {
+        imgHeader.src = nuevaImagen;
     }
 }
 
