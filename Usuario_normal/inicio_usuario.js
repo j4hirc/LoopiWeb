@@ -1136,6 +1136,7 @@ async function consultarGroq() {
    - MAPA: Usa "Explora tu zona" para ver puntos fijos (verde) y Recicladores (azul). Puedes filtrar por tipo de material[cite: 392, 394].
    - SECCION APRENDE- QUE TIENE TIPS DE COMO RECICLAR
    -SECCION MIS CUPONES: DONDE SE VAN A VER TODAS TUS RECOMPENSAS CANJEADAS, (Recuerda ir al local de la recompensa)
+   -Historial : seccion donde puedes encontrar tu historial reciclador y estadisticas.
 
 2. SISTEMA DE GAMIFICACIÓN:
    - Puntos: Se ganan por cada Kilogramo entregado y validado[cite: 309].
