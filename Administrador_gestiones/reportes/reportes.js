@@ -7,7 +7,7 @@ let chartTopInstance = null;
 let chartTendenciaInstance = null;
 const aplicarFiltrosDebounced = debounce(aplicarFiltros, 300);
 
-const RUTA_LOGO_LOCAL = "../../Imagenes/Logo.png"; 
+const RUTA_LOGO_LOCAL = "../../Imagenes/Logo.png";
 
 document.addEventListener("DOMContentLoaded", async () => {
     await cargarTodo();
@@ -151,17 +151,17 @@ function actualizarDashboard(datos) {
     let totalPuntos = 0;
     finalizados.forEach(s => {
         totalPuntos += (s.puntos_ganados || 0);
-        if(s.detalles) s.detalles.forEach(d => totalKg += d.cantidad_kg);
+        totalKg += (s._totalKg || 0);
     });
     document.getElementById("totalKgGlobal").innerText = totalKg.toFixed(1);
     document.getElementById("totalUsuarios").innerText = usuariosTotal;
-    document.getElementById("totalRecolecciones").innerText = datos.length; 
+    document.getElementById("totalRecolecciones").innerText = datos.length;
     document.getElementById("totalPuntos").innerText = totalPuntos;
     generarGraficoMateriales(finalizados);
     generarGraficoTopRecicladores(finalizados);
     generarGraficoTendencia(finalizados);
     generarTablaRecicladores(datos);
-    generarTopUsuarios(datos); 
+    generarTopUsuarios(datos);
 }
 
 function generarGraficoMateriales(lista) {
@@ -212,7 +212,7 @@ function generarGraficoMateriales(lista) {
 }
 
 function generarGraficoTendencia(lista) {
-    const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
     const dataMeses = new Array(12).fill(0);
     const anioActual = new Date().getFullYear();
 
@@ -270,8 +270,8 @@ function generarGraficoTopRecicladores(lista) {
     });
 
     const sorted = Object.entries(recStats)
-        .sort((a,b) => b[1] - a[1])
-        .slice(0,5);
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5);
 
     const ctx = document.getElementById('chartTopRecicladores').getContext('2d');
 
@@ -444,7 +444,7 @@ async function cargarImagenComoBase64(url) {
 async function descargarPDF() {
     const elemento = document.getElementById('reporteContent');
     const botones = document.querySelectorAll('button, .navbar, .filters-card');
-    
+
     // Ocultar elementos UI
     botones.forEach(b => b.style.display = 'none');
 
@@ -460,9 +460,9 @@ async function descargarPDF() {
 
     document.body.style.background = '#ffffff';
     elemento.style.background = '#ffffff';
-    elemento.style.padding = '30px'; 
+    elemento.style.padding = '30px';
     elemento.style.maxWidth = '100%';
-    
+
     // Inyectar CSS
     const estiloImpresion = document.createElement('style');
     estiloImpresion.innerHTML = `
@@ -483,14 +483,14 @@ async function descargarPDF() {
     // Ajustar gráficas
     const canvasElements = document.querySelectorAll('canvas');
     canvasElements.forEach(c => {
-        c.style.maxWidth = '550px'; 
+        c.style.maxWidth = '550px';
         c.style.maxHeight = '350px';
         c.style.margin = '0 auto 20px auto';
     });
 
     let logoImgTag = '';
     const logoBase64 = await cargarImagenComoBase64(RUTA_LOGO_LOCAL);
-    
+
     if (logoBase64) {
         logoImgTag = `<img src="${logoBase64}" style="width: 70px; height: auto; display: block;">`;
     } else {
@@ -525,21 +525,21 @@ async function descargarPDF() {
             </div>
         </div>
     `;
-    
+
     elemento.insertAdjacentHTML('afterbegin', headerHTML);
 
     const opt = {
-        margin:       [0.4, 0.4],
-        filename:     `Reporte_Loopi_${new Date().toISOString().slice(0,10)}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 }, 
-        html2canvas:  { 
-            scale: 2, 
-            useCORS: true, 
+        margin: [0.4, 0.4],
+        filename: `Reporte_Loopi_${new Date().toISOString().slice(0, 10)}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
+            scale: 2,
+            useCORS: true,
             letterRendering: true,
             scrollY: 0
         },
-        jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' },
-        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
     html2pdf().set(opt).from(elemento).save().then(() => {
@@ -548,17 +548,17 @@ async function descargarPDF() {
         elemento.style.background = '';
         elemento.style.padding = originalPadding;
         elemento.style.maxWidth = '';
-        
+
         document.head.removeChild(estiloImpresion);
         const header = document.getElementById("pdfHeader");
-        if(header) header.remove();
+        if (header) header.remove();
 
         canvasElements.forEach(c => {
             c.style.maxWidth = '';
             c.style.maxHeight = '';
             c.style.margin = '';
         });
-        
+
         Swal.fire({
             icon: 'success',
             title: 'Reporte Descargado',
