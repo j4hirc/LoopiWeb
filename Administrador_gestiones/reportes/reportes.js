@@ -74,47 +74,32 @@ function aplicarFiltros() {
     const tipo = document.getElementById('filtroTipo').value;
     const busqueda = document.getElementById('filtroReciclador').value.toLowerCase();
 
-    const filtrados = datosCrudos.filter(item => {
-        if (!item) return false;
-        const fechaItem = new Date(item.fecha_recoleccion_real || item.fecha_creacion);
-        fechaItem.setHours(0, 0, 0, 0);
-        
-        if (fInicio) {
-            const [y, m, d] = fInicio.split('-');
-            const dInicio = new Date(y, m - 1, d); 
-            dInicio.setHours(0, 0, 0, 0);
-            if (fechaItem < dInicio) return false;
-        }
-        if (fFin) {
-            const [y, m, d] = fFin.split('-');
-            const dFin = new Date(y, m - 1, d);
-            dFin.setHours(23, 59, 59, 999); 
-            if (fechaItem > dFin) return false;
-        }
+    const dInicio = fInicio ? new Date(fInicio) : null;
+    const dFin = fFin ? new Date(fFin + 'T23:59:59') : null;
+
+    const filtrados = datosProcesados.filter(item => {
+
+        if (dInicio && item._fecha < dInicio) return false;
+        if (dFin && item._fecha > dFin) return false;
+
         if (tipo !== "TODOS") {
-            if (tipo === "RECICLADOR") {
-                if (!item.reciclador) return false;
-            }
-            else if (tipo === "PUNTO_FIJO") {
-                if (!item.ubicacion) return false;
-                if (item.reciclador) return false;
-            }
+            if (tipo === "RECICLADOR" && !item.reciclador) return false;
+            if (tipo === "PUNTO_FIJO" && (!item.ubicacion || item.reciclador)) return false;
         }
+
         if (busqueda) {
-            let coincide = false;
+            let texto = '';
             if (item.reciclador) {
-                const cedula = (item.reciclador.cedula || "").toString();
-                const nombre = ((item.reciclador.primer_nombre || "") + " " + (item.reciclador.apellido_paterno || "")).toLowerCase();
-                if (cedula.includes(busqueda) || nombre.includes(busqueda)) coincide = true;
+                texto = `${item.reciclador.cedula} ${item.reciclador.primer_nombre} ${item.reciclador.apellido_paterno}`.toLowerCase();
+            } else if (item.ubicacion) {
+                texto = item.ubicacion.nombre.toLowerCase();
             }
-            if (item.ubicacion && !coincide) {
-                const nombreUbi = (item.ubicacion.nombre || "").toLowerCase();
-                if (nombreUbi.includes(busqueda)) coincide = true;
-            }
-            if (!coincide) return false;
+            if (!texto.includes(busqueda)) return false;
         }
+
         return true;
     });
+
     actualizarDashboard(filtrados);
 }
 
