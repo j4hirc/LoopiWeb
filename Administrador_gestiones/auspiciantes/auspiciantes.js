@@ -1,6 +1,7 @@
 const API_URL = 'https://api-loopi.onrender.com/api/auspiciantes';
 
 const DEFAULT_IMG = 'https://cdn-icons-png.flaticon.com/512/4503/4503915.png';
+
 const gridAuspiciantes = document.getElementById('gridAuspiciantes');
 const searchInput = document.getElementById('buscarAusp');
 const modalOverlay = document.getElementById('modalOverlay');
