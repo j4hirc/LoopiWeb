@@ -1054,6 +1054,25 @@ async function prepararDatosCompletosIA() {
             infoRangos = rangos.map(r => `- Rango ${r.id_rango}: ${r.nombre_rango}`).join('\n');
         }
 
+
+        if(resUbi.ok) {
+            let ubis = await resUbi.json();
+            
+            if (usuarioLogueado.parroquia) {
+                const idMiParroquia = usuarioLogueado.parroquia.id_parroquia || usuarioLogueado.parroquia.id;
+                
+                const ubisDeMiParroquia = ubis.filter(u => 
+                    u.parroquia && (u.parroquia.id_parroquia === idMiParroquia || u.parroquia.id === idMiParroquia)
+                );
+
+                if (ubisDeMiParroquia.length > 0) {
+                    ubis = ubisDeMiParroquia;
+                } else {
+                  infoPuntosReciclaje = "No se encontraron puntos de reciclaje registrados en tu parroquia específica. Recomienda al usuario revisar el mapa general.";
+                }
+            }
+          }
+
         if(resUbi.ok) {
             const ubis = await resUbi.json();
             infoPuntosReciclaje = ubis.map(u => {
@@ -1062,6 +1081,9 @@ async function prepararDatosCompletosIA() {
                 return `📍 "${u.nombre}" (${u.direccion}). Acepta: ${mats}. Horario: ${horario}`;
             }).join('\n\n');
         }
+
+
+
 
         if (resLogros.ok) {
             const todos = await resLogros.json();
