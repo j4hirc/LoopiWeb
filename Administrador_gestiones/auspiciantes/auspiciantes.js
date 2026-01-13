@@ -25,28 +25,28 @@ let fotoNuevaFile = null;
 document.addEventListener('DOMContentLoaded', () => {
     listarAuspiciantes();
 
-    if(btnNuevo) btnNuevo.addEventListener('click', () => {
+    if (btnNuevo) btnNuevo.addEventListener('click', () => {
         limpiarFormulario();
         modalOverlay.style.display = 'flex';
     });
 
-    const cerrar = () => { 
-        if(modalOverlay) modalOverlay.style.display = 'none'; 
+    const cerrar = () => {
+        if (modalOverlay) modalOverlay.style.display = 'none';
         limpiarFormulario();
     };
-    
-    if(btnCerrarModal) btnCerrarModal.addEventListener('click', cerrar);
-    if(btnCancelar) btnCancelar.addEventListener('click', cerrar);
 
-    if(btnImagen) btnImagen.addEventListener('click', () => inputImagen.click());
-    if(inputImagen) inputImagen.addEventListener('change', procesarImagen);
+    if (btnCerrarModal) btnCerrarModal.addEventListener('click', cerrar);
+    if (btnCancelar) btnCancelar.addEventListener('click', cerrar);
 
-    if(form) form.addEventListener('submit', guardarAuspiciante);
+    if (btnImagen) btnImagen.addEventListener('click', () => inputImagen.click());
+    if (inputImagen) inputImagen.addEventListener('change', procesarImagen);
 
-    if(searchInput) {
+    if (form) form.addEventListener('submit', guardarAuspiciante);
+
+    if (searchInput) {
         searchInput.addEventListener('input', (e) => {
             const termino = e.target.value.toLowerCase().trim();
-            if(!auspiciantesCache) return;
+            if (!auspiciantesCache) return;
             const filtrados = auspiciantesCache.filter(a => {
                 const nombre = a.nombre ? a.nombre.toLowerCase() : "";
                 const codigo = a.codigo ? a.codigo.toLowerCase() : "";
@@ -62,7 +62,7 @@ async function listarAuspiciantes() {
         gridAuspiciantes.innerHTML = '<p style="text-align:center;">Cargando...</p>';
         const response = await fetch(API_URL);
         if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
-        
+
         const data = await response.json();
         if (!Array.isArray(data)) throw new Error("Datos inválidos");
 
@@ -70,7 +70,7 @@ async function listarAuspiciantes() {
         renderizarGrid(data);
     } catch (error) {
         console.error(error);
-        if(gridAuspiciantes) gridAuspiciantes.innerHTML = '<p style="text-align:center; color:red;">No se pudo conectar.</p>';
+        if (gridAuspiciantes) gridAuspiciantes.innerHTML = '<p style="text-align:center; color:red;">No se pudo conectar.</p>';
     }
 }
 
@@ -92,12 +92,12 @@ async function guardarAuspiciante(e) {
     }
 
     const id = inpId.value;
-    
+
     const dataObj = {
         nombre: nombre,
         codigo: codigo,
         descripcion: desc,
-        imagen: null 
+        imagen: null
     };
 
     const formData = new FormData();
@@ -112,7 +112,7 @@ async function guardarAuspiciante(e) {
 
     try {
         const btnSubmit = form.querySelector('button[type="submit"]');
-        if(btnSubmit) { btnSubmit.disabled = true; btnSubmit.innerText = "Guardando..."; }
+        if (btnSubmit) { btnSubmit.disabled = true; btnSubmit.innerText = "Guardando..."; }
 
         const response = await fetch(url, {
             method: metodo,
@@ -144,12 +144,12 @@ async function guardarAuspiciante(e) {
         Swal.fire('Error de conexión', 'No se pudo contactar con el servidor', 'error');
     } finally {
         const btnSubmit = form.querySelector('button[type="submit"]');
-        if(btnSubmit) { btnSubmit.disabled = false; btnSubmit.innerText = "Guardar"; }
+        if (btnSubmit) { btnSubmit.disabled = false; btnSubmit.innerText = "Guardar"; }
     }
 }
 
 // ELIMINAR CON SWEETALERT (CONFIRMACIÓN)
-window.eliminarAuspiciante = function(id) {
+window.eliminarAuspiciante = function (id) {
     if (!id) return;
 
     Swal.fire({
@@ -171,20 +171,20 @@ window.eliminarAuspiciante = function(id) {
                 } else {
                     Swal.fire('Error', 'No se pudo eliminar el registro.', 'error');
                 }
-            } catch (error) { 
-                console.error(error); 
+            } catch (error) {
+                console.error(error);
                 Swal.fire('Error', 'Error de conexión.', 'error');
             }
         }
     });
 };
 
-window.cargarEdicion = function(id) {
+window.cargarEdicion = function (id) {
     if (!auspiciantesCache) return;
     const item = auspiciantesCache.find(a => a.id_auspiciante == id);
     if (!item) return;
 
-    limpiarFormulario(); 
+    limpiarFormulario();
 
     inpId.value = item.id_auspiciante;
     inpNombre.value = item.nombre || "";
@@ -194,7 +194,7 @@ window.cargarEdicion = function(id) {
     if (item.imagen && item.imagen.length > 5) {
         let imgUrl = item.imagen;
         if (!imgUrl.startsWith('http') && !imgUrl.startsWith('data:')) {
-             imgUrl = `data:image/png;base64,${item.imagen}`;
+            imgUrl = `data:image/png;base64,${item.imagen}`;
         }
         previewImagen.src = imgUrl;
     } else {
@@ -202,13 +202,13 @@ window.cargarEdicion = function(id) {
     }
 
     const title = document.getElementById('modalTitle');
-    if(title) title.innerText = 'Editar Auspiciante';
-    
-    if(modalOverlay) modalOverlay.style.display = 'flex';
+    if (title) title.innerText = 'Editar Auspiciante';
+
+    if (modalOverlay) modalOverlay.style.display = 'flex';
 };
 
 function renderizarGrid(lista) {
-    if(!gridAuspiciantes) return;
+    if (!gridAuspiciantes) return;
     gridAuspiciantes.innerHTML = '';
 
     if (!lista || lista.length === 0) {
@@ -223,7 +223,7 @@ function renderizarGrid(lista) {
         const id = item.id_auspiciante;
 
         let imgUrl = DEFAULT_IMG;
-        
+
         if (item.imagen && item.imagen.length > 5) {
             if (item.imagen.startsWith('http') || item.imagen.startsWith('data:')) {
                 imgUrl = item.imagen;
@@ -249,13 +249,13 @@ function renderizarGrid(lista) {
 }
 
 function limpiarFormulario() {
-    if(form) form.reset();
-    if(inpId) inpId.value = '';
-    if(previewImagen) previewImagen.src = 'https://cdn-icons-png.flaticon.com/512/747/747543.png';
+    if (form) form.reset();
+    if (inpId) inpId.value = '';
+    if (previewImagen) previewImagen.src = DEFAULT_IMG; 
     const title = document.getElementById('modalTitle');
-    if(title) title.innerText = 'Agregar Auspiciante';
-    
-    fotoNuevaFile = null; 
+    if (title) title.innerText = 'Agregar Auspiciante';
+
+    fotoNuevaFile = null;
 }
 
 async function procesarImagen(event) {
@@ -270,12 +270,12 @@ async function procesarImagen(event) {
 
     try {
         const archivoComprimido = await comprimirImagen(file);
-        
+
         fotoNuevaFile = archivoComprimido;
 
         const reader = new FileReader();
         reader.onload = (e) => {
-            if(previewImagen) previewImagen.src = e.target.result;
+            if (previewImagen) previewImagen.src = e.target.result;
         };
         reader.readAsDataURL(archivoComprimido);
 
@@ -287,8 +287,8 @@ async function procesarImagen(event) {
 
 async function comprimirImagen(archivo) {
     return new Promise((resolve, reject) => {
-        const maxWidth = 800; 
-        const quality = 0.7;  
+        const maxWidth = 800;
+        const quality = 0.7;
 
         const reader = new FileReader();
         reader.readAsDataURL(archivo);
@@ -307,7 +307,7 @@ async function comprimirImagen(archivo) {
                 const canvas = document.createElement('canvas');
                 canvas.width = width;
                 canvas.height = height;
-                
+
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
 
@@ -320,8 +320,8 @@ async function comprimirImagen(archivo) {
                         type: 'image/jpeg',
                         lastModified: Date.now(),
                     });
-                    
-                    console.log(`Compresión: ${(archivo.size/1024).toFixed(2)}KB -> ${(archivoComprimido.size/1024).toFixed(2)}KB`);
+
+                    console.log(`Compresión: ${(archivo.size / 1024).toFixed(2)}KB -> ${(archivoComprimido.size / 1024).toFixed(2)}KB`);
                     resolve(archivoComprimido);
                 }, 'image/jpeg', quality);
             };
