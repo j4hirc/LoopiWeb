@@ -134,8 +134,18 @@ body {
 /* --- MAPA Y FILTROS --- */
 .filtros-container-mapa { margin-bottom: 15px; }
 .filtros-scroll {
-    display: flex; gap: 10px; overflow-x: auto; padding: 4px;
-    scrollbar-width: none;
+    display: flex;
+    gap: 10px;
+    padding: 6px 4px;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    max-width: 100%;
+    white-space: nowrap;
+
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
 }
 .filtros-scroll::-webkit-scrollbar { display: none; }
 
@@ -149,6 +159,7 @@ body {
     font-weight: 500;
     cursor: pointer;
     transition: var(--transition);
+    flex: 0 0 auto;
 }
 .btn-filtro:hover { background: #e5e7eb; }
 .btn-filtro.active {
@@ -157,6 +168,14 @@ body {
     box-shadow: 0 4px 10px rgba(46, 125, 50, 0.3);
 }
 
+.filtros-scroll::-webkit-scrollbar {
+    height: 4px;
+}
+
+.filtros-scroll::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
 .map-wrapper {
     height: 280px;
     border-radius: 16px;
