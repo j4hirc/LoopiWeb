@@ -198,7 +198,7 @@ window.cargarEdicion = function(id) {
         }
         previewImagen.src = imgUrl;
     } else {
-        previewImagen.src = 'https://cdn-icons-png.flaticon.com/512/747/747543.png';
+        previewImagen.src = DEFAULT_IMG;
     }
 
     const title = document.getElementById('modalTitle');
