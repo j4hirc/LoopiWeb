@@ -42,11 +42,53 @@ async function cargarTodo() {
             usuariosTotal = users.length;
         }
 
-        aplicarFiltros();
+        aplicarFiltrosInicial();
     } catch (e) {
         console.error(e);
         Swal.fire("Error", "No se pudieron cargar los datos.", "error");
     }
+}
+
+
+function aplicarFiltrosInicial() {
+    const filtrados = datosProcesados;
+
+    actualizarKPIsInicial(filtrados);
+
+    requestAnimationFrame(() => {
+        generarGraficoMateriales(filtrados.filter(s =>
+            s.estado === 'FINALIZADO' || s.estado === 'COMPLETADA'
+        ));
+    });
+
+    requestAnimationFrame(() => {
+        generarGraficoTendencia(filtrados);
+        generarGraficoTopRecicladores(filtrados);
+    });
+
+    setTimeout(() => {
+        generarTablaRecicladores(filtrados);
+        generarTopUsuarios(filtrados);
+    }, 0);
+}
+
+function actualizarKPIsInicial(datos) {
+    let totalKg = 0;
+    let totalPuntos = 0;
+    let finalizados = 0;
+
+    for (const s of datos) {
+        if (s.estado === 'FINALIZADO' || s.estado === 'COMPLETADA') {
+            finalizados++;
+            totalPuntos += (s.puntos_ganados || 0);
+            totalKg += (s._totalKg || 0); // 🔥 ya procesado
+        }
+    }
+
+    document.getElementById("totalKgGlobal").innerText = totalKg.toFixed(1);
+    document.getElementById("totalUsuarios").innerText = usuariosTotal;
+    document.getElementById("totalRecolecciones").innerText = datos.length;
+    document.getElementById("totalPuntos").innerText = totalPuntos;
 }
 
 let datosProcesados = [];
