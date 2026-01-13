@@ -82,7 +82,6 @@ async function guardarAuspiciante(e) {
     const desc = inpDescripcion.value.trim();
     const imagenSrc = previewImagen.src;
 
-    // VALIDACIONES CON SWEETALERT
     if (!nombre || nombre.length < 3) return Swal.fire('Cuidado', 'El nombre es muy corto.', 'warning');
     if (!codigo) return Swal.fire('Falta información', 'El código es obligatorio.', 'warning');
     if (!desc) return Swal.fire('Falta información', 'La descripción es obligatoria.', 'warning');
@@ -122,7 +121,6 @@ async function guardarAuspiciante(e) {
         if (response.ok) {
             modalOverlay.style.display = 'none';
             listarAuspiciantes();
-            // ALERTA DE ÉXITO
             Swal.fire({
                 title: '¡Excelente!',
                 text: id ? 'Auspiciante actualizado correctamente' : 'Auspiciante creado correctamente',
@@ -148,7 +146,6 @@ async function guardarAuspiciante(e) {
     }
 }
 
-// ELIMINAR CON SWEETALERT (CONFIRMACIÓN)
 window.eliminarAuspiciante = function (id) {
     if (!id) return;
 
