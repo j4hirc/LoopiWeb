@@ -1,5 +1,7 @@
 const API_URL = 'https://api-loopi.onrender.com/api/auspiciantes';
 
+const DEFAULT_IMG = 'https://cdn-icons-png.flaticon.com/512/5968/5968764.png';
+
 const gridAuspiciantes = document.getElementById('gridAuspiciantes');
 const searchInput = document.getElementById('buscarAusp');
 const modalOverlay = document.getElementById('modalOverlay');
@@ -220,7 +222,7 @@ function renderizarGrid(lista) {
         const desc = escapeHtml(item.descripcion || "Sin descripción");
         const id = item.id_auspiciante;
 
-        let imgUrl = 'https://cdn-icons-png.flaticon.com/512/747/747543.png';
+        let imgUrl = DEFAULT_IMG;
         
         if (item.imagen && item.imagen.length > 5) {
             if (item.imagen.startsWith('http') || item.imagen.startsWith('data:')) {

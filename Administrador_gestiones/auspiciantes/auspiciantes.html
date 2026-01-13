@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <title>Gestión de Auspiciantes | Loopi</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="auspiciantes.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
+
 <body>
 
     <div class="bg-decoration"></div>
@@ -23,7 +26,7 @@
                     <p>Alianzas & Colaboradores</p>
                 </div>
             </div>
-            
+
             <button id="btnNuevoAusp" class="btn-agregar">
                 <div class="icon-circle"><i class="fa-solid fa-plus"></i></div>
                 <span>Nuevo Partner</span>
@@ -53,10 +56,10 @@
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
-            
+
             <form id="formAusp">
                 <input type="hidden" id="idAusp" name="idAusp">
-                
+
                 <div class="modal-body">
                     <div class="form-row">
                         <div class="form-group">
@@ -71,14 +74,16 @@
 
                     <div class="form-group full-width">
                         <label for="descripcionAusp">Descripción</label>
-                        <textarea id="descripcionAusp" class="input-field" rows="3" placeholder="Breve descripción..."></textarea>
+                        <textarea id="descripcionAusp" class="input-field" rows="3"
+                            placeholder="Breve descripción..."></textarea>
                     </div>
 
                     <div class="form-group full-width">
                         <label>Logo de la Marca</label>
                         <div class="image-upload-area">
                             <div class="img-preview-box">
-                                <img id="previewAusp" src="https://cdn-icons-png.flaticon.com/512/747/747543.png" alt="Preview">
+                                <img id="previewAusp" src="https://cdn-icons-png.flaticon.com/512/5968/5968764.png"
+                                    alt="Preview">
                             </div>
                             <div class="upload-controls">
                                 <span class="file-instruction">Formatos: PNG, JPG</span>
@@ -109,7 +114,7 @@
         const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
                 mutation.addedNodes.forEach((node) => {
-                    if (node.nodeType === 1 && node.classList.contains('card-ausp')) { 
+                    if (node.nodeType === 1 && node.classList.contains('card-ausp')) {
                         node.style.opacity = '0';
                         node.style.transform = 'translateY(30px) scale(0.95)';
                         setTimeout(() => {
@@ -124,4 +129,5 @@
         observer.observe(grid, { childList: true });
     </script>
 </body>
+
 </html>
