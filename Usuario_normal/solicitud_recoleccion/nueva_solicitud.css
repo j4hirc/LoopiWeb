@@ -134,8 +134,18 @@ body {
 /* --- MAPA Y FILTROS --- */
 .filtros-container-mapa { margin-bottom: 15px; }
 .filtros-scroll {
-    display: flex; gap: 10px; overflow-x: auto; padding: 4px;
-    scrollbar-width: none;
+    display: flex;
+    gap: 10px;
+    padding: 6px 4px;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    max-width: 100%;
+    white-space: nowrap;
+
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
 }
 .filtros-scroll::-webkit-scrollbar { display: none; }
 
@@ -149,6 +159,7 @@ body {
     font-weight: 500;
     cursor: pointer;
     transition: var(--transition);
+    flex: 0 0 auto;
 }
 .btn-filtro:hover { background: #e5e7eb; }
 .btn-filtro.active {
@@ -157,6 +168,14 @@ body {
     box-shadow: 0 4px 10px rgba(46, 125, 50, 0.3);
 }
 
+.filtros-scroll::-webkit-scrollbar {
+    height: 4px;
+}
+
+.filtros-scroll::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
 .map-wrapper {
     height: 280px;
     border-radius: 16px;
@@ -360,62 +379,4 @@ body {
 }
 @keyframes ripple {
     to { transform: scale(4); opacity: 0; }
-}
-
-.filtros-container-mapa { 
-    margin-bottom: 15px; 
-    /* Opcional: añade un degradado a los lados para indicar que hay scroll */
-    position: relative;
-}
-
-.filtros-scroll {
-    display: flex; 
-    gap: 10px; 
-    overflow-x: auto; 
-    padding: 5px 2px; /* Un poco de padding vertical para la sombra */
-    
-    /* Comportamiento de scroll nativo y suave */
-    scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch; 
-    
-    /* Ocultar barra de scroll en Firefox, Chrome, Safari */
-    scrollbar-width: none; 
-    -ms-overflow-style: none;
-    
-    /* Evita que se rompa la línea */
-    white-space: nowrap;
-}
-
-/* Ocultar barra en Webkit (Chrome/Safari) */
-.filtros-scroll::-webkit-scrollbar { 
-    display: none; 
-}
-
-.btn-filtro {
-    /* IMPORTANTE: Esto evita que los botones se aplasten */
-    flex-shrink: 0; 
-    
-    padding: 8px 18px;
-    border: 1px solid transparent;
-    border-radius: 20px;
-    background: #f3f4f6;
-    color: var(--text-light);
-    font-size: 0.85rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: var(--transition);
-    
-    /* Evita selección de texto al arrastrar */
-    user-select: none;
-}
-
-.btn-filtro:hover { 
-    background: #e5e7eb; 
-}
-
-.btn-filtro.active {
-    background: var(--primary);
-    color: white;
-    box-shadow: 0 4px 10px rgba(46, 125, 50, 0.3);
-    transform: scale(1.05); /* Pequeño pop al activar */
 }
