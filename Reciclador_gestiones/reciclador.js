@@ -9,42 +9,55 @@ let ubicacionActual = null;
 let miPuntoData = null;
 let fotoNuevaFile = null;
 let fotoPuntoFile = null;
-let mapaEdicion = null;     
+let mapaEdicion = null;
 let markerEdicion = null;
 
 const CUENCA_BOUNDS = L.latLngBounds(
-  [-2.99, -79.15], 
-  [-2.8, -78.85] 
+    [-2.99, -79.15],
+    [-2.8, -78.85]
 );
 
 const iconReciclador = L.divIcon({
-  className: "custom-div-icon",
-  html: `
+    className: "custom-div-icon",
+    html: `
     <div style="background:#2ecc71; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 3px 6px rgba(0,0,0,.35)">
       <i class="fa-solid fa-truck" style="color:white;"></i>
     </div>`,
-  iconSize: [32, 32],
-  iconAnchor: [16, 32],
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
 });
 
 const iconMiUbicacion = L.divIcon({
-  className: "custom-div-icon",
-  html: `
+    className: "custom-div-icon",
+    html: `
     <div style="background:#3498db; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 6px rgba(52,152,219,0.25)">
       <i class="fa-solid fa-location-dot" style="color:white;"></i>
     </div>`,
-  iconSize: [30, 30],
-  iconAnchor: [15, 30],
+    iconSize: [30, 30],
+    iconAnchor: [15, 30],
 });
 
 
 function getRolId(rolSel) {
-  if (rolSel?.id_rol != null) return Number(rolSel.id_rol);
-  if (rolSel?.idRol != null) return Number(rolSel.idRol);
-  if (rolSel?.rol?.id_rol != null) return Number(rolSel.rol.id_rol);
-  if (rolSel?.rol?.idRol != null) return Number(rolSel.rol.idRol);
-  return null;
+    if (rolSel?.id_rol != null) return Number(rolSel.id_rol);
+    if (rolSel?.idRol != null) return Number(rolSel.idRol);
+    if (rolSel?.rol?.id_rol != null) return Number(rolSel.rol.id_rol);
+    if (rolSel?.rol?.idRol != null) return Number(rolSel.rol.idRol);
+    return null;
 }
+
+let cacheUbicaciones = null;
+
+async function obtenerUbicaciones() {
+    if (cacheUbicaciones) return cacheUbicaciones;
+
+    const res = await fetch(`${API_BASE}/ubicacion_reciclajes`);
+    if (!res.ok) throw new Error("Error ubicaciones");
+
+    cacheUbicaciones = await res.json();
+    return cacheUbicaciones;
+}
+
 
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -56,10 +69,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (getRolId(usuario.rol_seleccionado) !== 2) return redirigirLogin();
 
     actualizarSaludoUI();
-    await Promise.all([
-        refrescarDatosUsuario(),
-        identificarMiPunto() 
-    ]);
+    refrescarDatosUsuario();
+    identificarMiPunto();
 
     document.getElementById("btnAbrirPerfil").onclick = abrirPerfil;
     document.getElementById("btnCerrarSesion").onclick = cerrarSesion;
@@ -74,11 +85,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     Promise.all([
         cargarFiltrosMateriales(),
-        cargarPuntosReciclajeReciclador(),
-        cargarNotificacionesReciclador()
+        cargarPuntosReciclajeReciclador()
     ]);
 
-    setInterval(cargarNotificacionesReciclador, 15000);
+    setTimeout(() => {
+        cargarNotificacionesReciclador();
+        setInterval(cargarNotificacionesReciclador, 15000);
+    }, 3000);
 });
 
 async function refrescarDatosUsuario() {
@@ -117,101 +130,97 @@ function actualizarSaludoUI() {
 }
 
 function initMapaReciclador() {
-  map = L.map("mapaReciclador", {
-    maxBounds: CUENCA_BOUNDS,
-    maxBoundsViscosity: 1.0,
-    minZoom: 12,
-    maxZoom: 18,
-  }).setView([-2.9001, -79.0059], 13);
+    map = L.map("mapaReciclador", {
+        maxBounds: CUENCA_BOUNDS,
+        maxBoundsViscosity: 1.0,
+        minZoom: 12,
+        maxZoom: 18,
+    }).setView([-2.9001, -79.0059], 13);
 
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: "© OpenStreetMap contributors",
-  }).addTo(map);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap contributors",
+    }).addTo(map);
 
-  recyclingLayer = L.layerGroup().addTo(map);
+    recyclingLayer = L.layerGroup().addTo(map);
 }
 
-// --- NUEVA FUNCIÓN: CARGAR BOTONES DE FILTRO ---
 async function cargarFiltrosMateriales() {
     const contenedor = document.getElementById("contenedorBotonesMateriales");
     if (!contenedor) return;
-  
+
     contenedor.innerHTML = "";
     const btnTodos = document.createElement("button");
     btnTodos.className = "btn-filtro active";
     btnTodos.innerText = "Todos";
     btnTodos.onclick = () => filtrarMapa("todos", btnTodos);
     contenedor.appendChild(btnTodos);
-  
+
     try {
-      const res = await fetch(`${API_BASE}/materiales`);
-      if (res.ok) {
-        const materiales = await res.json();
-        materiales.forEach((mat) => {
-          const btn = document.createElement("button");
-          btn.className = "btn-filtro";
-          btn.innerText = mat.nombre;
-          btn.onclick = () => filtrarMapa(mat.id_material, btn);
-          contenedor.appendChild(btn);
-        });
-      }
+        const res = await fetch(`${API_BASE}/materiales`);
+        if (res.ok) {
+            const materiales = await res.json();
+            materiales.forEach((mat) => {
+                const btn = document.createElement("button");
+                btn.className = "btn-filtro";
+                btn.innerText = mat.nombre;
+                btn.onclick = () => filtrarMapa(mat.id_material, btn);
+                contenedor.appendChild(btn);
+            });
+        }
     } catch (e) {
-      console.error("Error cargando materiales:", e);
+        console.error("Error cargando materiales:", e);
     }
 }
 
 window.filtrarMapa = function (idMaterial, btnElement) {
     document.querySelectorAll(".btn-filtro").forEach((b) => b.classList.remove("active"));
     btnElement.classList.add("active");
-  
+
     if (idMaterial === "todos") {
-      renderizarPuntosReciclador(todasLasUbicaciones);
+        renderizarPuntosReciclador(todasLasUbicaciones);
     } else {
-      const filtradas = todasLasUbicaciones.filter((ubicacion) => {
-        if (!ubicacion.materialesAceptados || ubicacion.materialesAceptados.length === 0) return false;
-        
-        return ubicacion.materialesAceptados.some(
-          (um) => um.material && um.material.id_material === idMaterial
-        );
-      });
-      renderizarPuntosReciclador(filtradas);
+        const filtradas = todasLasUbicaciones.filter((ubicacion) => {
+            if (!ubicacion.materialesAceptados || ubicacion.materialesAceptados.length === 0) return false;
+
+            return ubicacion.materialesAceptados.some(
+                (um) => um.material && um.material.id_material === idMaterial
+            );
+        });
+        renderizarPuntosReciclador(filtradas);
     }
 };
 
 async function cargarPuntosReciclajeReciclador() {
-  try {
-    const res = await fetch(`${API_BASE}/ubicacion_reciclajes`);
-    if (!res.ok) return;
-
-    todasLasUbicaciones = await res.json();
-    renderizarPuntosReciclador(todasLasUbicaciones);
-  } catch (e) {
-    console.error("Error cargando puntos:", e);
-  }
+    try {
+        todasLasUbicaciones = await obtenerUbicaciones();
+        renderizarPuntosReciclador(todasLasUbicaciones);
+    } catch (e) {
+        console.error(e);
+    }
 }
 
 function renderizarPuntosReciclador(lista) {
-  recyclingLayer.clearLayers();
+    recyclingLayer.clearLayers();
 
-  lista.forEach((p) => {
-    if (!p.latitud || !p.longitud) return;
+    lista.forEach((p) => {
+        if (!p.latitud || !p.longitud) return;
 
-    let materialesHTML = "";
-    if (p.materialesAceptados && p.materialesAceptados.length > 0) {
-        materialesHTML = `<div style="margin-top:5px; display:flex; flex-wrap:wrap; gap:3px; justify-content:center;">`;
-        p.materialesAceptados.forEach((um) => {
-            if (um.material) {
-                materialesHTML += `<span style="font-size:9px; background:#e8f5e9; color:#2e7d32; padding:2px 5px; border-radius:4px;">${um.material.nombre}</span>`;
-            }
+        let materialesHTML = "";
+        if (p.materialesAceptados && p.materialesAceptados.length > 0) {
+            materialesHTML = `<div style="margin-top:5px; display:flex; flex-wrap:wrap; gap:3px; justify-content:center;">`;
+            p.materialesAceptados.forEach((um) => {
+                if (um.material) {
+                    materialesHTML += `<span style="font-size:9px; background:#e8f5e9; color:#2e7d32; padding:2px 5px; border-radius:4px;">${um.material.nombre}</span>`;
+                }
+            });
+            materialesHTML += `</div>`;
+        }
+
+        const marker = L.marker([p.latitud, p.longitud], {
+            icon: iconReciclador,
         });
-        materialesHTML += `</div>`;
-    }
 
-    const marker = L.marker([p.latitud, p.longitud], {
-      icon: iconReciclador,
-    });
-
-    marker.bindPopup(`
+        marker.bindPopup(`
       <div style="text-align:center; min-width:170px;">
         <h4>${p.nombre}</h4>
         <p style="font-size:11px;">${p.direccion}</p>
@@ -224,107 +233,107 @@ function renderizarPuntosReciclador(lista) {
       </div>
     `);
 
-    marker.addTo(recyclingLayer);
-  });
+        marker.addTo(recyclingLayer);
+    });
 }
 
 
 function obtenerUbicacionActual(callback = null) {
-  if (!navigator.geolocation) {
-    return Swal.fire("Error", "Geolocalización no soportada", "error");
-  }
+    if (!navigator.geolocation) {
+        return Swal.fire("Error", "Geolocalización no soportada", "error");
+    }
 
-  Swal.fire({
-    title: "Obteniendo ubicación...",
-    allowOutsideClick: false,
-    didOpen: () => Swal.showLoading(),
-  });
+    Swal.fire({
+        title: "Obteniendo ubicación...",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+    });
 
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      Swal.close();
-      let lat = pos.coords.latitude;
-      let lng = pos.coords.longitude;
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            Swal.close();
+            let lat = pos.coords.latitude;
+            let lng = pos.coords.longitude;
 
-      if (!CUENCA_BOUNDS.contains([lat, lng])) {
-        Swal.fire("Fuera de Cuenca", "Se centró el mapa dentro del área operativa", "info");
-        lat = -2.9001;
-        lng = -79.0059;
-      }
+            if (!CUENCA_BOUNDS.contains([lat, lng])) {
+                Swal.fire("Fuera de Cuenca", "Se centró el mapa dentro del área operativa", "info");
+                lat = -2.9001;
+                lng = -79.0059;
+            }
 
-      ubicacionActual = { lat, lng };
+            ubicacionActual = { lat, lng };
 
-      if (marcadorMiUbicacion) map.removeLayer(marcadorMiUbicacion);
+            if (marcadorMiUbicacion) map.removeLayer(marcadorMiUbicacion);
 
-      marcadorMiUbicacion = L.marker([lat, lng], { icon: iconMiUbicacion }).addTo(map);
-      marcadorMiUbicacion.bindPopup("📍 Tu ubicación").openPopup();
-      map.setView([lat, lng], 15);
+            marcadorMiUbicacion = L.marker([lat, lng], { icon: iconMiUbicacion }).addTo(map);
+            marcadorMiUbicacion.bindPopup("📍 Tu ubicación").openPopup();
+            map.setView([lat, lng], 15);
 
-      if (typeof callback === 'function') callback();
-    },
-    () => {
-      Swal.close();
-      Swal.fire("Error", "No se pudo obtener tu ubicación", "error");
-    },
-    { enableHighAccuracy: true, timeout: 10000 }
-  );
+            if (typeof callback === 'function') callback();
+        },
+        () => {
+            Swal.close();
+            Swal.fire("Error", "No se pudo obtener tu ubicación", "error");
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+    );
 }
 
 function abrirRuta(latDestino, lngDestino) {
-  if (!ubicacionActual) {
-    obtenerUbicacionActual(() => abrirRuta(latDestino, lngDestino));
-    return;
-  }
-  const { lat, lng } = ubicacionActual;
-  const url = `https://www.google.com/maps/dir/${lat},${lng}/${latDestino},${lngDestino}`;
-  window.open(url, "_blank");
+    if (!ubicacionActual) {
+        obtenerUbicacionActual(() => abrirRuta(latDestino, lngDestino));
+        return;
+    }
+    const { lat, lng } = ubicacionActual;
+    const url = `https://www.google.com/maps/dir/${lat},${lng}/${latDestino},${lngDestino}`;
+    window.open(url, "_blank");
 }
 
 
 async function abrirPerfil() {
-  Swal.showLoading();
-  await refrescarDatosUsuario(); 
-  
-  Swal.close();
-  cargarDatosEnModal();
-  document.getElementById("modalPerfil").style.display = "flex";
+    Swal.showLoading();
+    await refrescarDatosUsuario();
+
+    Swal.close();
+    cargarDatosEnModal();
+    document.getElementById("modalPerfil").style.display = "flex";
 }
 
 function cargarDatosEnModal() {
-  fotoNuevaFile = null;
-  if(document.getElementById("inputPerfilFoto")) document.getElementById("inputPerfilFoto").value = "";
+    fotoNuevaFile = null;
+    if (document.getElementById("inputPerfilFoto")) document.getElementById("inputPerfilFoto").value = "";
 
-  document.getElementById("perfilPrimerNombre").value = usuario.primer_nombre || "";
-  document.getElementById("perfilSegundoNombre").value = usuario.segundo_nombre || "";
-  document.getElementById("perfilApellidoPaterno").value = usuario.apellido_paterno || "";
-  document.getElementById("perfilApellidoMaterno").value = usuario.apellido_materno || "";
-  document.getElementById("perfilCorreo").value = usuario.correo || "";
-  document.getElementById("perfilPassword").value = ""; 
-  
-  let fotoSrc = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-  if (usuario.foto && usuario.foto.length > 5) {
-      if (usuario.foto.startsWith("http") || usuario.foto.startsWith("data:")) {
-          fotoSrc = usuario.foto;
-      } else {
-          fotoSrc = `data:image/png;base64,${usuario.foto}`;
-      }
-  }
-  
-  document.getElementById("perfilPreview").src = fotoSrc;
+    document.getElementById("perfilPrimerNombre").value = usuario.primer_nombre || "";
+    document.getElementById("perfilSegundoNombre").value = usuario.segundo_nombre || "";
+    document.getElementById("perfilApellidoPaterno").value = usuario.apellido_paterno || "";
+    document.getElementById("perfilApellidoMaterno").value = usuario.apellido_materno || "";
+    document.getElementById("perfilCorreo").value = usuario.correo || "";
+    document.getElementById("perfilPassword").value = "";
+
+    let fotoSrc = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+    if (usuario.foto && usuario.foto.length > 5) {
+        if (usuario.foto.startsWith("http") || usuario.foto.startsWith("data:")) {
+            fotoSrc = usuario.foto;
+        } else {
+            fotoSrc = `data:image/png;base64,${usuario.foto}`;
+        }
+    }
+
+    document.getElementById("perfilPreview").src = fotoSrc;
 }
 
 function previsualizarFoto(e) {
-  const file = e.target.files[0];
-  if (!file) return;
+    const file = e.target.files[0];
+    if (!file) return;
 
-  fotoNuevaFile = file;
+    fotoNuevaFile = file;
 
-  
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    document.getElementById("perfilPreview").src = ev.target.result;
-  };
-  reader.readAsDataURL(file);
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        document.getElementById("perfilPreview").src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
 }
 
 async function guardarPerfil() {
@@ -347,11 +356,11 @@ async function guardarPerfil() {
         apellido_materno: sApellido,
         correo: correo,
         foto: usuario.foto,
-        estado: true 
+        estado: true
     };
 
     if (pass) {
-        datosUsuario.password = pass; 
+        datosUsuario.password = pass;
     }
 
     const formData = new FormData();
@@ -371,11 +380,11 @@ async function guardarPerfil() {
 
         if (res.ok) {
             const usuarioActualizado = await res.json();
-            
+
             usuarioActualizado.rol_seleccionado = usuario.rol_seleccionado;
             usuario = usuarioActualizado;
             localStorage.setItem("usuario", JSON.stringify(usuario));
-            
+
             actualizarSaludoUI();
             cerrarModalPerfil();
             Swal.fire("¡Listo!", "Perfil actualizado correctamente", "success");
@@ -389,57 +398,57 @@ async function guardarPerfil() {
 }
 
 function cerrarModalPerfil() {
-  document.getElementById("modalPerfil").style.display = "none";
+    document.getElementById("modalPerfil").style.display = "none";
 }
 
 
 async function cargarNotificacionesReciclador() {
-  try {
-    const res = await fetch(`${API_BASE}/solicitud_recolecciones/reciclador/${usuario.cedula}`);
-    if (!res.ok) return;
+    try {
+        const res = await fetch(`${API_BASE}/solicitud_recolecciones/reciclador/${usuario.cedula}`);
+        if (!res.ok) return;
 
-    const data = await res.json();
+        const data = await res.json();
 
-    const solicitudesActivas = data.filter((s) => {
-      const estado = s.estado ? s.estado.toUpperCase() : "";
-      return estado === "PENDIENTE_RECOLECCION" || estado === "ACEPTADA"; 
-    });
+        const solicitudesActivas = data.filter((s) => {
+            const estado = s.estado ? s.estado.toUpperCase() : "";
+            return estado === "PENDIENTE_RECOLECCION" || estado === "ACEPTADA";
+        });
 
-    const cantidad = solicitudesActivas.length;
-    const badge = document.getElementById("badgeEntregas");
+        const cantidad = solicitudesActivas.length;
+        const badge = document.getElementById("badgeEntregas");
 
-    if (badge) {
-      if (cantidad > 0) {
-        badge.innerText = cantidad;
-        badge.style.display = "flex";
-        badge.classList.add("urgente");
-      } else {
-        badge.style.display = "none";
-        badge.classList.remove("urgente");
-      }
+        if (badge) {
+            if (cantidad > 0) {
+                badge.innerText = cantidad;
+                badge.style.display = "flex";
+                badge.classList.add("urgente");
+            } else {
+                badge.style.display = "none";
+                badge.classList.remove("urgente");
+            }
+        }
+    } catch (e) {
+        console.error("Error notificaciones:", e);
     }
-  } catch (e) {
-    console.error("Error notificaciones:", e);
-  }
 }
 
 function cerrarSesion() {
-  Swal.fire({
-    title: "¿Cerrar sesión?",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonText: "Sí",
-    cancelButtonText: "No"
-  }).then((r) => {
-    if (r.isConfirmed) {
-      localStorage.removeItem("usuario");
-      redirigirLogin();
-    }
-  });
+    Swal.fire({
+        title: "¿Cerrar sesión?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sí",
+        cancelButtonText: "No"
+    }).then((r) => {
+        if (r.isConfirmed) {
+            localStorage.removeItem("usuario");
+            redirigirLogin();
+        }
+    });
 }
 
 function redirigirLogin() {
-  location.href = "../incio_de_sesion/login-registro.html";
+    location.href = "../incio_de_sesion/login-registro.html";
 }
 
 let chartInstance = null;
@@ -450,16 +459,16 @@ async function abrirEstadisticas() {
     try {
         const res = await fetch(`${API_BASE}/solicitud_recolecciones`);
         if (!res.ok) throw new Error("Error al cargar datos");
-        
+
         const todas = await res.json();
-        
-        const misEntregas = todas.filter(s => 
-            s.reciclador && s.reciclador.cedula === usuario.cedula && 
+
+        const misEntregas = todas.filter(s =>
+            s.reciclador && s.reciclador.cedula === usuario.cedula &&
             s.estado === 'FINALIZADO'
         );
 
         calcularYMostrarStats(misEntregas);
-        
+
         Swal.close();
         document.getElementById("modalEstadisticas").style.display = "flex";
 
@@ -474,7 +483,7 @@ function calcularYMostrarStats(entregas) {
     const materialesCount = {};
 
     entregas.forEach(s => {
-        if(s.detalles) {
+        if (s.detalles) {
             s.detalles.forEach(d => {
                 totalKg += d.cantidad_kg;
                 const matName = d.material ? d.material.nombre : "Otros";
@@ -487,7 +496,7 @@ function calcularYMostrarStats(entregas) {
     document.getElementById("statEntregas").innerText = entregas.length;
 
     const ctx = document.getElementById('chartMisMateriales').getContext('2d');
-    
+
     if (chartInstance) {
         chartInstance.destroy(); // Destruir anterior para no sobreponer
     }
@@ -501,8 +510,8 @@ function calcularYMostrarStats(entregas) {
             labels: labels.length ? labels : ['Sin datos'],
             datasets: [{
                 data: data.length ? data : [1],
-                backgroundColor: labels.length 
-                    ? ['#2ecc71', '#3498db', '#9b59b6', '#f1c40f', '#e74c3c'] 
+                backgroundColor: labels.length
+                    ? ['#2ecc71', '#3498db', '#9b59b6', '#f1c40f', '#e74c3c']
                     : ['#e0e0e0'],
                 borderWidth: 2
             }]
@@ -514,7 +523,7 @@ function calcularYMostrarStats(entregas) {
                 legend: { position: 'bottom' },
                 tooltip: {
                     callbacks: {
-                        label: function(context) {
+                        label: function (context) {
                             let label = context.label || '';
                             if (label) label += ': ';
                             if (context.parsed !== null) label += context.parsed + ' Kg';
@@ -538,30 +547,19 @@ function cerrarModalEstadisticas() {
 
 async function identificarMiPunto() {
     try {
-        const res = await fetch(`${API_BASE}/ubicacion_reciclajes`);
-        if (res.ok) {
-            const todos = await res.json();
-            miPuntoData = todos.find(p => {
-                if (p.reciclador && p.reciclador.cedula) {
-                    return String(p.reciclador.cedula) === String(usuario.cedula);
-                }
-                return false;
-            });
-            
-            if (miPuntoData) {
-                const card = document.querySelector('.card-orange');
-                if (card) card.style.border = "2px solid #e67e22";
-            }
-        }
+        const todos = await obtenerUbicaciones();
+        miPuntoData = todos.find(p =>
+            p.reciclador?.cedula == usuario.cedula
+        );
     } catch (e) {
-        console.error("Error crítico buscando mi punto:", e);
+        console.error(e);
     }
 }
 
 
 async function abrirModalMiPunto() {
     fotoPuntoFile = null;
-    
+
     if (mapaEdicion) {
         mapaEdicion.remove();
         mapaEdicion = null;
@@ -630,7 +628,7 @@ async function abrirModalMiPunto() {
     const nuevoInput = inputFoto.cloneNode(true);
     inputFoto.parentNode.replaceChild(nuevoInput, inputFoto);
 
-    nuevoInput.addEventListener('change', function(e) {
+    nuevoInput.addEventListener('change', function (e) {
         const file = e.target.files[0];
         if (file) {
             fotoPuntoFile = file;
@@ -672,23 +670,23 @@ function initMapaEdicion(lat, lng) {
     }
 
     mapaEdicion = L.map(container, {
-        maxBounds: CUENCA_BOUNDS,      
-        maxBoundsViscosity: 1.0,      
+        maxBounds: CUENCA_BOUNDS,
+        maxBoundsViscosity: 1.0,
         minZoom: 12
     }).setView([lat, lng], 15);
-    
+
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: "© OpenStreetMap"
     }).addTo(mapaEdicion);
 
-    mapaEdicion.on('click', function(e) {
+    mapaEdicion.on('click', function (e) {
         colocarMarcadorEdicion(e.latlng.lat, e.latlng.lng);
     });
 
     colocarMarcadorEdicion(lat, lng);
 
     setTimeout(() => {
-        if(mapaEdicion) {
+        if (mapaEdicion) {
             mapaEdicion.invalidateSize();
             mapaEdicion.panTo([lat, lng]);
         }
@@ -697,14 +695,14 @@ function initMapaEdicion(lat, lng) {
 
 
 function colocarMarcadorEdicion(lat, lng) {
-    if(!mapaEdicion) return;
+    if (!mapaEdicion) return;
 
     if (markerEdicion) {
         markerEdicion.setLatLng([lat, lng]);
     } else {
         markerEdicion = L.marker([lat, lng], { draggable: true }).addTo(mapaEdicion);
-        
-        markerEdicion.on('dragend', function(e) {
+
+        markerEdicion.on('dragend', function (e) {
             const pos = e.target.getLatLng();
             document.getElementById("txtLatitud").value = pos.lat.toFixed(6);
             document.getElementById("txtLongitud").value = pos.lng.toFixed(6);
@@ -722,13 +720,13 @@ async function renderizarMaterialesEdicion() {
     try {
         const res = await fetch(`${API_BASE}/materiales`);
         const todosMateriales = await res.json();
-        
+
         container.innerHTML = "";
-        
+
         const idsMisMateriales = new Set();
-        if(miPuntoData.materialesAceptados) {
+        if (miPuntoData.materialesAceptados) {
             miPuntoData.materialesAceptados.forEach(um => {
-                if(um.material) idsMisMateriales.add(um.material.id_material);
+                if (um.material) idsMisMateriales.add(um.material.id_material);
             });
         }
 
@@ -750,11 +748,11 @@ async function renderizarMaterialesEdicion() {
 function normalizarDia(texto) {
     if (!texto) return "";
     return texto.toString()
-        .toUpperCase()                      
-        .normalize("NFD")                   
-        .replace(/[\u0300-\u036f]/g, "")    
-        .trim();                            
-}          
+        .toUpperCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim();
+}
 
 function formatearDiaBonito(diaDb) {
     if (!diaDb) return "";
@@ -762,7 +760,7 @@ function formatearDiaBonito(diaDb) {
         .toLowerCase()
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "")
-        .trim(); 
+        .trim();
 
     const mapa = {
         "lunes": "Lunes",
@@ -774,7 +772,7 @@ function formatearDiaBonito(diaDb) {
         "domingo": "Domingo"
     };
 
-    return mapa[diaLimpio] || diaDb; 
+    return mapa[diaLimpio] || diaDb;
 }
 
 function renderizarHorariosEdicion() {
@@ -786,8 +784,8 @@ function renderizarHorariosEdicion() {
     if (horarios.length === 0) {
         agregarFilaHorario();
     } else {
-        const ordenDias = { 
-            "Lunes": 1, "Martes": 2, "Miércoles": 3, "Jueves": 4, "Viernes": 5, "Sábado": 6, "Domingo": 7 
+        const ordenDias = {
+            "Lunes": 1, "Martes": 2, "Miércoles": 3, "Jueves": 4, "Viernes": 5, "Sábado": 6, "Domingo": 7
         };
 
         horarios.sort((a, b) => {
@@ -806,9 +804,9 @@ function renderizarHorariosEdicion() {
 
 function agregarFilaHorario(dia = null, inicio = "08:00", fin = "18:00") {
     const lista = document.getElementById("listaHorarios");
-    
+
     const diasSemana = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
-    
+
     const selectsExistentes = lista.querySelectorAll(".input-dia");
     const diasUsados = Array.from(selectsExistentes).map(s => normalizarDia(s.value));
 
@@ -923,7 +921,7 @@ async function guardarCambiosPunto() {
 
     const formData = new FormData();
     formData.append("datos", JSON.stringify(objetoUpdate));
-    
+
     if (fotoPuntoFile) formData.append("archivo", fotoPuntoFile);
 
     try {
@@ -962,8 +960,8 @@ function actualizarPosicionMarker(latlng) {
         markerEdicion = L.marker(latlng, {
             draggable: true
         }).addTo(mapaEdicion);
-        
-        markerEdicion.on('dragend', function(e) {
+
+        markerEdicion.on('dragend', function (e) {
             const pos = e.target.getLatLng();
             document.getElementById("txtLatitud").value = pos.lat.toFixed(6);
             document.getElementById("txtLongitud").value = pos.lng.toFixed(6);
