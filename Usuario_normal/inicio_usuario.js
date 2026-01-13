@@ -75,16 +75,21 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   initMap();
 
-  // 3. Cargar Datos
-  await cargarNotificaciones();
-  await cargarMisFavoritos();
-  await cargarFiltrosMateriales();
-  await cargarPuntosReciclaje();
-  await cargarPuntosRecompensa();
-  
-  prepararDatosCompletosIA();
+  try {
+    await Promise.all([
+      cargarNotificaciones(),
+      cargarMisFavoritos(),
+      cargarFiltrosMateriales(),
+      cargarPuntosReciclaje(),
+      cargarPuntosRecompensa(),
+      cargarParroquiasEnBackground()
+    ]);
+    
+    prepararDatosCompletosIA()
 
- cargarParroquiasEnBackground();
+  } catch (error) {
+    console.error("Error cargando datos iniciales:", error);
+  }
 
   const inputPerfilFoto = document.getElementById("inputPerfilFoto");
   if (inputPerfilFoto)
