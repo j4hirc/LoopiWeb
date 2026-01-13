@@ -35,6 +35,7 @@ async function cargarTodo() {
         if (!resSol.ok) throw new Error("Error fetching solicitudes");
 
         datosCrudos = await resSol.json();
+        procesarDatos();
 
         if (resUs.ok) {
             const users = await resUs.json();
@@ -46,6 +47,25 @@ async function cargarTodo() {
         console.error(e);
         Swal.fire("Error", "No se pudieron cargar los datos.", "error");
     }
+}
+
+let datosProcesados = [];
+
+function procesarDatos() {
+    datosProcesados = datosCrudos.map(s => {
+        let totalKg = 0;
+        if (s.detalles) {
+            for (const d of s.detalles) totalKg += d.cantidad_kg;
+        }
+
+        return {
+            ...s,
+            _fecha: new Date(s.fecha_recoleccion_real || s.fecha_creacion),
+            _totalKg: totalKg,
+            _anio: new Date(s.fecha_recoleccion_real || s.fecha_creacion).getFullYear(),
+            _mes: new Date(s.fecha_recoleccion_real || s.fecha_creacion).getMonth()
+        };
+    });
 }
 
 function aplicarFiltros() {
@@ -119,33 +139,56 @@ function actualizarDashboard(datos) {
 
 function generarGraficoMateriales(lista) {
     const matStats = {};
+
     lista.forEach(s => {
-        if (s.detalles) s.detalles.forEach(d => {
-            const nombre = d.material ? d.material.nombre : "Otros";
-            matStats[nombre] = (matStats[nombre] || 0) + d.cantidad_kg;
+        if (s.detalles) {
+            s.detalles.forEach(d => {
+                const nombre = d.material ? d.material.nombre : "Otros";
+                matStats[nombre] = (matStats[nombre] || 0) + d.cantidad_kg;
+            });
+        }
+    });
+
+    const labels = Object.keys(matStats);
+    const data = Object.values(matStats);
+
+    const ctx = document
+        .getElementById('chartMaterialesGlobal')
+        .getContext('2d');
+
+    if (!chartMatInstance) {
+        chartMatInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels,
+                datasets: [{
+                    data,
+                    backgroundColor: [
+                        '#2ecc71', '#3498db', '#9b59b6',
+                        '#f1c40f', '#e74c3c', '#1abc9c'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'right' } }
+            }
         });
-    });
-    const ctx = document.getElementById('chartMaterialesGlobal').getContext('2d');
-    if (chartMatInstance) chartMatInstance.destroy();
-    chartMatInstance = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: Object.keys(matStats),
-            datasets: [{
-                data: Object.values(matStats),
-                backgroundColor: ['#2ecc71', '#3498db', '#9b59b6', '#f1c40f', '#e74c3c', '#1abc9c'],
-                borderWidth: 2,
-                borderColor: '#fff'
-            }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
-    });
+    } else {
+        chartMatInstance.data.labels = labels;
+        chartMatInstance.data.datasets[0].data = data;
+        chartMatInstance.update();
+    }
 }
 
 function generarGraficoTendencia(lista) {
-    const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
     const dataMeses = new Array(12).fill(0);
     const anioActual = new Date().getFullYear();
+
     lista.forEach(s => {
         const fecha = new Date(s.fecha_recoleccion_real || s.fecha_creacion);
         if (fecha.getFullYear() === anioActual) {
@@ -154,61 +197,81 @@ function generarGraficoTendencia(lista) {
             dataMeses[fecha.getMonth()] += peso;
         }
     });
+
     const ctx = document.getElementById('chartTendencia').getContext('2d');
-    if (chartTendenciaInstance) chartTendenciaInstance.destroy();
-    chartTendenciaInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: meses,
-            datasets: [{
-                label: `Kilos Reciclados ${anioActual}`,
-                data: dataMeses,
-                borderColor: '#6DB85C',
-                backgroundColor: 'rgba(109, 184, 92, 0.1)',
-                fill: true,
-                tension: 0.4
-            }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
-    });
+
+    if (!chartTendenciaInstance) {
+        chartTendenciaInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: meses,
+                datasets: [{
+                    label: `Kilos Reciclados ${anioActual}`,
+                    data: dataMeses,
+                    borderColor: '#6DB85C',
+                    backgroundColor: 'rgba(109,184,92,0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+    } else {
+        chartTendenciaInstance.data.datasets[0].data = dataMeses;
+        chartTendenciaInstance.update();
+    }
 }
 
 function generarGraficoTopRecicladores(lista) {
     const recStats = {};
+
     lista.forEach(s => {
-        let nombreEntidad = "Desconocido";
-        if (s.reciclador) {
-            nombreEntidad = `👤 ${s.reciclador.primer_nombre} ${s.reciclador.apellido_paterno}`;
-        } else if (s.ubicacion) {
-            nombreEntidad = `📍 ${s.ubicacion.nombre}`;
-        } else {
-            return;
-        }
-        let pesoEntrega = 0;
-        if (s.detalles) s.detalles.forEach(d => pesoEntrega += d.cantidad_kg);
-        recStats[nombreEntidad] = (recStats[nombreEntidad] || 0) + pesoEntrega;
+        let nombre = s.reciclador
+            ? `👤 ${s.reciclador.primer_nombre} ${s.reciclador.apellido_paterno}`
+            : s.ubicacion
+                ? `📍 ${s.ubicacion.nombre}`
+                : null;
+        if (!nombre) return;
+
+        let peso = 0;
+        if (s.detalles) s.detalles.forEach(d => peso += d.cantidad_kg);
+        recStats[nombre] = (recStats[nombre] || 0) + peso;
     });
-    const sorted = Object.entries(recStats).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+    const sorted = Object.entries(recStats)
+        .sort((a,b) => b[1] - a[1])
+        .slice(0,5);
+
     const ctx = document.getElementById('chartTopRecicladores').getContext('2d');
-    if (chartTopInstance) chartTopInstance.destroy();
-    chartTopInstance = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: sorted.map(i => i[0]),
-            datasets: [{
-                label: 'Kilos Recolectados (Kg)',
-                data: sorted.map(i => i[1].toFixed(1)),
-                backgroundColor: '#3A6958',
-                borderRadius: 4
-            }]
-        },
-        options: {
-            indexAxis: 'y',
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: { x: { beginAtZero: true } }
-        }
-    });
+
+    if (!chartTopInstance) {
+        chartTopInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: sorted.map(i => i[0]),
+                datasets: [{
+                    label: 'Kilos Recolectados (Kg)',
+                    data: sorted.map(i => i[1].toFixed(1)),
+                    backgroundColor: '#3A6958',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { x: { beginAtZero: true } }
+            }
+        });
+    } else {
+        chartTopInstance.data.labels = sorted.map(i => i[0]);
+        chartTopInstance.data.datasets[0].data = sorted.map(i => i[1].toFixed(1));
+        chartTopInstance.update();
+    }
 }
 
 function generarTablaRecicladores(lista) {
