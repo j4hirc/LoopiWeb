@@ -34,7 +34,10 @@ const imagenesEllie = [
     "../Imagenes/Ellie2.png",
     "../Imagenes/Ellie3.png",
     "../Imagenes/Ellie4.png",
-    "../Imagenes/Ellie5.png"
+    "../Imagenes/Ellie5.png",
+    "../Imagenes/Ellie6.png",
+    "../Imagenes/Ellie7.png",
+    "../Imagenes/Ellie8.png"
 ];
 
 const CUENCA_BOUNDS = L.latLngBounds(
