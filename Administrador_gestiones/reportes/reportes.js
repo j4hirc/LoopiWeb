@@ -104,23 +104,23 @@ function aplicarFiltros() {
 }
 
 function actualizarDashboard(datos) {
-    const finalizados = datos.filter(s => s.estado === 'FINALIZADO' || s.estado === 'COMPLETADA');
-    let totalKg = 0;
-    let totalPuntos = 0;
-    finalizados.forEach(s => {
-        totalPuntos += (s.puntos_ganados || 0);
-        if(s.detalles) s.detalles.forEach(d => totalKg += d.cantidad_kg);
+    actualizarKPIs(datos);
+
+    requestAnimationFrame(() => {
+        generarGraficoMateriales(datos);
     });
-    document.getElementById("totalKgGlobal").innerText = totalKg.toFixed(1);
-    document.getElementById("totalUsuarios").innerText = usuariosTotal;
-    document.getElementById("totalRecolecciones").innerText = datos.length; 
-    document.getElementById("totalPuntos").innerText = totalPuntos;
-    generarGraficoMateriales(finalizados);
-    generarGraficoTopRecicladores(finalizados);
-    generarGraficoTendencia(finalizados);
-    generarTablaRecicladores(datos);
-    generarTopUsuarios(datos); 
+
+    requestAnimationFrame(() => {
+        generarGraficoTendencia(datos);
+        generarGraficoTopRecicladores(datos);
+    });
+
+    setTimeout(() => {
+        generarTablaRecicladores(datos);
+        generarTopUsuarios(datos);
+    }, 0);
 }
+
 
 function generarGraficoMateriales(lista) {
     const matStats = {};
