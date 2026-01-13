@@ -4,18 +4,13 @@ let map;
 let usuarioLogueado;
 let listaFavoritos = [];
 let notificaciones = [];
-
 let todasLasUbicaciones = [];
 let recyclingLayer;
 let rewardLayer;
-
 let listaParroquiasCache = [];
-
 let marcadorMiUbicacion = null;
 let ubicacionActual = null;
-
 let notificacionesCargadas = false;
-
 let fotoNuevaFile = null;
 
 

@@ -1,20 +1,24 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Loop - Reciclaje Inteligente</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
-    
+
     <header>
         <div class="logo">
-            <img src="Imagenes/logo_icon.png" alt="Loop" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3405/3405802.png'">
+            <img src="Imagenes/logo_icon.png" alt="Loop"
+                onerror="this.src='https://cdn-icons-png.flaticon.com/512/3405/3405802.png'">
             <span>Loopi</span>
         </div>
-        
+
         <div class="menu-btn" id="menu-btn">
             <div class="bar"></div>
             <div class="bar"></div>
@@ -39,23 +43,22 @@
                 <div class="hero-pill">🌿 Únete al cambio</div>
                 <h1>Ayudando al <span class="gradient-text">medio ambiente</span></h1>
                 <p>
-                    Recicla de forma inteligente, gana recompensas increíbles y únete a la comunidad que está cambiando el planeta. ¡Empieza hoy mismo!
+                    Recicla de forma inteligente, gana recompensas increíbles y únete a la comunidad que está cambiando
+                    el planeta. ¡Empieza hoy mismo!
                 </p>
                 <div class="hero-buttons">
-                    <a href="descargas/loopi.apk" download="LoopiApp.apk" class="btn-primary" style="text-decoration: none; display: inline-block; text-align: center;">
-    Descargar App
-</a>
+                    <a href="descargas/loopi.apk" download="LoopiApp.apk" class="btn-primary"
+                        style="text-decoration: none; display: inline-block; text-align: center;">
+                        Descargar App
+                    </a>
                     <a href="#materiales" class="btn-secondary">Ver Materiales</a>
                 </div>
             </div>
 
             <div class="hero-right animate-up delay-200">
                 <div class="video-card">
-                    <iframe 
-                        src="https://www.youtube.com/embed/uaI3PLmAJyM" 
-                        title="Video Loop" 
-                        frameborder="0" 
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                    <iframe src="https://www.youtube.com/embed/uaI3PLmAJyM" title="Video Loop" frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                         allowfullscreen>
                     </iframe>
                 </div>
@@ -98,7 +101,7 @@
             <h2 class="section-title">¿Qué reciclamos?</h2>
             <p class="section-subtitle">Aceptamos una amplia variedad de materiales.</p>
         </div>
-        
+
         <div class="materials-grid" id="contenedor-materiales">
             <div class="loading-spinner">Cargando materiales...</div>
         </div>
@@ -109,7 +112,7 @@
             <h2 class="section-title">Nuestros Aliados</h2>
             <p class="section-subtitle">Empresas comprometidas con el planeta.</p>
         </div>
-        
+
         <div class="sponsors-grid" id="contenedor-auspiciantes">
             <div class="loading-spinner">Cargando aliados...</div>
         </div>
@@ -160,7 +163,7 @@
             navMenu.classList.toggle('active');
         });
 
- 
+
         navLinks.forEach(link => {
             link.addEventListener('click', () => {
                 menuBtn.classList.remove('active');
@@ -169,4 +172,5 @@
         });
     </script>
 </body>
+
 </html>
