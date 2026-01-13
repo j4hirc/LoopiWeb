@@ -235,7 +235,7 @@ function renderizarGrid(lista) {
         const card = document.createElement('div');
         card.className = 'card-ausp';
         card.innerHTML = `
-            <img src="${imgUrl}" alt="Logo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/747/747543.png'">
+           <img src="${imgUrl}" alt="Logo" onerror="this.src='${DEFAULT_IMG}'">
             <h3>${nombre}</h3>
             <p style="font-size:12px; color:#888; margin-bottom:5px;">Code: <strong>${codigo}</strong></p>
             <p style="font-size:13px; color:#666; height:40px; overflow:hidden;">${desc}</p>
