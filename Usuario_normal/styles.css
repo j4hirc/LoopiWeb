@@ -218,10 +218,24 @@ body {
 .section-header { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
 .section-header h2 { margin: 0; font-size: 1.3rem; color: var(--primary); }
 
-.filtros-container { width: 100%; overflow: hidden; }
+.filtros-container {
+    width: 100%;
+    overflow-x: auto;   
+    overflow-y: hidden;
+}
 .filtros-scroll {
-    display: flex; gap: 10px; overflow-x: auto;
-    padding-bottom: 8px; scrollbar-width: none; /* Firefox */
+    display: flex;
+    gap: 10px;
+    padding: 6px 4px;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    max-width: 100%;
+    white-space: nowrap;
+
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
 }
 .filtros-scroll::-webkit-scrollbar { display: none; /* Chrome */ }
 
