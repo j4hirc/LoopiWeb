@@ -5,8 +5,8 @@ let usuariosTotal = 0;
 let chartMatInstance = null;
 let chartTopInstance = null;
 let chartTendenciaInstance = null;
+const aplicarFiltrosDebounced = debounce(aplicarFiltros, 300);
 
-// RUTA DEL LOGO (Asegúrate que esta ruta sea correcta relativa a tu HTML)
 const RUTA_LOGO_LOCAL = "../../Imagenes/Logo.png"; 
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -14,19 +14,33 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById('filtroInicio').addEventListener('change', aplicarFiltros);
     document.getElementById('filtroFin').addEventListener('change', aplicarFiltros);
     document.getElementById('filtroTipo').addEventListener('change', aplicarFiltros);
-    document.getElementById('filtroReciclador').addEventListener('keyup', aplicarFiltros);
+    document.getElementById('filtroReciclador').addEventListener('keyup', aplicarFiltrosDebounced);
 });
+
+function debounce(fn, delay = 300) {
+    let timeout;
+    return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => fn(...args), delay);
+    };
+}
 
 async function cargarTodo() {
     try {
-        const resSol = await fetch(`${API_BASE}/solicitud_recolecciones`);
+        const [resSol, resUs] = await Promise.all([
+            fetch(`${API_BASE}/solicitud_recolecciones`),
+            fetch(`${API_BASE}/usuarios`)
+        ]);
+
         if (!resSol.ok) throw new Error("Error fetching solicitudes");
+
         datosCrudos = await resSol.json();
-        const resUs = await fetch(`${API_BASE}/usuarios`);
+
         if (resUs.ok) {
             const users = await resUs.json();
             usuariosTotal = users.length;
         }
+
         aplicarFiltros();
     } catch (e) {
         console.error(e);
