@@ -361,3 +361,61 @@ body {
 @keyframes ripple {
     to { transform: scale(4); opacity: 0; }
 }
+
+.filtros-container-mapa { 
+    margin-bottom: 15px; 
+    /* Opcional: añade un degradado a los lados para indicar que hay scroll */
+    position: relative;
+}
+
+.filtros-scroll {
+    display: flex; 
+    gap: 10px; 
+    overflow-x: auto; 
+    padding: 5px 2px; /* Un poco de padding vertical para la sombra */
+    
+    /* Comportamiento de scroll nativo y suave */
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch; 
+    
+    /* Ocultar barra de scroll en Firefox, Chrome, Safari */
+    scrollbar-width: none; 
+    -ms-overflow-style: none;
+    
+    /* Evita que se rompa la línea */
+    white-space: nowrap;
+}
+
+/* Ocultar barra en Webkit (Chrome/Safari) */
+.filtros-scroll::-webkit-scrollbar { 
+    display: none; 
+}
+
+.btn-filtro {
+    /* IMPORTANTE: Esto evita que los botones se aplasten */
+    flex-shrink: 0; 
+    
+    padding: 8px 18px;
+    border: 1px solid transparent;
+    border-radius: 20px;
+    background: #f3f4f6;
+    color: var(--text-light);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    
+    /* Evita selección de texto al arrastrar */
+    user-select: none;
+}
+
+.btn-filtro:hover { 
+    background: #e5e7eb; 
+}
+
+.btn-filtro.active {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 4px 10px rgba(46, 125, 50, 0.3);
+    transform: scale(1.05); /* Pequeño pop al activar */
+}

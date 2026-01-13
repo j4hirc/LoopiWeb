@@ -1060,9 +1060,10 @@ async function prepararDatosCompletosIA() {
         if(resUbi.ok) {
             const ubis = await resUbi.json();
             infoPuntosReciclaje = ubis.map(u => {
+                let nombreParroquia = "Cuenca";
                 let mats = u.materialesAceptados?.map(m => m.material.nombre).join(", ") || "Todos";
                 let horario = u.horarios?.map(h => `${h.dia} (${h.hora_inicio}-${h.hora_fin})`).join(", ") || "No especificado";
-                return `📍 "${u.nombre}" (${u.direccion}). Acepta: ${mats}. Horario: ${horario}`;
+                return `📍 "${u.nombre}" - Ubicado en la parroquia: ${nombreParroquia}. Dirección: ${u.direccion}. Acepta: ${mats}. Horario: ${horario}`;
             }).join('\n\n');
         }
 
