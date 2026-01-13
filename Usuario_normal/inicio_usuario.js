@@ -1058,12 +1058,30 @@ async function prepararDatosCompletosIA() {
         }
 
         if(resUbi.ok) {
-            const ubis = await resUbi.json();
-            infoPuntosReciclaje = ubis.map(u => {
-                let mats = u.materialesAceptados?.map(m => m.material.nombre).join(", ") || "Todos";
-                let horario = u.horarios?.map(h => `${h.dia} (${h.hora_inicio}-${h.hora_fin})`).join(", ") || "No especificado";
-                return `📍 "${u.nombre}" (${u.direccion}). Acepta: ${mats}. Horario: ${horario}`;
-            }).join('\n\n');
+            let ubis = await resUbi.json();
+            
+            if (usuarioLogueado.parroquia) {
+                const idMiParroquia = usuarioLogueado.parroquia.id_parroquia || usuarioLogueado.parroquia.id;
+                
+                const ubisDeMiParroquia = ubis.filter(u => 
+                    u.parroquia && (u.parroquia.id_parroquia === idMiParroquia || u.parroquia.id === idMiParroquia)
+                );
+
+                if (ubisDeMiParroquia.length > 0) {
+                    ubis = ubisDeMiParroquia;
+                } else {
+                }
+            }
+
+            if (ubis.length > 0) {
+                infoPuntosReciclaje = ubis.map(u => {
+                    let mats = u.materialesAceptados?.map(m => m.material.nombre).join(", ") || "Todos";
+                    let horario = u.horarios?.map(h => `${h.dia} (${h.hora_inicio}-${h.hora_fin})`).join(", ") || "No especificado";
+                    return `📍 "${u.nombre}" (${u.direccion}). Acepta: ${mats}. Horario: ${horario}`;
+                }).join('\n\n');
+            } else {
+                infoPuntosReciclaje = "No se encontraron puntos de reciclaje registrados en tu parroquia.";
+            }
         }
 
         if (resLogros.ok) {
