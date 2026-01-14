@@ -14,7 +14,7 @@ let notificacionesCargadas = false;
 let fotoNuevaFile = null;
 
 
-const GROQ_API_KEY = "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"; 
+const GEMINI_API_KEY = "AIzaSyA7y4i7J6RIpcL5NTONu6YbJPeFn02V8JI";
 let infoMateriales = "Cargando materiales...";
 let infoRecompensas = "Cargando recompensas...";
 let infoRangos = "Cargando rangos...";
@@ -1241,7 +1241,7 @@ async function consultarGroq() {
     `;
     
 
-    const url = "https://api.groq.com/openai/v1/chat/completions";
+    const url = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"; 
     
     const messagesPayload = [
         { role: "system", content: SYSTEM_PROMPT },
