@@ -487,11 +487,14 @@ label {
     box-shadow: 0 8px 16px rgba(45, 90, 74, 0.4);
 }
 
-/* Responsive */
 @media (max-width: 768px) {
     .header-content { flex-direction: column; text-align: center; justify-content: center;}
     .header-left { align-items: center; }
     .form-row { flex-direction: column; gap: 15px; }
     .search-wrapper { margin-top: -30px; }
     .btn-agregar { width: 100%; justify-content: center; }
+}
+
+.swal2-container {
+    z-index: 20000 !important; 
 }
