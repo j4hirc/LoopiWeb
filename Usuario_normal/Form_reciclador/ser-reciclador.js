@@ -149,11 +149,16 @@ async function verificarEstadoReciclador(cedula) {
             if(form.aprobado === true) {
                 redirigirConMensaje("¡Ya eres Reciclador!", "Tu cuenta ya está activa.", "success", "../inicio_usuario_normal.html");
             } else if (form.aprobado === false) {
-                 Swal.fire({
+                Swal.fire({
                     title: "Solicitud Rechazada",
                     text: "Motivo: " + (form.observacion_admin || "Sin detalles. Intenta contactar al admin."),
-                    icon: "error"
-                 });
+                    icon: "error",
+                    confirmButtonText: "Entendido",
+                    confirmButtonColor: "#d33", 
+                    allowOutsideClick: false
+                }).then(() => {
+                    window.location.href = "../inicio_usuario_normal.html";
+                });
             } else {
                 redirigirConMensaje("Solicitud en proceso", "Ya enviaste una solicitud. Espera la respuesta.", "info", "../inicio_usuario_normal.html");
             }
