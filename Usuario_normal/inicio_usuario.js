@@ -14,7 +14,7 @@ let notificacionesCargadas = false;
 let fotoNuevaFile = null;
 
 
-const GROQ_API_KEY = "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"; 
+const GROQ_API_KEY = "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"; 
 let infoMateriales = "Cargando materiales...";
 let infoRecompensas = "Cargando recompensas...";
 let infoRangos = "Cargando rangos...";
