@@ -12,7 +12,6 @@
     --text-light: #6B7280;
     --danger: #ef4444;
     
-    /* Efectos */
     --radius: 20px;
     --shadow-soft: 0 10px 40px -10px rgba(45, 90, 74, 0.15);
     --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
@@ -30,10 +29,8 @@ body {
     min-height: 100vh;
 }
 
-/* SweetAlert Fix */
 .swal2-container { z-index: 100000 !important; }
 
-/* Decoración Fondo */
 .bg-decoration {
     position: absolute; top: 0; left: 0; width: 100%; height: 350px;
     background: var(--primary-gradient);
@@ -41,7 +38,6 @@ body {
     z-index: -1;
 }
 
-/* --- HEADER --- */
 .header {
     padding: 30px 5% 60px;
     color: white;
@@ -59,7 +55,6 @@ body {
 
 .header-left { display: flex; flex-direction: column; gap: 15px; }
 
-/* Botón Volver */
 .btn-volver {
     display: inline-flex; align-items: center; gap: 8px;
     color: rgba(255,255,255,0.9); text-decoration: none;
@@ -92,7 +87,6 @@ body {
 }
 .btn-agregar:hover { transform: translateY(-4px); box-shadow: 0 15px 30px rgba(0,0,0,0.2); }
 
-/* --- BUSCADOR --- */
 .search-wrapper {
     max-width: 800px; margin: -45px auto 50px; padding: 0 20px;
     position: relative; z-index: 10;
@@ -119,7 +113,6 @@ body {
     background: transparent; font-family: inherit; font-weight: 500;
 }
 
-/* --- GRID DE PARROQUIAS --- */
 .grid-container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -165,7 +158,6 @@ body {
     color: var(--text-light);
 }
 
-/* Botones de Acción Circulares */
 .acciones {
     display: flex; justify-content: center; gap: 15px;
     width: 100%; padding-top: 15px;
@@ -195,7 +187,6 @@ body {
     box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);
 }
 
-/* --- MODAL --- */
 .modal-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(6px);
@@ -230,7 +221,6 @@ body {
     padding: 30px; display: flex; flex-direction: column; gap: 20px;
 }
 
-/* Forms */
 .form-group { display: flex; flex-direction: column; gap: 8px; }
 .form-group.full-width { width: 100%; }
 
@@ -251,7 +241,6 @@ label { font-size: 0.85rem; font-weight: 600; color: #475569; margin-left: 2px; 
 }
 select.input-field { appearance: none; cursor: pointer; }
 
-/* Footer */
 .modal-footer {
     padding: 20px 30px; background: #f8fafc;
     border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end; gap: 12px;
@@ -270,7 +259,6 @@ select.input-field { appearance: none; cursor: pointer; }
 }
 .btn-guardar:hover { background: #134e4a; transform: translateY(-2px); }
 
-/* Responsive */
 @media (max-width: 768px) {
     .header-content { flex-direction: column; text-align: center; align-items: center; }
     .header-left { align-items: center; }

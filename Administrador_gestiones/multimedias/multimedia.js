@@ -133,10 +133,15 @@ window.editar = (id) => {
     
     if (m.imagenes) {
         let imageUrl = m.imagenes;
+        
         if (!imageUrl.startsWith('http') && !imageUrl.startsWith('data:')) {
              imageUrl = `data:image/png;base64,${m.imagenes}`;
         }
-        previewImg.style.backgroundImage = `url(${imageUrl})`;
+        
+        previewImg.style.backgroundImage = `url("${imageUrl}")`;
+        
+        previewImg.style.backgroundSize = 'cover';
+        previewImg.style.backgroundPosition = 'center';
     }
     
     document.getElementById('modalTitle').innerText = 'Editar Contenido';

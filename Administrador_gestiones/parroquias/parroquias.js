@@ -1,8 +1,6 @@
-// 🌍 URLs de las APIs
 const API_PARROQUIAS = 'https://api-loopi.onrender.com/api/parroquias';
 const API_CIUDADES   = 'https://api-loopi.onrender.com/api/ciudades';
 
-// Elementos del DOM
 const gridParroquias = document.getElementById('gridParroquias');
 const searchInput = document.getElementById('buscarParroquia');
 const modalOverlay = document.getElementById('modalOverlay');
@@ -12,27 +10,23 @@ const btnCerrarModal = document.getElementById('btnCerrarModal');
 const btnCancelar = document.getElementById('btnCancelar');
 const selectCiudad = document.getElementById('ciudadParroquia'); 
 
-// Cache
 let parroquiasCache = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     listarParroquias();
     cargarCiudadesEnSelect(); 
 
-    // Abrir Modal
     btnNueva.addEventListener('click', () => {
         limpiarFormulario();
         modalOverlay.style.display = 'flex';
     });
 
-    // Cerrar Modal
     if(btnCerrarModal) btnCerrarModal.addEventListener('click', cerrarModal);
     if(btnCancelar) btnCancelar.addEventListener('click', cerrarModal);
 
-    // Guardar
+    
     form.addEventListener('submit', guardarParroquia);
 
-    // Buscador
     if(searchInput) {
         searchInput.addEventListener('input', (e) => {
             const termino = e.target.value.toLowerCase();
@@ -45,7 +39,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// --- 1. CARGAR SELECT DE CIUDADES ---
 async function cargarCiudadesEnSelect() {
     try {
         const response = await fetch(API_CIUDADES);
@@ -64,7 +57,6 @@ async function cargarCiudadesEnSelect() {
     }
 }
 
-// --- 2. LISTAR PARROQUIAS ---
 async function listarParroquias() {
     try {
         const response = await fetch(API_PARROQUIAS);
@@ -213,7 +205,6 @@ window.cargarEdicion = function(id) {
     modalOverlay.style.display = 'flex';
 };
 
-// --- RENDERIZADO ---
 function renderizarGrid(parroquias) {
     gridParroquias.innerHTML = '';
 
