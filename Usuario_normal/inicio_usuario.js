@@ -1180,6 +1180,9 @@ async function consultarGroq() {
 
 1. FUNCIONALIDADES PRINCIPALES:
    - SOLICITUD DE RECOLECCIÓN-Reciclar: Ve al botón "Solicitud" -> Elige ubicación, fecha y material -> Confirma[cite: 259, 260, 261].
+   En caso de ser un punto fijo(Que no tiene reciclador y no tiene icono de persona) tienes q dejar la foto de evidencia que lo entregaste.
+   En caso de ser reciclador(Que no es un punto fijp y tiene el icono de persona) mandas la solicitud con el material q vas a dar, el reciclador de acepta, si te acepta te llegara 
+   una notificacion y podras ir donde el reciclador para q la entrega se finalize. 
    - favorito: Si quiere seleccionar una ubicacion a favoritos, busque en el mapa, y seleccione el punto favorito, y presione el icono de corazon.
    - CANJE DE PREMIOS: Entra a "Canjear" -> Elige el premio -> Canjear -> Escanea el QR en el local para recibir tu recompensa[cite: 351, 352, 354, 355].
    - MAPA: Usa "Explora tu zona" para ver puntos fijos (verde) y Recicladores (azul). Puedes filtrar por tipo de material[cite: 392, 394].
@@ -1242,7 +1245,7 @@ async function consultarGroq() {
        - Lee el "REPORTE DE LOGROS" arriba.
        - Si dice que tiene el **100% o TODOS**, ¡haz una fiesta! Dile que es un máster, una leyenda de Loopi. No le recomiendes nada porque ya lo tiene todo.
        - Si tiene una lista de **"LE FALTAN"**, felicítalo por los que ya tiene (los ✅) y anímalo a completar uno de los que faltan (los ❌). Diles cómo hacerlo (leyendo la misión).
-       
+
     2. **RANGO:** Menciona su rango actual (${rangoActual}) para que se sienta importante.
 
     3. **PUNTOS:** Calcula siempre: Kilos x Puntos Unitarios. Nunca hables de dinero.
