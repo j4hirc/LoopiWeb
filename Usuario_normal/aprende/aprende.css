@@ -243,9 +243,6 @@ body {
     .img-container { width: 240px; height: 240px; }
 }
 @media (max-width: 768px) {
-    .main-content { height: 550px; }
-    .post-card { width: 280px; height: 440px; }
-    .img-container { width: 200px; height: 200px; }
     .modal-content { 
         grid-template-columns: 1fr; 
         max-height: 90vh;
