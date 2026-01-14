@@ -1045,8 +1045,8 @@ async function prepararDatosCompletosIA() {
             fetch(`${API_BASE}/recompensas`),
             fetch(`${API_BASE}/rangos`),
             fetch(`${API_BASE}/ubicacion_reciclajes`),
-            fetch(`${API_BASE}/logros`),                  // Catálogo completo
-            fetch(`${API_BASE}/usuarios/${cedula}/logros`) // Lo que tiene el usuario
+            fetch(`${API_BASE}/logros`),                
+            fetch(`${API_BASE}/usuarios/${cedula}/logros`) 
         ]);
 
         if(resMat.ok) {
@@ -1073,28 +1073,36 @@ async function prepararDatosCompletosIA() {
             }).join('\n\n');
         }
 
-        if (resLogros.ok) {
-            const todos = await resLogros.json();
-            
-            let misIds = new Set();
-            let misNombres = [];
-            
-            if (resMisLogros.ok) {
-                const mios = await resMisLogros.json();
-                mios.forEach(l => {
-                    misIds.add(l.id_logro);
-                    misNombres.push(l.nombre);
-                });
-            }
+        if (resLogros.ok && resMisLogros.ok) {
+            const todosLosLogros = await resLogros.json();
+            const misLogros = await resMisLogros.json();
 
-            infoLogros = todos.map(l => 
-                `- Medalla: "${l.nombre}" (Premio: ${l.puntos_ganados} pts). Misión: ${l.descripcion}`
-            ).join('\n');
+            const misIds = new Set(misLogros.map(l => l.id_logro));
 
-            if (misNombres.length > 0) {
-                infoMisLogros = `🏆 EL USUARIO TIENE ESTOS LOGROS DESBLOQUEADOS: ${misNombres.join(", ")}.`;
+            let obtenidosNombres = [];
+            let faltantesDetalle = [];
+
+            todosLosLogros.forEach(logro => {
+                if (misIds.has(logro.id_logro)) {
+                    obtenidosNombres.push(logro.nombre);
+                } else {
+                    faltantesDetalle.push(`- Faltante: "${logro.nombre}" (Misión: ${logro.descripcion})`);
+                }
+            });
+
+            if (faltantesDetalle.length === 0) {
+                infoMisLogros = `
+                ¡ATENCIÓN ELLIE! ESTE USUARIO ES UNA LEYENDA. 🏆
+                ESTADO: ¡TIENE EL 100% DE LOS LOGROS COMPLETADOS! (${obtenidosNombres.length} de ${todosLosLogros.length}).
+                No le falta nada. Debes felicitarlo exageradamente por ser un maestro del reciclaje.
+                `;
             } else {
-                infoMisLogros = "El usuario aún NO tiene logros desbloqueados. ¡Motívalo!";
+                infoMisLogros = `
+                ESTADO ACTUAL DE LOGROS:
+                ✅ TIENE (${obtenidosNombres.length}): ${obtenidosNombres.join(", ")}.
+                ❌ LE FALTAN (${faltantesDetalle.length}):
+                ${faltantesDetalle.join("\n")}
+                `;
             }
         }
 
@@ -1230,9 +1238,11 @@ async function consultarGroq() {
     ${infoRecompensas}
 
     INSTRUCCIONES DE RAZONAMIENTO:
-    1. **LOGROS:** Si el usuario pregunta "¿Cómo voy?" o sobre sus logros, revisa la lista de "EL USUARIO TIENE..." y felicítalo por los que ya tiene. Luego, mira la lista de "TODOS LOS LOGROS" y recomiéndale uno fácil que le falte.
-       *Ejemplo:* "¡Qué bestia mi ñaño! 🌸 Ya tienes la medalla 'Reciclador de Vidrio'. ¡Estoy súper orgullosa! 💖 Ahora intenta conseguir la de 'Pilas'..."
-    
+    1. **LOGROS:**
+       - Lee el "REPORTE DE LOGROS" arriba.
+       - Si dice que tiene el **100% o TODOS**, ¡haz una fiesta! Dile que es un máster, una leyenda de Loopi. No le recomiendes nada porque ya lo tiene todo.
+       - Si tiene una lista de **"LE FALTAN"**, felicítalo por los que ya tiene (los ✅) y anímalo a completar uno de los que faltan (los ❌). Diles cómo hacerlo (leyendo la misión).
+       
     2. **RANGO:** Menciona su rango actual (${rangoActual}) para que se sienta importante.
 
     3. **PUNTOS:** Calcula siempre: Kilos x Puntos Unitarios. Nunca hables de dinero.
