@@ -5,35 +5,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aprende | Loopi</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <link rel="stylesheet" href="../styles.css"> <link rel="stylesheet" href="aprende.css"> </head>
+    <link rel="stylesheet" href="aprende.css"> 
+</head>
 <body>
 
     <nav class="navbar-aprende">
         <div class="nav-back" onclick="window.history.back()">
-            <i class="fa-solid fa-arrow-left"></i> Volver
+            <i class="fa-solid fa-arrow-left"></i>
         </div>
-        <div class="nav-title">
-            <i class="fa-solid fa-seedling"></i> Zona Educativa
+        <div class="nav-logo">
+            LOOPI <span class="highlight">EDU</span>
         </div>
     </nav>
 
     <header class="learn-header">
-        <div class="header-content">
-            <h1>Aprende con Loopi</h1>
-            <p>Tips, guías y consejos para convertirte en un experto del reciclaje.</p>
-        </div>
-        <div class="header-decoration"></div>
+        <span class="badge-header">Zona Educativa</span>
+        <h1>Conviértete en un<br>Experto del Reciclaje</h1>
+        <p>Desliza para descubrir tips, guías y secretos.</p>
     </header>
 
-    <div class="main-content">
+    <div class="main-content" id="gesture-zone">
         <div id="grid-multimedia" class="posts-grid">
             <div class="loader-container">
-                <i class="fa-solid fa-circle-notch fa-spin"></i> Cargando contenido...
+                <div class="spinner"></div>
+                <p>Cargando tips...</p>
             </div>
         </div>
+    </div>
+
+    <div class="controls-container">
+        <button onclick="moverCarrusel(-1)" class="control-btn"><i class="fa-solid fa-chevron-left"></i></button>
+        <button onclick="moverCarrusel(1)" class="control-btn"><i class="fa-solid fa-chevron-right"></i></button>
     </div>
 
     <div id="modal-detalle" class="modal-overlay" onclick="cerrarModal(event)">
@@ -45,14 +50,13 @@
             </div>
             
             <div class="modal-body">
-                <span class="modal-tag">Eco-Tip</span>
+                <span class="modal-tag">Eco-Tip Loopi</span>
                 <h2 id="modal-titulo">Título del Post</h2>
-                <div class="modal-meta">
-                    <span id="modal-autor"><i class="fa-regular fa-user"></i> Loopi</span>
-                </div>
+                <div class="separator"></div>
                 <div class="modal-text">
                     <p id="modal-desc">Descripción completa...</p>
                 </div>
+                <button class="btn-leido" onclick="cerrarModal(true)">¡Entendido!</button>
             </div>
         </div>
     </div>
