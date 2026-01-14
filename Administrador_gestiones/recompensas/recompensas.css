@@ -370,3 +370,7 @@ body {
     .search-wrapper { margin-top: -30px; }
     .form-row, .geo-box { flex-direction: column; gap: 15px; }
 }
+
+.swal2-container {
+    z-index: 20000 !important; 
+}
