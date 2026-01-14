@@ -71,15 +71,43 @@ async function guardarLogro(e) {
     const desc = document.getElementById('descripcionLogro').value;
     const puntos = document.getElementById('puntosLogro').value;
 
-    if(!nombre || !puntos) {
+    if (!nombre || !puntos) {
         return Swal.fire('Campos requeridos', 'Nombre y Puntos son obligatorios.', 'warning');
     }
+
+    // --- INICIO DE VALIDACIÓN DE DUPLICADOS ---
     
+    // Normalizamos el nombre (todo minúsculas) para comparar
+    const nombreNormalizado = nombre.toLowerCase();
+
+    const existeDuplicado = logrosCache.some(logro => {
+        // 1. Verificamos si el nombre es igual
+        const mismoNombre = logro.nombre.trim().toLowerCase() === nombreNormalizado;
+        
+        // 2. Si estamos editando, aseguramos que NO sea el mismo ID que estamos tocando
+        // (Si es el mismo ID, es válido guardar el mismo nombre)
+        if (id) {
+            return mismoNombre && (logro.id_logro != id);
+        }
+        
+        // Si estamos creando, solo importa si el nombre existe
+        return mismoNombre;
+    });
+
+    if (existeDuplicado) {
+        return Swal.fire({
+            icon: 'warning',
+            title: 'Duplicado',
+            text: `Ya existe otro logro llamado "${nombre}". Por favor usa otro nombre.`
+        });
+    }
+    // --- FIN DE VALIDACIÓN ---
+
     const logroData = {
         nombre: nombre,
         descripcion: desc,
         puntos_ganados: parseInt(puntos),
-        imagen_logro: null 
+        imagen_logro: null
     };
 
     const formData = new FormData();
@@ -94,11 +122,11 @@ async function guardarLogro(e) {
 
     try {
         const btnSubmit = form.querySelector('button[type="submit"]');
-        if(btnSubmit) { btnSubmit.disabled = true; btnSubmit.innerText = "Guardando..."; }
+        if (btnSubmit) { btnSubmit.disabled = true; btnSubmit.innerText = "Guardando..."; }
 
         const response = await fetch(url, {
             method: metodo,
-            body: formData 
+            body: formData
         });
 
         if (response.ok) {
@@ -121,7 +149,7 @@ async function guardarLogro(e) {
         Swal.fire('Error', 'Error de conexión.', 'error');
     } finally {
         const btnSubmit = form.querySelector('button[type="submit"]');
-        if(btnSubmit) { btnSubmit.disabled = false; btnSubmit.innerText = "Guardar"; }
+        if (btnSubmit) { btnSubmit.disabled = false; btnSubmit.innerText = "Guardar"; }
     }
 }
 
