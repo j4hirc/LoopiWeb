@@ -981,48 +981,55 @@ function cerrarModalRangos() {
 }
 
 function renderizarCaminoRangos(rangos, totalReal) {
-  const container = document.getElementById("listaRangosContainer");
-  container.innerHTML = "";
+    const container = document.getElementById("listaRangosContainer");
+    container.innerHTML = "";
 
-  const idRangoCalculado = Math.floor(totalReal / 25) + 1;
+    const idRangoCalculado = Math.floor(totalReal / 25) + 1;
 
-  rangos.forEach((rango) => {
-    let claseEstado = "";
-    let iconoEstado = '<i class="fa-solid fa-lock"></i>'; // Futuro
+    rangos.forEach((rango) => {
+        let claseEstado = "";
+        let iconoEstado = '<i class="fa-solid fa-lock"></i>'; 
 
-    if (rango.id_rango < idRangoCalculado) {
-      claseEstado = "passed"; // Pasado
-      iconoEstado = '<i class="fa-solid fa-check-circle"></i>';
-    } else if (rango.id_rango === idRangoCalculado) {
-      claseEstado = "current"; // Actual
-      iconoEstado = '<i class="fa-solid fa-star"></i>';
-    }
+        if (rango.id_rango < idRangoCalculado) {
+            claseEstado = "passed"; // ✅ Ya pasado
+            iconoEstado = '<i class="fa-solid fa-check-circle"></i>';
+        } else if (rango.id_rango === idRangoCalculado) {
+            claseEstado = "current"; // ⭐ Actual
+            iconoEstado = '<i class="fa-solid fa-star"></i>';
+        }
 
-    let imgSrc = "https://via.placeholder.com/50?text=?";
-    if (rango.imagen && rango.imagen.length > 20) {
-      let imgClean = rango.imagen;
-      if (!imgClean.startsWith("http") && !imgClean.startsWith("data:")) {
-        imgClean = `data:image/png;base64,${imgClean}`;
-      }
-      imgSrc = imgClean;
-    }
+        let imgSrc = "https://via.placeholder.com/50?text=?";
+        if (rango.imagen && rango.imagen.length > 20) {
+            let imgClean = rango.imagen;
+            if (!imgClean.startsWith("http") && !imgClean.startsWith("data:")) {
+                imgClean = `data:image/png;base64,${imgClean}`;
+            }
+            imgSrc = imgClean;
+        }
 
-    const recoleccionesMeta = rango.id_rango * 25;
+        let textoMeta = "";
+        
+        if (rango.id_rango === 1) {
+             textoMeta = "<p>Nivel Inicial</p>"; // O déjalo vacío "" si prefieres que no salga nada
+        } else {
+            const meta = (rango.id_rango - 1) * 25;
+            textoMeta = `<p>Se alcanza a las ${meta} entregas</p>`;
+        }
 
-    const card = document.createElement("div");
-    card.className = `rango-card ${claseEstado}`;
-    card.innerHTML = `
+        const card = document.createElement("div");
+        card.className = `rango-card ${claseEstado}`;
+        card.innerHTML = `
             <img src="${imgSrc}" class="rango-img" alt="${rango.nombre_rango}">
             <div class="rango-info">
                 <h4>${rango.nombre_rango}</h4>
-                <p>Se alcanza a las ${recoleccionesMeta} entregas</p>
+                ${textoMeta}
             </div>
             <div class="status-icon">
                 ${iconoEstado}
             </div>
         `;
-    container.appendChild(card);
-  });
+        container.appendChild(card);
+    });
 }
 
 
