@@ -1,20 +1,16 @@
-/* --- VARIABLES & RESET --- */
 :root {
-    /* Identidad de Marca (Loopi) */
     --primary: #3A6958;
     --primary-dark: #2A4D40;
     --primary-light: #E8F5E9;
     --accent: #6DB85C;
     
-    /* Fondo y Superficies */
-    --bg-body: #F4F7FE; /* Un gris azulado muy suave, más moderno */
+  
+    --bg-body: #F4F7FE;
     --bg-card: #FFFFFF;
     
-    /* Textos */
-    --text-main: #2B3674; /* Azul oscuro profundo en lugar de negro puro */
+    --text-main: #2B3674; 
     --text-secondary: #A3AED0;
     
-    /* Sombras y Bordes */
     --shadow-sm: 0 2px 12px rgba(0, 0, 0, 0.04);
     --shadow-hover: 0 20px 40px rgba(0, 0, 0, 0.08);
     --radius-card: 20px;
@@ -35,7 +31,6 @@ body {
     padding-bottom: 40px;
 }
 
-/* --- ANIMACIONES --- */
 @keyframes floatLogo {
     0% { transform: translateY(0px); filter: drop-shadow(0 2px 2px rgba(58, 105, 88, 0.2)); }
     50% { transform: translateY(-6px); filter: drop-shadow(0 10px 8px rgba(58, 105, 88, 0.3)); }
@@ -109,7 +104,6 @@ body {
     color: var(--primary);
 }
 
-/* Botón Salir Estilizado */
 .btn-logout {
     color: #E03131 !important;
     background: #FFF5F5;
@@ -125,7 +119,6 @@ body {
     box-shadow: 0 4px 10px rgba(224, 49, 49, 0.3);
 }
 
-/* --- HEADER --- */
 .header {
     background: var(--primary);
     background: linear-gradient(120deg, var(--primary) 0%, #243B33 100%);
@@ -138,7 +131,6 @@ body {
     overflow: hidden;
 }
 
-/* Patrón de fondo sutil */
 .header-overlay {
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
@@ -197,7 +189,6 @@ body {
     font-size: 1.2rem;
 }
 
-/* --- DASHBOARD MAIN --- */
 .dashboard-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -233,7 +224,6 @@ body {
     gap: 1.8rem;
 }
 
-/* --- TARJETAS PRO (Estilo Limpio) --- */
 .card {
     background: var(--bg-card);
     border-radius: var(--radius-card);
@@ -246,7 +236,7 @@ body {
     box-shadow: var(--shadow-sm);
     border: 1px solid transparent;
     position: relative;
-    overflow: visible; /* Importante para el badge */
+    overflow: visible; 
     min-height: 110px;
 }
 
@@ -255,11 +245,10 @@ body {
     box-shadow: var(--shadow-hover);
 }
 
-/* Contenedor del Icono (El Círculo de color) */
 .card-icon-container {
     width: 64px;
     height: 64px;
-    border-radius: 18px; /* Cuadrado redondeado moderno */
+    border-radius: 18px; 
     display: flex;
     align-items: center;
     justify-content: center;
@@ -286,69 +275,52 @@ body {
     font-weight: 400;
 }
 
-/* === GESTIÓN DE COLORES === */
-/* Estilo base para cada tipo de tarjeta: Fondo suave en icono + Color de texto */
 
-/* Default / Generico */
 .card .card-icon-container { background: #F4F7FE; color: var(--primary); }
 
-/* Validaciones (Destacada) */
 .card-validations {
-    background: white; /* Mantener blanco para consistencia o usar gradiente suave */
-    border: 1px solid #1abc9c; /* Borde sutil para destacar */
+    background: white; 
+    border: 1px solid #1abc9c; 
 }
 .card-validations .card-icon-container { background: #E0F2F1; color: #1abc9c; }
 .card-validations:hover { border-color: #16a085; }
 
-/* Materiales (Purple) */
 .card-purple .card-icon-container { background: #F3E5F5; color: #8e24aa; }
 .card-purple:hover .card-info h3 { color: #8e24aa; }
 
-/* Usuarios (Blue) */
 .card-blue .card-icon-container { background: #E3F2FD; color: #1e88e5; }
 .card-blue:hover .card-info h3 { color: #1e88e5; }
 
-/* Ubicaciones (Orange) */
 .card-orange .card-icon-container { background: #FFF3E0; color: #fb8c00; }
 .card-orange:hover .card-info h3 { color: #fb8c00; }
 
-/* Recompensas (Pink) */
 .card-pink .card-icon-container { background: #FCE4EC; color: #d81b60; }
 .card-pink:hover .card-info h3 { color: #d81b60; }
 
-/* Reportes (Cyan) */
 .card-cyan .card-icon-container { background: #E0F7FA; color: #00acc1; }
 .card-cyan:hover .card-info h3 { color: #00acc1; }
 
-/* Logros (Yellow) */
 .card-yellow .card-icon-container { background: #FFF8E1; color: #fbc02d; }
 .card-yellow:hover .card-info h3 { color: #fbc02d; }
 
-/* Auspiciantes (Indigo) */
 .card-indigo .card-icon-container { background: #E8EAF6; color: #3949ab; }
 .card-indigo:hover .card-info h3 { color: #3949ab; }
 
-/* Ciudades (Slate) */
 .card-slate .card-icon-container { background: #ECEFF1; color: #546e7a; }
 .card-slate:hover .card-info h3 { color: #546e7a; }
 
-/* Rangos (Red) */
 .card-red .card-icon-container { background: #FBE9E7; color: #e64a19; }
 .card-red:hover .card-info h3 { color: #e64a19; }
 
-/* Parroquias (Green) */
 .card-green .card-icon-container { background: #E0F2F1; color: #00897b; }
 .card-green:hover .card-info h3 { color: #00897b; }
 
-/* Multimedia (Custom) */
 .card-multimedia .card-icon-container { background: #E1F5FE; color: #0277bd; }
 
-/* Reciclador (Teal) */
 .card-teal .card-icon-container { background: #E0F2F1; color: #009688; }
 .card-teal:hover .card-info h3 { color: #009688; }
 
 
-/* Flechita decorativa en tarjeta especial */
 .card-arrow {
     margin-left: auto;
     color: #1abc9c;
@@ -361,7 +333,6 @@ body {
     transform: translateX(0);
 }
 
-/* --- BADGES Y NOTIFICACIONES --- */
 .badge-notificacion {
     position: absolute;
     top: -8px;
@@ -388,7 +359,6 @@ body {
     to { transform: scale(1); }
 }
 
-/* --- MODAL ESTILIZADO --- */
 .modal-overlay {
     position: fixed;
     inset: 0;
@@ -504,7 +474,6 @@ body {
     margin-bottom: 25px;
 }
 
-/* Formularios dentro del modal */
 .form-grid {
     display: flex;
     flex-direction: column;
@@ -546,7 +515,7 @@ body {
 
 .modal-footer {
     padding: 20px 25px;
-    background: #F9FAFC; /* Footer ligeramente diferente */
+    background: #F9FAFC; 
     text-align: right;
     display: flex;
     justify-content: flex-end;
@@ -585,12 +554,10 @@ body {
     transform: translateY(-1px);
 }
 
-/* SweetAlert customization override */
 .swal2-container {
     z-index: 20000 !important;
 }
 
-/* --- RESPONSIVE --- */
 .menu-icon, #menu-toggle { display: none; }
 
 @media (max-width: 768px) {

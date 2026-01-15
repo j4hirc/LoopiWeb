@@ -1,6 +1,5 @@
 const API_BASE = 'https://api-loopi.onrender.com/api';
 
-// Variable global para guardar la foto nueva si el usuario la cambia
 let fotoNuevaFile = null; 
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -63,10 +62,8 @@ document.addEventListener("DOMContentLoaded", () => {
     inputFoto.addEventListener("change", function () {
       const file = this.files[0];
       if (file) {
-        // 1. GUARDAMOS EL ARCHIVO REAL PARA ENVIARLO LUEGO
         fotoNuevaFile = file;
 
-        // 2. Mostramos previsualización local
         const reader = new FileReader();
         reader.onload = function (e) {
           document.getElementById("perfilPreview").src = e.target.result;
@@ -90,11 +87,9 @@ function cargarDatosEnModal(usuario) {
 
   const imgPreview = document.getElementById("perfilPreview");
   
-  // LIMPIAMOS LA VARIABLE DE FOTO NUEVA AL ABRIR
   fotoNuevaFile = null; 
   if (document.getElementById("inputPerfilFoto")) document.getElementById("inputPerfilFoto").value = "";
 
-  // --- CORRECCIÓN AQUÍ: SOPORTAR URL Y BASE64 ---
   let fotoSrc = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
   
   if (usuario.foto && usuario.foto.length > 5) {
@@ -132,7 +127,6 @@ async function guardarPerfil() {
       usuarioActualDB = await r.json();
   } catch(e) { console.error(e); }
 
-  // 1. CREAMOS EL OBJETO DE DATOS (SIN FOTO AQUÍ)
  const datosUsuario = {
     cedula: usuarioActualDB.cedula,
     fecha_nacimiento: usuarioActualDB.fecha_nacimiento,
@@ -150,31 +144,25 @@ async function guardarPerfil() {
 
     password: password ? password : null,
     
-    // --- AQUÍ ESTÁ EL FIX: ENVIAR OBJETOS SIMPLIFICADOS ---
     
-    // Parroquia: Solo mandamos el ID si existe
     parroquia: usuarioActualDB.parroquia ? { id_parroquia: usuarioActualDB.parroquia.id_parroquia || usuarioActualDB.parroquia.id } : null,
     
-    // Rango: Solo ID
     rango: usuarioActualDB.rango ? { id_rango: usuarioActualDB.rango.id_rango } : null,
 
     roles: usuarioActualDB.roles ? usuarioActualDB.roles.map(r => ({
         id_usuario_rol: r.id_usuario_rol,
-        rol: { id_rol: r.rol.id_rol } // Solo el ID del rol
+        rol: { id_rol: r.rol.id_rol } 
     })) : []
   };
 
-  // 2. CREAMOS EL FORMDATA PARA ENVIAR A JAVA
   const formData = new FormData();
-  formData.append("datos", JSON.stringify(datosUsuario)); // JSON como texto
+  formData.append("datos", JSON.stringify(datosUsuario)); 
 
-  // Si subió foto nueva, la adjuntamos
   if (fotoNuevaFile) {
       formData.append("archivo", fotoNuevaFile);
   }
 
   try {
-    // CAMBIO: No ponemos Content-Type, fetch lo pone solo para FormData
     const res = await fetch(`${API_BASE}/usuarios/${usuarioLocal.cedula}`, {
       method: "PUT",
       body: formData, 
@@ -183,7 +171,6 @@ async function guardarPerfil() {
     if (res.ok) {
       const usuarioActualizado = await res.json();
 
-      // Actualizamos el LocalStorage para que se vea el cambio arriba a la derecha
       const nuevoStorage = {
           ...usuarioLocal,
           nombre: usuarioActualizado.primer_nombre, 
