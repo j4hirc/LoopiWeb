@@ -25,7 +25,7 @@ let infoMisLogros = "Aún no reviso tus medallas...";
 let infoAuspiciantes = "Cargando marcas aliadas...";
 let totalEntregasUsuario = 0;
 
-let mapaImagenesGlobal = {};
+
 
 
 const imagenesEllie = [
@@ -1057,10 +1057,7 @@ async function prepararDatosCompletosIA() {
 
         if(resMat.ok) {
             const mats = await resMat.json();
-            infoMateriales = mats.map(m => {
-                if(m.imagen) mapaImagenesGlobal[m.nombre] = m.imagen; 
-                return `- ${m.nombre}: ${m.puntos_por_kg} pts/kg.`;
-            }).join('\n');
+            infoMateriales = mats.map(m => `- ${m.nombre}: ${m.puntos_por_kg} pts/kg.`).join('\n');
         }
 
         if(resRec.ok) {
@@ -1073,28 +1070,21 @@ async function prepararDatosCompletosIA() {
 
         if(resRan.ok) {
             const rangos = await resRan.json();
-            infoRangos = rangos.map(r => {
-                if(r.imagen) mapaImagenesGlobal[r.nombre_rango] = r.imagen;
-                return `- Rango ${r.id_rango}: ${r.nombre_rango}`;
-            }).join('\n');
+            infoRangos = rangos.map(r => `- Rango ${r.id_rango}: ${r.nombre_rango}`).join('\n');
         }
 
         if(resUbi.ok) {
             const ubis = await resUbi.json();
             infoPuntosReciclaje = ubis.map(u => {
-                if(u.foto) mapaImagenesGlobal[u.nombre] = u.foto; 
                 let mats = u.materialesAceptados?.map(m => m.material.nombre).join(", ") || "Todos";
                 let horario = u.horarios?.map(h => `${h.dia} (${h.hora_inicio}-${h.hora_fin})`).join(", ") || "No especificado";
                 return `📍 "${u.nombre}" (${u.direccion}). Acepta: ${mats}. Horario: ${horario}`;
             }).join('\n\n');
         }
 
-       if (resAuspiciantes.ok) {
+        if (resAuspiciantes.ok) {
             const ausp = await resAuspiciantes.json();
-            infoAuspiciantes = ausp.map(a => {
-                if(a.imagen) mapaImagenesGlobal[a.nombre] = a.imagen; // Guardar foto
-                return `🏢 ${a.nombre}: ${a.descripcion || 'Aliado oficial de Loopi'}`;
-            }).join('\n');
+            infoAuspiciantes = ausp.map(a => `🏢 ${a.nombre}: ${a.descripcion || 'Aliado oficial de Loopi'}`).join('\n');
         }
 
         if (resConteo.ok) {
@@ -1104,13 +1094,13 @@ async function prepararDatosCompletosIA() {
         if (resLogros.ok && resMisLogros.ok) {
             const todosLosLogros = await resLogros.json();
             const misLogros = await resMisLogros.json();
+
             const misIds = new Set(misLogros.map(l => l.id_logro));
+
             let obtenidosNombres = [];
             let faltantesDetalle = [];
 
             todosLosLogros.forEach(logro => {
-                if(logro.imagen_logro) mapaImagenesGlobal[logro.nombre] = logro.imagen_logro;
-
                 if (misIds.has(logro.id_logro)) {
                     obtenidosNombres.push(logro.nombre);
                 } else {
@@ -1119,9 +1109,18 @@ async function prepararDatosCompletosIA() {
             });
 
             if (faltantesDetalle.length === 0) {
-                infoMisLogros = `¡ATENCIÓN ELLIE! ESTE USUARIO TIENE TODOS LOS LOGROS.`;
+                infoMisLogros = `
+                ¡ATENCIÓN ELLIE! ESTE USUARIO ES UNA LEYENDA. 🏆
+                ESTADO: ¡TIENE EL 100% DE LOS LOGROS COMPLETADOS! (${obtenidosNombres.length} de ${todosLosLogros.length}).
+                No le falta nada. Debes felicitarlo exageradamente por ser un maestro del reciclaje.
+                `;
             } else {
-                infoMisLogros = `ESTADO LOGROS:\n✅ TIENE: ${obtenidosNombres.join(", ")}.\n❌ LE FALTAN:\n${faltantesDetalle.join("\n")}`;
+                infoMisLogros = `
+                ESTADO ACTUAL DE LOGROS:
+                ✅ TIENE (${obtenidosNombres.length}): ${obtenidosNombres.join(", ")}.
+                ❌ LE FALTAN (${faltantesDetalle.length}):
+                ${faltantesDetalle.join("\n")}
+                `;
             }
         }
 
@@ -1321,46 +1320,17 @@ function agregarMensaje(texto, tipo, esLoading = false) {
     
     if (esLoading) { div.style.fontStyle = "italic"; div.style.opacity = "0.7"; }
 
-    let contenidoHtml = texto
+    const textoHtml = texto
         .replace(/\n/g, "<br>")
-        .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>");
-
-    contenidoHtml = contenidoHtml.replace(/\[VER:\s*(.*?)\]/g, (match, nombreItem) => {
-        const nombreLimpio = nombreItem.trim();
-        let src = mapaImagenesGlobal[nombreLimpio];
-
-        if (src) {
-            const esRuta = src.startsWith("http") || src.startsWith("data:") || src.includes("/") || src.includes(".");
-            
-            if (!esRuta) {
-                src = `data:image/png;base64,${src}`;
-            }
-            
-            return `
-                <div class="chat-img-container" style="margin: 10px 0; text-align: center;">
-                    <img src="${src}" alt="${nombreLimpio}" 
-                         style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 2px solid #3A6958; object-fit: cover;">
-                    <p style="font-size: 10px; color: #555; margin-top: 2px;">📷 ${nombreLimpio}</p>
-                </div>
-            `;
-        } else {
-            return `<b>${nombreLimpio}</b>`; 
-        }
-    });
+        .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>"); 
 
     const hora = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    div.innerHTML = `<p>${contenidoHtml}</p>${!esLoading ? `<span class="time">${hora}</span>` : ''}`;
+    div.innerHTML = `<p>${textoHtml}</p>${!esLoading ? `<span class="time">${hora}</span>` : ''}`;
     chatBody.appendChild(div);
-    
-    setTimeout(() => {
-        chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: 'smooth' });
-    }, 100);
-
+    chatBody.scrollTop = chatBody.scrollHeight;
     return div.id;
 }
-
-
 
 function eliminarMensaje(id) {
     const el = document.getElementById(id);
