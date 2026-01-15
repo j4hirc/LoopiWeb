@@ -1049,7 +1049,7 @@ async function prepararDatosCompletosIA() {
             fetch(`${API_BASE}/ubicacion_reciclajes`),
             fetch(`${API_BASE}/logros`),                
             fetch(`${API_BASE}/usuarios/${cedula}/logros`),
-            fetch(`${API_BASE}/auspiciantes`), // Nuevo: Auspiciantes
+            fetch(`${API_BASE}/auspiciantes`), 
             fetch(`${API_BASE}/solicitud_recolecciones/contar/${cedula}`)
         ]);
 
