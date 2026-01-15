@@ -1321,15 +1321,44 @@ function agregarMensaje(texto, tipo, esLoading = false) {
     
     if (esLoading) { div.style.fontStyle = "italic"; div.style.opacity = "0.7"; }
 
-    const textoHtml = texto
+    // 1. Formatear Negritas y Saltos de línea
+    let contenidoHtml = texto
         .replace(/\n/g, "<br>")
-        .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>"); 
+        .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>");
+
+    // 2. DETECTAR Y REEMPLAZAR ETIQUETAS DE IMAGEN [VER: Nombre]
+    // Usamos una expresión regular para buscar [VER: Algo]
+    contenidoHtml = contenidoHtml.replace(/\[VER:\s*(.*?)\]/g, (match, nombreItem) => {
+        const nombreLimpio = nombreItem.trim();
+        const imagenBase64 = mapaImagenesGlobal[nombreLimpio];
+
+        if (imagenBase64) {
+            let src = imagenBase64;
+            if (!src.startsWith("http") && !src.startsWith("data:")) {
+                src = `data:image/png;base64,${imagenBase64}`;
+            }
+            
+            return `
+                <div class="chat-img-container" style="margin: 10px 0; text-align: center;">
+                    <img src="${src}" alt="${nombreLimpio}" 
+                         style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 2px solid #3A6958;">
+                    <p style="font-size: 10px; color: #555; margin-top: 2px;">📷 ${nombreLimpio}</p>
+                </div>
+            `;
+        } else {
+            return `<b>${nombreLimpio}</b>`; 
+        }
+    });
 
     const hora = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    div.innerHTML = `<p>${textoHtml}</p>${!esLoading ? `<span class="time">${hora}</span>` : ''}`;
+    div.innerHTML = `<p>${contenidoHtml}</p>${!esLoading ? `<span class="time">${hora}</span>` : ''}`;
     chatBody.appendChild(div);
-    chatBody.scrollTop = chatBody.scrollHeight;
+    
+    setTimeout(() => {
+        chatBody.scrollTo({ top: chatBody.scrollHeight, behavior: 'smooth' });
+    }, 100);
+
     return div.id;
 }
 
