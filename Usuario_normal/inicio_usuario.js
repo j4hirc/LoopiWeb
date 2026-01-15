@@ -25,6 +25,8 @@ let infoMisLogros = "Aún no reviso tus medallas...";
 let infoAuspiciantes = "Cargando marcas aliadas...";
 let totalEntregasUsuario = 0;
 
+let mapaImagenesGlobal = {};
+
 
 const imagenesEllie = [
     "../Imagenes/ELLIE_LOOPI.png",
@@ -1055,7 +1057,10 @@ async function prepararDatosCompletosIA() {
 
         if(resMat.ok) {
             const mats = await resMat.json();
-            infoMateriales = mats.map(m => `- ${m.nombre}: ${m.puntos_por_kg} pts/kg.`).join('\n');
+            infoMateriales = mats.map(m => {
+                if(m.imagen) mapaImagenesGlobal[m.nombre] = m.imagen; 
+                return `- ${m.nombre}: ${m.puntos_por_kg} pts/kg.`;
+            }).join('\n');
         }
 
         if(resRec.ok) {
@@ -1068,21 +1073,28 @@ async function prepararDatosCompletosIA() {
 
         if(resRan.ok) {
             const rangos = await resRan.json();
-            infoRangos = rangos.map(r => `- Rango ${r.id_rango}: ${r.nombre_rango}`).join('\n');
+            infoRangos = rangos.map(r => {
+                if(r.imagen) mapaImagenesGlobal[r.nombre_rango] = r.imagen;
+                return `- Rango ${r.id_rango}: ${r.nombre_rango}`;
+            }).join('\n');
         }
 
         if(resUbi.ok) {
             const ubis = await resUbi.json();
             infoPuntosReciclaje = ubis.map(u => {
+                if(u.foto) mapaImagenesGlobal[u.nombre] = u.foto; 
                 let mats = u.materialesAceptados?.map(m => m.material.nombre).join(", ") || "Todos";
                 let horario = u.horarios?.map(h => `${h.dia} (${h.hora_inicio}-${h.hora_fin})`).join(", ") || "No especificado";
                 return `📍 "${u.nombre}" (${u.direccion}). Acepta: ${mats}. Horario: ${horario}`;
             }).join('\n\n');
         }
 
-        if (resAuspiciantes.ok) {
+       if (resAuspiciantes.ok) {
             const ausp = await resAuspiciantes.json();
-            infoAuspiciantes = ausp.map(a => `🏢 ${a.nombre}: ${a.descripcion || 'Aliado oficial de Loopi'}`).join('\n');
+            infoAuspiciantes = ausp.map(a => {
+                if(a.imagen) mapaImagenesGlobal[a.nombre] = a.imagen; // Guardar foto
+                return `🏢 ${a.nombre}: ${a.descripcion || 'Aliado oficial de Loopi'}`;
+            }).join('\n');
         }
 
         if (resConteo.ok) {
@@ -1092,13 +1104,13 @@ async function prepararDatosCompletosIA() {
         if (resLogros.ok && resMisLogros.ok) {
             const todosLosLogros = await resLogros.json();
             const misLogros = await resMisLogros.json();
-
             const misIds = new Set(misLogros.map(l => l.id_logro));
-
             let obtenidosNombres = [];
             let faltantesDetalle = [];
 
             todosLosLogros.forEach(logro => {
+                if(logro.imagen_logro) mapaImagenesGlobal[logro.nombre] = logro.imagen_logro;
+
                 if (misIds.has(logro.id_logro)) {
                     obtenidosNombres.push(logro.nombre);
                 } else {
@@ -1107,18 +1119,9 @@ async function prepararDatosCompletosIA() {
             });
 
             if (faltantesDetalle.length === 0) {
-                infoMisLogros = `
-                ¡ATENCIÓN ELLIE! ESTE USUARIO ES UNA LEYENDA. 🏆
-                ESTADO: ¡TIENE EL 100% DE LOS LOGROS COMPLETADOS! (${obtenidosNombres.length} de ${todosLosLogros.length}).
-                No le falta nada. Debes felicitarlo exageradamente por ser un maestro del reciclaje.
-                `;
+                infoMisLogros = `¡ATENCIÓN ELLIE! ESTE USUARIO TIENE TODOS LOS LOGROS.`;
             } else {
-                infoMisLogros = `
-                ESTADO ACTUAL DE LOGROS:
-                ✅ TIENE (${obtenidosNombres.length}): ${obtenidosNombres.join(", ")}.
-                ❌ LE FALTAN (${faltantesDetalle.length}):
-                ${faltantesDetalle.join("\n")}
-                `;
+                infoMisLogros = `ESTADO LOGROS:\n✅ TIENE: ${obtenidosNombres.join(", ")}.\n❌ LE FALTAN:\n${faltantesDetalle.join("\n")}`;
             }
         }
 
