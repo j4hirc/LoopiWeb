@@ -1,5 +1,4 @@
 :root {
-    /* Paleta Loopi Premium */
     --primary: #1a4d3e;       
     --primary-gradient: linear-gradient(135deg, #2D5A4A 0%, #1a4d3e 100%);
     --accent: #6DB85C;        
@@ -12,7 +11,6 @@
     --text-light: #6B7280;
     --danger: #ef4444;
     
-    /* Efectos */
     --radius: 20px;
     --shadow-soft: 0 10px 40px -10px rgba(45, 90, 74, 0.15);
     --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
@@ -30,10 +28,8 @@ body {
     min-height: 100vh;
 }
 
-/* SweetAlert Fix */
 .swal2-container { z-index: 100000 !important; }
 
-/* Decoración Fondo */
 .bg-decoration {
     position: absolute; top: 0; left: 0; width: 100%; height: 350px;
     background: var(--primary-gradient);
@@ -41,7 +37,6 @@ body {
     z-index: -1;
 }
 
-/* --- HEADER --- */
 .header {
     padding: 30px 5% 60px;
     color: white;
@@ -59,7 +54,6 @@ body {
 
 .header-left { display: flex; flex-direction: column; gap: 15px; }
 
-/* Botón Volver */
 .btn-volver {
     display: inline-flex; align-items: center; gap: 8px;
     color: rgba(255,255,255,0.9); text-decoration: none;
@@ -76,7 +70,6 @@ body {
 }
 .titulo-seccion p { font-size: 1rem; opacity: 0.9; margin-left: 5px; font-weight: 300; }
 
-/* Botón Agregar */
 .btn-agregar {
     background: white; color: var(--primary); border: none;
     padding: 8px 24px 8px 8px; border-radius: 50px;
@@ -92,7 +85,6 @@ body {
 }
 .btn-agregar:hover { transform: translateY(-4px); box-shadow: 0 15px 30px rgba(0,0,0,0.2); }
 
-/* --- BUSCADOR --- */
 .search-wrapper {
     max-width: 800px; margin: -45px auto 50px; padding: 0 20px;
     position: relative; z-index: 10;
@@ -119,7 +111,6 @@ body {
     background: transparent; font-family: inherit; font-weight: 500;
 }
 
-/* --- GRID DE MULTIMEDIA --- */
 .grid-container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -127,12 +118,10 @@ body {
     max-width: 1200px; margin: 0 auto; padding: 0 20px;
 }
 
-/* Tarjeta Multimedia */
 .card {
     background: white;
     border-radius: var(--radius);
     overflow: hidden;
-    /* Borde inicial invisible */
     border: 2px solid transparent; 
     box-shadow: var(--shadow-card);
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -140,14 +129,12 @@ body {
     position: relative;
 }
 
-/* Efecto Hover */
 .card:hover {
     transform: translateY(-10px);
     box-shadow: var(--shadow-hover);
     border-color: var(--accent);
 }
 
-/* Imagen con Zoom */
 .card img {
     width: 100%; height: 180px;
     object-fit: cover;
@@ -156,17 +143,14 @@ body {
 
 .card:hover img { transform: scale(1.1); }
 
-/* Contenedor de imagen (para cortar el zoom) */
 .card-img-wrapper { 
     width: 100%; height: 180px; overflow: hidden; position: relative; 
 }
-/* Añadimos gradiente sobre la imagen */
 .card-img-wrapper::after {
     content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 40%;
     background: linear-gradient(to top, rgba(0,0,0,0.4), transparent);
 }
 
-/* Cuerpo de la Tarjeta */
 .card-body {
     padding: 20px;
     display: flex; flex-direction: column; flex: 1;
@@ -184,19 +168,18 @@ body {
     flex: 1; /* Empuja los botones abajo */
 }
 
-/* --- BOTONES DE ACCIÓN MEJORADOS --- */
 .card-actions {
     margin-top: auto; 
     padding: 15px 20px;
     background: #ffffff; 
     border-top: 1px solid #f1f5f9;
     display: flex; 
-    justify-content: space-between; /* Distribuye espacio entre botones */
-    gap: 15px; /* Espacio mínimo entre botones */
+    justify-content: space-between; 
+    gap: 15px; 
 }
 
 .card-actions button {
-    flex: 1; /* Ocupan el mismo ancho disponible */
+    flex: 1; 
     border: none; 
     cursor: pointer;
     display: flex; 
@@ -205,12 +188,11 @@ body {
     font-size: 0.9rem; 
     transition: all 0.3s ease;
     padding: 8px 12px;
-    border-radius: 12px; /* Bordes redondeados pero no circulares */
+    border-radius: 12px; 
     font-weight: 500;
-    gap: 8px; /* Espacio entre icono y texto (si hubiera texto) */
+    gap: 8px;
 }
 
-/* Botón Editar: Azul suave */
 .btn-edit { 
     background: #e0f2fe; 
     color: #0284c7; 
@@ -222,7 +204,6 @@ body {
     transform: translateY(-2px);
 }
 
-/* Botón Eliminar: Rojo suave */
 .btn-delete { 
     background: #fee2e2; 
     color: #ef4444; 
@@ -234,7 +215,6 @@ body {
     transform: translateY(-2px);
 }
 
-/* --- MODAL --- */
 .modal-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(6px);
@@ -270,7 +250,6 @@ body {
     max-height: 75vh; overflow-y: auto;
 }
 
-/* Subida Imagen Modal */
 .img-upload-section {
     display: flex; gap: 20px; align-items: center;
     background: #f8fafc; padding: 15px; border-radius: 15px;
@@ -297,7 +276,6 @@ body {
 }
 .btn-upload:hover { border-color: var(--accent); color: var(--accent); }
 
-/* Forms */
 .form-group { display: flex; flex-direction: column; gap: 6px; }
 .form-group.full-width { width: 100%; }
 
@@ -311,7 +289,6 @@ label { font-size: 0.85rem; font-weight: 600; color: #475569; margin-left: 2px; 
 }
 .input-field:focus { outline: none; border-color: var(--accent); background: white; }
 
-/* Footer */
 .modal-footer {
     padding: 20px 30px; background: #f8fafc;
     border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end; gap: 12px;
@@ -330,7 +307,6 @@ label { font-size: 0.85rem; font-weight: 600; color: #475569; margin-left: 2px; 
 }
 .btn-guardar:hover { background: #134e4a; transform: translateY(-2px); }
 
-/* Responsive */
 @media (max-width: 768px) {
     .header-content { flex-direction: column; text-align: center; align-items: center; }
     .header-left { align-items: center; }

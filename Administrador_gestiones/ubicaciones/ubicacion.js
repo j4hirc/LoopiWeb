@@ -32,7 +32,6 @@ const CUENCA_BOUNDS = L.latLngBounds(
 
 const DIAS_SEMANA = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 
-// ICONOS
 const iconPuntoFijo = L.divIcon({
   className: "custom-icon",
   html: `<div style="background-color:#2ecc71; width:30px; height:30px; border-radius:50%; display:flex; justify-content:center; align-items:center; border:2px solid white; box-shadow:0 3px 5px rgba(0,0,0,0.3);">
@@ -145,10 +144,8 @@ function agregarFilaHorario(data = null, horaIniDefecto = "08:00", horaFinDefect
     div.style.marginBottom = "5px";
     div.style.alignItems = "center";
 
-    // Construir opciones del select
     let optionsHtml = "";
     DIAS_SEMANA.forEach(dia => {
-        // Solo mostrar días no seleccionados O el día actual si estamos editando
         if (!diasSeleccionados.includes(dia) || dia === diaVal) {
              optionsHtml += `<option value="${dia}" ${dia === diaVal ? 'selected' : ''}>${dia}</option>`;
         }
@@ -276,7 +273,6 @@ function actualizarTextoCoords(lat, lng) {
     document.getElementById("txtLng").innerText = lng.toFixed(6);
 }
 
-// MAPA MODAL
 window.abrirModalMapa = function () {
     modalMapa.style.display = "flex";
     setTimeout(() => {
@@ -346,10 +342,8 @@ async function cargarRecicladores() {
     } catch (e) { console.error(e); }
 }
 
-// --- CARGA CON LOADER VISUAL ---
 async function listarUbicaciones() {
     try {
-        // Mostrar spinner en el grid
         gridUbicaciones.innerHTML = `
             <div class="loader-container">
                 <div class="spinner"></div>
@@ -367,11 +361,9 @@ async function listarUbicaciones() {
     }
 }
 
-// --- GUARDAR CON VALIDACIONES Y LOADING ---
 window.guardarUbicacion = async function () {
     const btnGuardar = document.getElementById("btnGuardarUbicacion");
     
-    // 1. Recolección de datos
     const idInput = document.getElementById("idUbicacion").value;
     const id = idInput ? parseInt(idInput) : null; 
     
@@ -380,24 +372,19 @@ window.guardarUbicacion = async function () {
     const idParroquia = selectParroquia.value;
     const idReciclador = selectReciclador.value;
 
-    // --- VALIDACIONES ---
     if (!nombre) return Swal.fire("Campo requerido", "Ingresa el nombre del punto.", "warning");
     if (!idParroquia) return Swal.fire("Campo requerido", "Selecciona una parroquia.", "warning");
     if (!direccion) return Swal.fire("Campo requerido", "Ingresa una dirección.", "warning");
     if (!coordenadasSeleccionadas) return Swal.fire("Ubicación GPS", "Debes abrir el mapa y marcar el punto exacto.", "warning");
 
-    // Validar Materiales
     const checkboxes = document.querySelectorAll('input[name="materiales"]:checked');
     if (checkboxes.length === 0) return Swal.fire("Materiales", "Selecciona al menos un material aceptado.", "warning");
 
-    // VALIDACIÓN IMPORTANTE: RECICLADOR DUPLICADO
-    // Si se seleccionó un reciclador, verificar si ya tiene otra ubicación asignada
     if (idReciclador) {
-        // Buscamos si existe OTRA ubicación que tenga este mismo reciclador asignado
         const recicladorOcupado = ubicacionesCache.find(u => 
             u.reciclador && 
             u.reciclador.cedula == idReciclador && 
-            u.id_ubicacion_reciclaje !== id // Ignorar si es la misma ubicación que estamos editando
+            u.id_ubicacion_reciclaje !== id 
         );
 
         if (recicladorOcupado) {
@@ -405,7 +392,6 @@ window.guardarUbicacion = async function () {
         }
     }
 
-    // Validar Horarios (Duplicados y Lógica)
     const listaHorarios = [];
     const diasVistos = new Set();
     let errorHorario = null;
@@ -440,7 +426,6 @@ window.guardarUbicacion = async function () {
 
     if (errorHorario) return Swal.fire("Error en Horarios", errorHorario, "error");
 
-    // 2. Preparar objetos
     const listaMateriales = Array.from(checkboxes).map(cb => ({ material: { id_material: parseInt(cb.value) } }));
 
     let objReciclador = null;
@@ -468,11 +453,9 @@ window.guardarUbicacion = async function () {
     const url = id ? `${API_URL}/${id}` : API_URL;
 
     try {
-        // --- LOADING STATE ---
         btnGuardar.disabled = true;
         btnGuardar.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
         
-        // Bloqueo de pantalla suave
         Swal.fire({
             title: "Procesando...",
             text: "Guardando la información de la ubicación",
@@ -501,7 +484,6 @@ window.guardarUbicacion = async function () {
         console.error(e); 
         Swal.fire("Error", "Fallo de conexión con el servidor.", "error");
     } finally {
-        // Restaurar botón
         btnGuardar.disabled = false;
         btnGuardar.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar';
     }

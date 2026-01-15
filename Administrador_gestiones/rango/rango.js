@@ -56,7 +56,6 @@ async function listarRangos() {
     }
 }
 
-// --- GUARDAR CON SWEETALERT ---
 async function guardarRango(e) {
     e.preventDefault();
 
@@ -64,7 +63,6 @@ async function guardarRango(e) {
     const nombre = document.getElementById('nombreRango').value.trim(); 
     const imagenSrc = previewImagen.src;
 
-    // Validaciones
     if (!nombre) return Swal.fire('Error', 'El nombre es obligatorio', 'warning');
 
     const nombreDuplicado = rangosCache.some(r => {
@@ -87,7 +85,6 @@ async function guardarRango(e) {
     const formData = new FormData();
     formData.append("datos", JSON.stringify(rangoData));
 
-    // Aquí se envía el archivo original sin comprimir
     if (fotoNuevaFile) {
         formData.append("archivo", fotoNuevaFile);
     }
@@ -96,7 +93,6 @@ async function guardarRango(e) {
     const url = id ? `${API_URL}/${id}` : API_URL;
 
     try {
-        // Bloquear botón para evitar doble click
         const btnGuardar = form.querySelector('.btn-guardar');
         const textoOriginal = btnGuardar.innerText;
         btnGuardar.disabled = true;
@@ -132,7 +128,6 @@ async function guardarRango(e) {
     }
 }
 
-// --- ELIMINAR CON SWEETALERT ---
 window.eliminarRango = function(id) {
     if (!id) return;
 
@@ -243,7 +238,6 @@ function limpiarFormulario() {
     fotoNuevaFile = null; 
 }
 
-// --- FUNCIÓN SIMPLIFICADA (Sin compresión) ---
 function procesarImagen(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -254,10 +248,8 @@ function procesarImagen(event) {
         return;
     }
 
-    // Guardamos el archivo original directamente
     fotoNuevaFile = file; 
 
-    // Solo creamos la vista previa
     const reader = new FileReader();
     reader.onload = function(e) {
         previewImagen.src = e.target.result;

@@ -54,7 +54,6 @@ window.abrirModalMapa = function() {
             colocarMarcador(coordenadasSeleccionadas.lat, coordenadasSeleccionadas.lng);
             map.setView([coordenadasSeleccionadas.lat, coordenadasSeleccionadas.lng], 15);
         } else {
-            // Coordenadas por defecto (puedes cambiarlas a tu ciudad)
             map.setView([-2.9001, -79.0059], 13); 
             if (marker) map.removeLayer(marker);
         }
@@ -129,7 +128,6 @@ async function guardarRecompensa(e) {
     const costo = parseInt(document.getElementById('costoRecompensa').value);
     const idAusp = selectAuspiciante.value;
 
-    // VALIDACIONES SWEETALERT
     if (costo <= 0) {
         return Swal.fire('Atención', 'El costo en puntos debe ser mayor a 0.', 'warning');
     }
@@ -168,7 +166,6 @@ async function guardarRecompensa(e) {
     const url = id ? `${API_RECOMPENSAS}/${id}` : API_RECOMPENSAS;
 
     try {
-        // Bloquear botón
         const btnGuardar = form.querySelector('.btn-guardar');
         const txtOriginal = btnGuardar.innerText;
         btnGuardar.disabled = true;

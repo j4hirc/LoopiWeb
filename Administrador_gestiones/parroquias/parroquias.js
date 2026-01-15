@@ -86,7 +86,6 @@ async function guardarParroquia(e) {
     }
 
     const existeDuplicado = parroquiasCache.some(p => {
-        // Si estamos editando, ignoramos el registro actual (comparamos IDs)
         if (idInput && p.id_parroquia == idInput) {
             return false; 
         }
@@ -155,7 +154,6 @@ async function guardarParroquia(e) {
     }
 }
 
-// --- 4. ELIMINAR CON SWEETALERT ---
 window.eliminarParroquia = function(id) {
     if (!id) return;
 
@@ -189,7 +187,6 @@ window.eliminarParroquia = function(id) {
     });
 };
 
-// --- 5. CARGAR EDICIÓN ---
 window.cargarEdicion = function(id) {
     const parroquia = parroquiasCache.find(p => p.id_parroquia === id);
     if (!parroquia) return;

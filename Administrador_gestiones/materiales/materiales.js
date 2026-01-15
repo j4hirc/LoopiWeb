@@ -102,7 +102,6 @@ async function guardarMaterial(e) {
     const nombre = document.getElementById('nombreMaterial').value.trim();
     const puntos = parseFloat(document.getElementById('puntosKg').value);
 
-    // VALIDACIÓN CON SWEETALERT
     if (isNaN(puntos) || puntos <= 0) {
         return Swal.fire('Atención', 'Los puntos por Kg deben ser mayores a 0.', 'warning');
     }
@@ -122,7 +121,7 @@ async function guardarMaterial(e) {
         descripcion: document.getElementById('descripcionMaterial').value,
         tipo_material: document.getElementById('tipoMaterial').value, 
         puntos_por_kg: puntos,
-        imagen: null // Backend maneja la foto aparte
+        imagen: null 
     };
 
     const formData = new FormData();
@@ -170,7 +169,6 @@ async function guardarMaterial(e) {
     }
 }
 
-// ELIMINAR CON SWEETALERT
 window.eliminarMaterial = function(id) {
     if (!id) return;
 
@@ -212,7 +210,6 @@ function renderizarLista(materiales) {
     materiales.forEach(mat => {
         let imgUrl = 'https://cdn-icons-png.flaticon.com/512/685/685662.png';
         
-        // Soporte URL y Base64
         if (mat.imagen && mat.imagen.length > 5) {
             if (mat.imagen.startsWith('http') || mat.imagen.startsWith('data:')) {
                 imgUrl = mat.imagen;
@@ -224,7 +221,6 @@ function renderizarLista(materiales) {
         const card = document.createElement('div');
         card.className = 'card-material';
         
-        // Se cambiaron los SVG inline por íconos de FontAwesome para mantener consistencia
         card.innerHTML = `
             <div class="card-icono">
                 <div class="card-icono-inner">

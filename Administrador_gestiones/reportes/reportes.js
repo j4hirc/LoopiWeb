@@ -463,7 +463,6 @@ async function descargarPDF() {
     elemento.style.padding = '30px';
     elemento.style.maxWidth = '100%';
 
-    // Inyectar CSS
     const estiloImpresion = document.createElement('style');
     estiloImpresion.innerHTML = `
         body { font-family: 'Poppins', Helvetica, sans-serif !important; color: #333; }
@@ -480,7 +479,6 @@ async function descargarPDF() {
     `;
     document.head.appendChild(estiloImpresion);
 
-    // Ajustar gráficas
     const canvasElements = document.querySelectorAll('canvas');
     canvasElements.forEach(c => {
         c.style.maxWidth = '550px';

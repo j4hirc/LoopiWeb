@@ -1,11 +1,10 @@
 :root {
-    /* Paleta Loopi Premium */
-    --primary: #1a4d3e;       /* Verde bosque profundo */
+    --primary: #1a4d3e;       
     --primary-gradient: linear-gradient(135deg, #2D5A4A 0%, #1a4d3e 100%);
-    --accent: #6DB85C;        /* Verde acción */
+    --accent: #6DB85C;        
     --accent-gradient: linear-gradient(135deg, #6DB85C 0%, #5aa14c 100%);
     
-    --bg-body: #F2F5F7;       /* Gris azulado muy suave */
+    --bg-body: #F2F5F7;       
     --bg-card: #FFFFFF;
     
     --text-main: #1F2937;
@@ -14,7 +13,6 @@
     --border-radius: 20px;
     --border-radius-sm: 12px;
     
-    /* Sombras Premium (Smooth Shadows) */
     --shadow-soft: 0 10px 40px -10px rgba(45, 90, 74, 0.15);
     --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
     --shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
@@ -32,7 +30,6 @@ body {
     overflow-x: hidden;
 }
 
-/* Decoración de fondo sutil */
 .bg-decoration {
     position: absolute;
     top: 0; left: 0; width: 100%; height: 400px;
@@ -41,10 +38,9 @@ body {
     z-index: -1;
 }
 
-/* --- HEADER --- */
+
 .header {
-    padding: 30px 5% 80px; /* Espacio extra abajo para el buscador */
-    color: white;
+    padding: 30px 5% 80px; 
 }
 
 .header-content {
@@ -98,12 +94,11 @@ body {
     margin-top: 5px;
 }
 
-/* Botón Nuevo: Diseño de píldora premium */
 .btn-agregar {
     background: var(--accent-gradient);
     color: white;
     border: none;
-    padding: 10px 24px 10px 10px; /* Padding asimétrico para el icono */
+    padding: 10px 24px 10px 10px; 
     border-radius: 50px;
     font-weight: 600;
     cursor: pointer;
@@ -132,10 +127,9 @@ body {
     box-shadow: 0 15px 30px rgba(109, 184, 92, 0.5);
 }
 
-/* --- BUSCADOR GLASSMORPHISM --- */
 .search-wrapper {
     max-width: 800px;
-    margin: -45px auto 50px; /* Sube sobre el header */
+    margin: -45px auto 50px;
     padding: 0 20px;
     position: relative;
     z-index: 10;
@@ -177,7 +171,6 @@ body {
 
 #buscarAusp::placeholder { color: #a0aec0; font-weight: 400; }
 
-/* --- GRID DE TARJETAS --- */
 .grid-container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -187,11 +180,10 @@ body {
     padding: 0 20px;
 }
 
-/* Estilo de la Tarjeta */
 .card-ausp {
     background: var(--bg-card);
     border-radius: var(--border-radius);
-    padding: 30px 25px 25px; /* Más padding arriba */
+    padding: 30px 25px 25px; 
     text-align: center;
     box-shadow: var(--shadow-card);
     transition: all 0.4s ease;
@@ -203,7 +195,6 @@ body {
     overflow: hidden;
 }
 
-/* Barra decorativa superior en cada tarjeta */
 .card-ausp::before {
     content: '';
     position: absolute;
@@ -280,7 +271,6 @@ body {
     transform: rotate(-10deg);
 }
 
-/* Loader */
 .loader-container {
     grid-column: 1 / -1;
     display: flex;
@@ -301,11 +291,10 @@ body {
 }
 @keyframes spin { 100% { transform: rotate(360deg); } }
 
-/* --- MODAL FLOTANTE --- */
 .modal-overlay {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(20, 30, 40, 0.6); /* Oscuro y elegante */
+    background: rgba(20, 30, 40, 0.6); 
     backdrop-filter: blur(8px);
     display: none;
     justify-content: center;
@@ -401,7 +390,6 @@ label {
     box-shadow: 0 0 0 4px rgba(109, 184, 92, 0.1);
 }
 
-/* Upload Area Mejorado */
 .image-upload-area {
     display: flex;
     align-items: center;
