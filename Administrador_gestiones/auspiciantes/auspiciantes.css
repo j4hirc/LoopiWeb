@@ -84,6 +84,7 @@ body {
 .titulo-seccion h1 {
     font-size: 2.2rem;
     font-weight: 700;
+    color:white;
     letter-spacing: -0.5px;
     line-height: 1.1;
 }
