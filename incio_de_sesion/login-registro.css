@@ -230,17 +230,21 @@ input:focus, select:focus {
     color: #666;
 }
 
-.side-panel img {
-    width: 350px;
-    max-width: 100%;
-    display: block; 
-    margin: 0 auto 20px auto; 
-    object-fit: contain; 
-    filter: drop-shadow(0 10px 10px rgba(0,0,0,0.2)); 
+.side-panel {
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(135deg, #4A8C74, #2D5F4F);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 40px;
 }
+
 @media (max-width: 1050px) {
     body {
-        padding: 10px; 
+        padding: 10px; /* Menos padding en body */
     }
 
     .container {
