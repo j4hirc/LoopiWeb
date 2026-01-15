@@ -23,8 +23,14 @@ img {
 .side-panel img {
     width: 350px;
     max-width: 100%;
+    
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 20px;
+    
+    display: block; 
+    object-fit: contain; 
 }
-
 .container {
     width: 100%;           
     max-width: 1000px;     
