@@ -22,6 +22,8 @@ let infoPuntosReciclaje = "Cargando puntos cercanos...";
 let infoLogros = "Cargando logros...";
 let historialChat = [];
 let infoMisLogros = "Aún no reviso tus medallas..."; 
+let infoAuspiciantes = "Cargando marcas aliadas...";
+let totalEntregasUsuario = 0;
 
 
 const imagenesEllie = [
@@ -1040,13 +1042,15 @@ async function prepararDatosCompletosIA() {
     try {
         const cedula = usuarioLogueado.cedula;
 
-        const [resMat, resRec, resRan, resUbi, resLogros, resMisLogros] = await Promise.all([
+        const [resMat, resRec, resRan, resUbi, resLogros, resMisLogros, resAuspiciantes, resConteo] = await Promise.all([
             fetch(`${API_BASE}/materiales`),
             fetch(`${API_BASE}/recompensas`),
             fetch(`${API_BASE}/rangos`),
             fetch(`${API_BASE}/ubicacion_reciclajes`),
             fetch(`${API_BASE}/logros`),                
-            fetch(`${API_BASE}/usuarios/${cedula}/logros`) 
+            fetch(`${API_BASE}/usuarios/${cedula}/logros`),
+            fetch(`${API_BASE}/auspiciantes`), // Nuevo: Auspiciantes
+            fetch(`${API_BASE}/solicitud_recolecciones/contar/${cedula}`)
         ]);
 
         if(resMat.ok) {
@@ -1056,7 +1060,10 @@ async function prepararDatosCompletosIA() {
 
         if(resRec.ok) {
             const recs = await resRec.json();
-            infoRecompensas = recs.map(r => `- ${r.nombre} (Cuesta ${r.costoPuntos} pts)`).join('\n');
+            infoRecompensas = recs.map(r => {
+                const nombreAuspiciante = r.auspiciante ? r.auspiciante.nombre : "Loopi Oficial";
+                return `- ${r.nombre} (Cuesta ${r.costoPuntos} pts) -> Gracias a: ${nombreAuspiciante}`;
+            }).join('\n');
         }
 
         if(resRan.ok) {
@@ -1071,6 +1078,15 @@ async function prepararDatosCompletosIA() {
                 let horario = u.horarios?.map(h => `${h.dia} (${h.hora_inicio}-${h.hora_fin})`).join(", ") || "No especificado";
                 return `📍 "${u.nombre}" (${u.direccion}). Acepta: ${mats}. Horario: ${horario}`;
             }).join('\n\n');
+        }
+
+        if (resAuspiciantes.ok) {
+            const ausp = await resAuspiciantes.json();
+            infoAuspiciantes = ausp.map(a => `🏢 ${a.nombre}: ${a.descripcion || 'Aliado oficial de Loopi'}`).join('\n');
+        }
+
+        if (resConteo.ok) {
+            totalEntregasUsuario = await resConteo.json();
         }
 
         if (resLogros.ok && resMisLogros.ok) {
@@ -1174,6 +1190,10 @@ async function consultarGroq() {
     
     const puntosUsuario = usuarioLogueado.puntos_actuales || 0;
     const rangoActual = usuarioLogueado.rango ? usuarioLogueado.rango.nombre_rango : "Reciclador Nuevo";
+
+    const entregasHechas = totalEntregasUsuario;
+    const siguienteMetaRango = (Math.floor(entregasHechas / 25) + 1) * 25;
+    const faltanParaSubir = siguienteMetaRango - entregasHechas;
     
     const MANUAL_LOOPI = `
 [MANUAL OFICIAL DE LOOPI - VERSIÓN USUARIO]
@@ -1219,6 +1239,9 @@ async function consultarGroq() {
     - Nombre: ${usuarioLogueado.primer_nombre}
     - Puntos actuales: ${puntosUsuario} ✨
     - Rango Actual: ${rangoActual} 🏅
+    - Entregas Totales: ${entregasHechas} 📦
+    - Meta Siguiente Rango: ${siguienteMetaRango} entregas.
+    - ¡LE FALTAN ${faltanParaSubir} ENTREGAS PARA SUBIR DE RANGO! (Avísale esto para motivarlo).
     
     ${infoMisLogros}  <-- ¡AQUÍ SABE QUÉ MEDALLAS TIENE!
 
@@ -1241,14 +1264,10 @@ async function consultarGroq() {
     ${infoRecompensas}
 
     INSTRUCCIONES DE RAZONAMIENTO:
-    1. **LOGROS:**
-       - Lee el "REPORTE DE LOGROS" arriba.
-       - Si dice que tiene el **100% o TODOS**, ¡haz una fiesta! Dile que es un máster, una leyenda de Loopi. No le recomiendes nada porque ya lo tiene todo.
-       - Si tiene una lista de **"LE FALTAN"**, felicítalo por los que ya tiene (los ✅) y anímalo a completar uno de los que faltan (los ❌). Diles cómo hacerlo (leyendo la misión).
-
-    2. **RANGO:** Menciona su rango actual (${rangoActual}) para que se sienta importante.
-
-    3. **PUNTOS:** Calcula siempre: Kilos x Puntos Unitarios. Nunca hables de dinero.
+    1. **RANGOS:** Explica siempre que los rangos se suben haciendo ENTREGAS (no por puntos). Dile cuántas entregas le faltan para el siguiente nivel. ¡Motívalo!
+    2. **AUSPICIANTES:** Si te preguntan quién nos apoya o de dónde salen los premios, menciona la lista de [AUSPICIANTES].
+    3. **LOGROS:** Felicita por lo que tiene y reta por lo que falta.
+    4. **TONO:** Muy suave, "ñaño/a", emojis (🌸, ✨, 💖, 🎒).
 
     FORMATO: Sé breve, útil y muy amorosa.
     `;
