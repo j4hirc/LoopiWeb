@@ -4,10 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Loop - Reciclaje Inteligente</title>
+    <title>Loopi - Reciclaje Inteligente</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 </head>
 
 <body>
@@ -40,16 +41,16 @@
 
         <div class="hero-container">
             <div class="hero-left animate-up">
-                <div class="hero-pill">🌿 Únete al cambio</div>
+                <div class="hero-pill"><i class="bi bi-patch-check-fill"></i> Únete al cambio</div>
                 <h1>Ayudando al <span class="gradient-text">medio ambiente</span></h1>
                 <p>
                     Recicla de forma inteligente, gana recompensas increíbles y únete a la comunidad que está cambiando
                     el planeta. ¡Empieza hoy mismo!
                 </p>
                 <div class="hero-buttons">
-                    <a href="https://drive.google.com/file/d/1i5ps-yD1H32mLauE2SQ7HfFOFvkUPpcy/view?usp=drive_link" download="LoopiApp.apk" class="btn-primary"
-                        style="text-decoration: none; display: inline-block; text-align: center;">
-                        Descargar App
+                    <a href="https://drive.google.com/file/d/1i5ps-yD1H32mLauE2SQ7HfFOFvkUPpcy/view?usp=drive_link"
+                        download="LoopiApp.apk" class="btn-primary">
+                        <i class="bi bi-android2"></i> Descargar App
                     </a>
                     <a href="#materiales" class="btn-secondary">Ver Materiales</a>
                 </div>
@@ -69,29 +70,33 @@
     <section class="features" id="saber">
         <div class="section-header animate-up">
             <h2 class="section-title">¿Cómo funciona?</h2>
-            <p class="section-subtitle">Es muy fácil empezar a reciclar con Loop.</p>
+            <p class="section-subtitle">Haz clic en las tarjetas para descubrir tu camino.</p>
         </div>
 
         <div class="features-grid">
-            <div class="feature-card animate-up">
+            <div class="feature-card interactive-card animate-up">
                 <div class="feature-icon bg-green-light">⭐</div>
                 <h3>Gana Puntos</h3>
                 <p>Acumula puntos por cada kilo que recicles.</p>
+                <span class="card-action">Empezar ahora <i class="bi bi-arrow-right"></i></span>
             </div>
-            <div class="feature-card animate-up delay-100">
+            <div class="feature-card interactive-card animate-up delay-100">
                 <div class="feature-icon bg-green-light">📍</div>
                 <h3>Puntos Cercanos</h3>
-                <p>Mapa con los puntos de reciclaje mas cercanos a ti.</p>
+                <p>Mapa con los puntos de reciclaje mas cercanos.</p>
+                <span class="card-action">Ver mapa <i class="bi bi-arrow-right"></i></span>
             </div>
-            <div class="feature-card animate-up delay-200">
+            <div class="feature-card interactive-card animate-up delay-200">
                 <div class="feature-icon bg-green-light">📊</div>
                 <h3>Tu Impacto</h3>
                 <p>Visualiza tus estadisticas de reciclaje.</p>
+                <span class="card-action">Ver estadísticas <i class="bi bi-arrow-right"></i></span>
             </div>
-            <div class="feature-card animate-up delay-300">
+            <div class="feature-card interactive-card animate-up delay-300">
                 <div class="feature-icon bg-green-light">🎁</div>
                 <h3>Canjea Premios</h3>
-                <p>Usa tus puntos en comercios locales/Auspiciantes.</p>
+                <p>Usa tus puntos en comercios locales.</p>
+                <span class="card-action">Ver catálogo <i class="bi bi-arrow-right"></i></span>
             </div>
         </div>
     </section>
@@ -132,14 +137,30 @@
             </div>
             <div class="footer-contact">
                 <h4>Contacto</h4>
-                <p>📍 Cuenca, Ecuador</p>
-                <p>📧 juanalberto25423@gmail.com</p>
+                <p><i class="bi bi-geo-alt-fill"></i> Cuenca, Ecuador</p>
+                <p><i class="bi bi-envelope-fill"></i> juanalberto25423@gmail.com</p>
             </div>
         </div>
         <div class="footer-bottom">
             © 2025 Loopi Reciclaje Inteligente. Hecho con 💚.
         </div>
     </footer>
+
+    <div id="authModal" class="modal">
+        <div class="modal-content animate-up">
+            <span class="close-modal">&times;</span>
+            <div class="modal-icon">🔒</div>
+            <h2>¡Únete a Loopi!</h2>
+            <p>Para empezar a reciclar, ver el mapa o canjear tus puntos, necesitas tener una cuenta activa.</p>
+
+            <div class="modal-buttons">
+                <a href="incio_de_sesion/login-registro.html" class="btn-primary full-width">Iniciar Sesión /
+                    Registrarse</a>
+                <button class="btn-secondary full-width" id="closeModalBtn">Solo estoy mirando</button>
+            </div>
+            <p class="modal-footer-text">¿Ya tienes cuenta? ¡Entra y recicla!</p>
+        </div>
+    </div>
 
     <script src="cargarDatos.js"></script>
     <script>
@@ -168,6 +189,37 @@
                 menuBtn.classList.remove('active');
                 navMenu.classList.remove('active');
             });
+        });
+
+        const modal = document.getElementById('authModal');
+        const closeModalX = document.querySelector('.close-modal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const interactiveCards = document.querySelectorAll('.interactive-card');
+
+        function openModal() {
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden'; 
+        }
+
+        function closeModal() {
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto'; 
+        }
+
+        interactiveCards.forEach(card => {
+            card.addEventListener('click', () => {
+                openModal();
+            });
+        });
+
+        closeModalX.addEventListener('click', closeModal);
+        closeModalBtn.addEventListener('click', closeModal);
+
+        window.addEventListener('click', (e) => {
+            if (e.target == modal) {
+                closeModal();
+            }
         });
     </script>
 </body>
