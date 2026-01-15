@@ -277,15 +277,126 @@ h1 {
 .material-card:hover { transform: translateY(-5px); border-color: var(--primary); }
 .material-card img { width: 70px; height: 70px; object-fit: contain; margin-bottom: 15px; }
 
-.sponsors { padding: 5rem 6%; background: var(--primary-dark); color: white; }
-.sponsors .section-title { color: white; }
-.sponsors .section-subtitle { color: rgba(255,255,255,0.8); }
-.sponsors-grid {
-    display: flex; flex-wrap: wrap; justify-content: center; gap: 3rem;
-    align-items: center; background: rgba(255,255,255,0.1);
-    padding: 2rem; border-radius: var(--radius);
+.sponsors {
+    padding: 6rem 6%;
+    background-color: #f8fafc;
+    background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+    background-size: 30px 30px;
+    color: var(--secondary);
+    position: relative;
+    overflow: hidden;
 }
-.sponsor-card { opacity: 0.7; filter: grayscale(100%) brightness(200%); }
+
+
+
+.sponsors::before, .sponsors::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 100px;
+    pointer-events: none;
+    z-index: 1;
+}
+.sponsors::before { top: 0; background: linear-gradient(to bottom, #f8fafc, transparent); }
+.sponsors::after { bottom: 0; background: linear-gradient(to top, #f8fafc, transparent); }
+
+.sponsors .section-title {
+    color: var(--secondary); 
+    position: relative;
+    z-index: 2;
+}
+.sponsors .section-subtitle {
+    color: var(--text-light);
+    position: relative;
+    z-index: 2;
+    margin-bottom: 3rem;
+}
+
+.sponsors-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 2;
+    padding: 10px; 
+}
+
+
+.sponsor-card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    
+    border: 1px solid rgba(0,0,0,0.05);
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+    
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+    opacity: 1; 
+    filter: none; 
+}
+
+.sponsor-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+    border-color: var(--primary-light);
+}
+
+.sponsor-card img {
+    filter: grayscale(100%);
+    opacity: 0.7;
+    transition: all 0.3s ease;
+    margin-bottom: 1rem;
+    max-height: 80px; 
+}
+
+.sponsor-card:hover img {
+
+    filter: grayscale(0%);
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.sponsor-card span {
+    font-size: 1.1rem !important;
+    font-weight: 700 !important;
+    color: var(--secondary);
+    margin-bottom: 0.5rem;
+}
+
+.sponsor-card p {
+    font-size: 0.85rem !important;
+    color: var(--text-light);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.sponsor-card {
+    position: relative;
+    overflow: hidden;
+}
+.sponsor-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 0%;
+    background: var(--primary);
+    transition: height 0.3s ease;
+}
+.sponsor-card:hover::before {
+    height: 100%;
+}
 
 footer { 
     background: #022c22; color: white; 
